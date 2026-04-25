@@ -68,28 +68,35 @@ export default function PlanesPage() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="grid grid-cols-1 md:grid-cols-2 gap-8"
             >
               {plans.map((plan) => (
                 <div
                   key={plan.id}
                   onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                  className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'border-border hover:border-primary/50'}`}
+                  className={`liquid-glass liquid-glass-glow cursor-pointer group relative p-10 rounded-3xl transition-all duration-500 hover:scale-[1.02] flex flex-col items-center text-center`}
                 >
                   {plan.isPopular && (
-                    <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                      MÁS POPULAR
+                    <div className="absolute -top-4 bg-primary text-primary-foreground text-[10px] uppercase tracking-widest font-bold px-4 py-1.5 rounded-full shadow-lg">
+                      Más Popular
                     </div>
                   )}
-                  <h3 className="text-2xl font-display font-bold mb-2">{plan.name}</h3>
-                  <div className="flex items-end gap-2 mb-4">
-                    <span className="text-4xl font-bold font-mono text-primary">{plan.price}</span>
-                    <span className="text-muted-foreground line-through text-sm mb-1">{plan.originalPrice}</span>
+                  <h3 className="text-xl md:text-2xl font-light tracking-wide mb-8 text-foreground/90">{plan.name}</h3>
+                  
+                  <div className="flex flex-col items-center gap-1 mb-8">
+                    <span className="text-muted-foreground line-through text-xs tracking-wider opacity-60">{plan.originalPrice}</span>
+                    <span className="text-5xl font-light tracking-tighter text-primary">{plan.price}</span>
                   </div>
-                  <p className="text-muted-foreground text-sm mb-6">Acceso completo a instalaciones y app.</p>
-                  <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                  
+                  <div className="space-y-3 mb-10 text-sm text-foreground/70 font-light tracking-wide">
+                    <p>{plan.name}</p>
+                    <p>Acceso a instalaciones</p>
+                    <p>App y Rutinas</p>
+                  </div>
+                  
+                  <button className="btn-smooth w-full py-4 rounded-full bg-secondary/30 border border-primary/20 text-foreground font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all mt-auto">
                     Seleccionar
-                  </div>
+                  </button>
                 </div>
               ))}
             </motion.div>
@@ -136,7 +143,7 @@ export default function PlanesPage() {
                   />
                 </div>
                 
-                <button type="submit" className="w-full py-4 mt-6 bg-primary text-primary-foreground font-bold rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all">
+                <button type="submit" className="btn-smooth w-full py-4 mt-6 bg-primary text-primary-foreground font-bold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)]">
                   Continuar al Pago
                 </button>
               </form>
@@ -249,7 +256,7 @@ export default function PlanesPage() {
               </p>
               <button 
                 onClick={() => window.location.href = "/login"}
-                className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all"
+                className="btn-smooth w-full py-4 bg-primary text-primary-foreground font-bold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)]"
               >
                 Ir a Iniciar Sesión
               </button>

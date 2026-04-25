@@ -21,8 +21,8 @@ const mainServices = [
   },
   {
     name: "Valoración Física",
-    originalPrice: "$60.000",
-    price: "$30.000",
+    originalPrice: "$30.000",
+    price: "$15.000",
     discount: "-50% OFF",
     features: ["Análisis de composición corporal", "Medidas y peso", "Definición de objetivos"]
   }

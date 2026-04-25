@@ -1,32 +1,37 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #0A0E1A; /* bg-primary */
-  --color-foreground: #FFFFFF; /* text-primary */
+  /* ============================================
+     PALETA: NEGRO PURO + DORADO
+     Negro profundo como base, dorado como acento
+     ============================================ */
 
-  --color-card: #141A2E; /* bg-secondary */
+  --color-background: #080808;       /* Negro puro — fondo global */
+  --color-foreground: #FFFFFF;       /* Blanco — texto principal */
+
+  --color-card: #111111;             /* Negro ligeramente elevado — tarjetas */
   --color-card-foreground: #FFFFFF;
 
-  --color-popover: #141A2E;
+  --color-popover: #111111;
   --color-popover-foreground: #FFFFFF;
 
-  --color-primary: #D4AF37; /* accent-gold */
-  --color-primary-foreground: #0A0E1A;
+  --color-primary: #D4AF37;          /* Dorado — acento principal */
+  --color-primary-foreground: #080808;
 
-  --color-secondary: #1E2744; /* bg-tertiary */
+  --color-secondary: #1A1A1A;        /* Negro gris — fondos de sección */
   --color-secondary-foreground: #FFFFFF;
 
-  --color-muted: #1E2744;
-  --color-muted-foreground: #B8C1CF; /* text-secondary */
+  --color-muted: #1A1A1A;
+  --color-muted-foreground: #9A9A9A; /* Gris neutro — texto secundario */
 
-  --color-accent: #3B82F6; /* accent-blue */
-  --color-accent-foreground: #FFFFFF;
+  --color-accent: #D4AF37;           /* Dorado — reemplaza el azul */
+  --color-accent-foreground: #080808;
 
-  --color-destructive: #EF4444; /* danger */
+  --color-destructive: #EF4444;      /* Rojo — alertas y errores */
   --color-destructive-foreground: #FFFFFF;
 
-  --color-border: #1E2744;
-  --color-input: #1E2744;
+  --color-border: #222222;           /* Gris muy oscuro — bordes */
+  --color-input: #1A1A1A;
   --color-ring: #D4AF37;
 
   --radius: 0.5rem;
@@ -34,7 +39,7 @@
   --font-display: "Space Grotesk", sans-serif;
   --font-body: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
-  
+
   --color-success: #10B981;
 }
 
@@ -60,16 +65,18 @@
 }
 
 .glow-gold {
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
 }
 
+/* Antes era azul — ahora dorado */
 .glow-blue {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
 }
 
+/* Glass panel con tinte negro, no azul */
 .glass-panel {
-  background: rgba(20, 26, 46, 0.7);
+  background: rgba(17, 17, 17, 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.08);
 }

@@ -71,11 +71,11 @@ export default function AdminDashboardPage() {
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1E2744" vertical={false} />
-                <XAxis dataKey="name" stroke="#B8C1CF" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#B8C1CF" fontSize={12} tickLine={false} axisLine={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#222222" vertical={false} />
+                <XAxis dataKey="name" stroke="#9A9A9A" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#9A9A9A" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#141A2E', borderColor: '#1E2744', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: '#111111', borderColor: '#222222', borderRadius: '8px' }}
                   itemStyle={{ color: '#D4AF37' }}
                 />
                 <Line type="monotone" dataKey="usuarios" stroke="#D4AF37" strokeWidth={3} dot={{ fill: '#D4AF37', strokeWidth: 2 }} activeDot={{ r: 8 }} />

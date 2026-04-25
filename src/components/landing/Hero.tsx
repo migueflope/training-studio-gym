@@ -43,13 +43,13 @@ export function Hero() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
             <Link
               href="/planes"
-              className="btn-smooth w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground text-lg font-bold rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground text-lg font-bold rounded-lg shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2"
             >
               Ver Planes <ArrowRight className="w-5 h-5" />
             </Link>
             <Link
               href="/contacto"
-              className="btn-smooth w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-primary text-primary text-lg font-bold rounded-full hover:bg-primary/10 flex items-center justify-center"
+              className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-primary text-primary text-lg font-bold rounded-lg hover:bg-primary/10 transition-all flex items-center justify-center"
             >
               Agendar Valoración
             </Link>

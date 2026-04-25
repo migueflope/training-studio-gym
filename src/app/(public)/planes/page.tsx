@@ -74,7 +74,7 @@ export default function PlanesPage() {
                 <div
                   key={plan.id}
                   onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                  className={`liquid-glass liquid-glass-glow cursor-pointer group relative p-10 rounded-3xl transition-all duration-500 hover:scale-[1.02] flex flex-col items-center text-center`}
+                  className={`premium-card premium-glow cursor-pointer group relative p-10 flex flex-col items-center text-center`}
                 >
                   {plan.isPopular && (
                     <div className="absolute -top-4 bg-primary text-primary-foreground text-[10px] uppercase tracking-widest font-bold px-4 py-1.5 rounded-full shadow-lg">
@@ -94,7 +94,7 @@ export default function PlanesPage() {
                     <p>App y Rutinas</p>
                   </div>
                   
-                  <button className="btn-smooth w-full py-4 rounded-full bg-secondary/30 border border-primary/20 text-foreground font-medium hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all mt-auto">
+                  <button className="btn-smooth w-full py-4 bg-[#1A1A1A] border border-[#222] text-foreground font-medium group-hover:border-primary/50 transition-all mt-auto">
                     Seleccionar
                   </button>
                 </div>
@@ -143,7 +143,7 @@ export default function PlanesPage() {
                   />
                 </div>
                 
-                <button type="submit" className="btn-smooth w-full py-4 mt-6 bg-primary text-primary-foreground font-bold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)]">
+                <button type="submit" className="btn-smooth w-full py-4 mt-6 bg-[#1A1A1A] border border-[#222] text-foreground font-bold hover:border-primary/50 hover:text-primary transition-all">
                   Continuar al Pago
                 </button>
               </form>
@@ -256,7 +256,7 @@ export default function PlanesPage() {
               </p>
               <button 
                 onClick={() => window.location.href = "/login"}
-                className="btn-smooth w-full py-4 bg-primary text-primary-foreground font-bold rounded-full shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)]"
+                className="btn-smooth w-full py-4 bg-[#1A1A1A] border border-[#222] text-foreground font-bold hover:border-primary/50 hover:text-primary transition-all"
               >
                 Ir a Iniciar Sesión
               </button>

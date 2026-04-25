@@ -77,16 +77,34 @@ export function Pricing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass-panel rounded-2xl p-8 border border-border flex flex-col justify-center items-center text-center group hover:border-primary/50 transition-all"
+                className="glass-panel rounded-2xl p-8 border border-border flex flex-col justify-between text-center group hover:border-primary/50 transition-all h-full"
               >
-                <div className="absolute top-0 right-0 bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                  {service.discount}
+                <div>
+                  <div className="absolute top-0 right-0 bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    {service.discount}
+                  </div>
+                  <h3 className="text-xl font-bold font-display mb-6 text-foreground/90">{service.name}</h3>
+                  <div className="flex flex-col items-center gap-1 mb-8">
+                    <span className="text-muted-foreground line-through text-sm font-medium">{service.originalPrice}</span>
+                    <span className="text-4xl font-bold text-primary tracking-tighter">{service.price}</span>
+                  </div>
+
+                  <ul className="space-y-4 mb-8 text-left">
+                    {service.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <Check className="w-5 h-5 text-primary shrink-0" />
+                        <span className="text-muted-foreground text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-xl font-bold font-display mb-4 text-foreground/90">{service.name}</h3>
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-muted-foreground line-through text-sm font-medium">{service.originalPrice}</span>
-                  <span className="text-4xl font-bold text-primary tracking-tighter">{service.price}</span>
-                </div>
+
+                <Link
+                  href="/planes"
+                  className="w-full py-4 rounded-lg font-bold text-center border border-primary/30 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto"
+                >
+                  Seleccionar Plan
+                </Link>
               </motion.div>
             ))}
           </div>

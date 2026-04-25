@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertCircle, Calendar, Flame, Trophy, Play } from "lucide-react";
+import { AlertCircle, Calendar, Flame, Trophy, Play, Activity } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardPage() {

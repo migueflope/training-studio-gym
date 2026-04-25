@@ -4,17 +4,19 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
+import { useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 const basicServices = [
-  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF" },
-  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false, discount: "-50% OFF" },
-  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false, discount: "-50% OFF" },
+  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF", features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"] },
+  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false, discount: "-50% OFF", features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"] },
+  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false, discount: "-50% OFF", features: ["Análisis de composición corporal", "Medidas y peso", "Definición de objetivos"] },
 ];
 
 const customPackages = [
-  { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false, discount: "-38% OFF" },
-  { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true, discount: "-38% OFF" },
-  { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false, discount: "-38% OFF" },
+  { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false, discount: "-38% OFF", features: ["12 sesiones personalizadas", "Rutina adaptada por IA", "Valoración incluida", "Soporte de entrenadores"] },
+  { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true, discount: "-38% OFF", features: ["15 sesiones personalizadas", "Rutina premium adaptada", "Valoración física mensual", "Prioridad en reservas"] },
+  { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false, discount: "-38% OFF", features: ["20 sesiones personalizadas", "Resultados acelerados", "Valoración física quincenal", "Acceso total a la app"] },
 ];
 
 const allPlans = [...basicServices, ...customPackages];
@@ -26,8 +28,18 @@ const paymentMethods = [
 ];
 
 export default function PlanesPage() {
+  const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
+  useEffect(() => {
+    const planParam = searchParams.get('plan');
+    const stepParam = searchParams.get('step');
+    if (planParam && stepParam) {
+      setSelectedPlan(planParam);
+      setStep(parseInt(stepParam));
+    }
+  }, [searchParams]);
   const [contactData, setContactData] = useState({ name: "", whatsapp: "", email: "" });
   const [selectedMethod, setSelectedMethod] = useState(paymentMethods[0]);
   const [isCopied, setIsCopied] = useState(false);
@@ -84,20 +96,28 @@ export default function PlanesPage() {
                     <div
                       key={plan.id}
                       onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                      className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02]"
+                      className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
                     >
-                      <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
-                      <div className="flex items-end gap-2 mb-6">
-                        <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground line-through text-xs">{plan.originalPrice}</span>
-                            <span className="bg-destructive/10 text-destructive text-[9px] font-bold px-1.5 py-0.5 rounded-sm">{plan.discount}</span>
-                          </div>
+                      <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
+                      <div className="flex flex-col items-start gap-1 mb-8">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground line-through text-sm font-medium">{plan.originalPrice}</span>
+                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.discount}</span>
                         </div>
+                        <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{plan.price}</span>
                       </div>
-                      <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                        Seleccionar
+                      
+                      <ul className="space-y-4 mb-8 text-left flex-1">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <Check className="w-5 h-5 text-primary shrink-0" />
+                            <span className="text-muted-foreground text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
+                        Seleccionar Plan
                       </div>
                     </div>
                   ))}
@@ -115,25 +135,33 @@ export default function PlanesPage() {
                     <div
                       key={plan.id}
                       onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                      className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] md:-translate-y-2' : 'border-border hover:border-primary/50'}`}
+                      className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] flex flex-col h-full ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] md:-translate-y-2' : 'border-border hover:border-primary/50'}`}
                     >
                       {plan.isPopular && (
                         <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
                           MÁS POPULAR
                         </div>
                       )}
-                      <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
-                      <div className="flex items-end gap-2 mb-6">
-                        <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
-                        <div className="flex flex-col items-start gap-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground line-through text-xs">{plan.originalPrice}</span>
-                            <span className="bg-destructive/10 text-destructive text-[9px] font-bold px-1.5 py-0.5 rounded-sm">{plan.discount}</span>
-                          </div>
+                      <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
+                      <div className="flex flex-col items-start gap-1 mb-8">
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground line-through text-sm font-medium">{plan.originalPrice}</span>
+                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.discount}</span>
                         </div>
+                        <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{plan.price}</span>
                       </div>
-                      <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                        Seleccionar
+
+                      <ul className="space-y-4 mb-8 text-left flex-1">
+                        {plan.features.map((feature, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <Check className="w-5 h-5 text-primary shrink-0" />
+                            <span className="text-muted-foreground text-sm">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
+                        Seleccionar Plan
                       </div>
                     </div>
                   ))}

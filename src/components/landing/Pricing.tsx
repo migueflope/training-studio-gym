@@ -6,6 +6,7 @@ import { Check } from "lucide-react";
 
 const mainServices = [
   {
+    id: "mensualidad",
     name: "Mensualidad del Gym",
     originalPrice: "$90.000",
     price: "$60.000",
@@ -13,6 +14,7 @@ const mainServices = [
     features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"]
   },
   {
+    id: "sesion",
     name: "Sesión de Entrenamiento",
     originalPrice: "$10.000",
     price: "$5.000",
@@ -20,6 +22,7 @@ const mainServices = [
     features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"]
   },
   {
+    id: "valoracion",
     name: "Valoración Física",
     originalPrice: "$30.000",
     price: "$15.000",
@@ -104,7 +107,7 @@ export function Pricing() {
                 </div>
 
                 <Link
-                  href="/planes"
+                  href={`/planes?plan=${service.id}&step=2`}
                   className="w-full py-4 rounded-lg font-bold text-center border border-primary/30 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto"
                 >
                   Seleccionar Plan

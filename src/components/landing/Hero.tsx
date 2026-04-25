@@ -9,8 +9,8 @@ export function Hero() {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video Background Placeholder — semi-transparent to let particles through */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-background/60 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-background/50 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent z-10" />
         <img
           src="/assets/hero-bg.jpg" // We'll add a script to generate this or use a placeholder
           alt="Atletas entrenando"

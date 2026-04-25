@@ -113,19 +113,19 @@ const vertexShader = `
     // Recalculate after displacement
     vec4 finalMvPos = modelViewMatrix * vec4(pos, 1.0);
 
-    // Depth-based alpha fade
+    // Depth-based alpha fade — much brighter now
     float depth = -finalMvPos.z;
-    vAlpha = smoothstep(12.0, 2.0, depth) * 0.7;
+    vAlpha = smoothstep(14.0, 1.5, depth) * 1.0;
 
-    // Pulsing size
-    float pulse = 0.8 + 0.2 * sin(uTime * 1.5 + aPhase * 6.28);
+    // Pulsing size — bigger pulse range
+    float pulse = 0.85 + 0.35 * sin(uTime * 1.5 + aPhase * 6.28);
 
     gl_Position = projectionMatrix * finalMvPos;
-    gl_PointSize = aSize * pulse * uPixelRatio * (4.0 / depth);
+    gl_PointSize = aSize * pulse * uPixelRatio * (6.0 / depth);
   }
 `;
 
-// ─── Fragment Shader ───
+// ─── Fragment Shader (with glow halo) ───
 const fragmentShader = `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
@@ -134,15 +134,24 @@ const fragmentShader = `
   varying float vAlpha;
 
   void main() {
-    // Soft circular particle
     float distFromCenter = length(gl_PointCoord - vec2(0.5));
     if (distFromCenter > 0.5) discard;
 
-    float alpha = smoothstep(0.5, 0.1, distFromCenter) * vAlpha;
+    // Bright core
+    float core = smoothstep(0.5, 0.05, distFromCenter);
+    // Soft outer glow halo
+    float glow = smoothstep(0.5, 0.0, distFromCenter) * 0.6;
+    // Combined intensity
+    float intensity = core + glow;
 
-    // Subtle color oscillation between gold tones
+    float alpha = intensity * vAlpha;
+
+    // Color oscillation between gold tones
     float colorMix = sin(gl_PointCoord.x * 3.14 + uTime * 0.5) * 0.5 + 0.5;
-    vec3 color = mix(uColorA, uColorB, colorMix * 0.3);
+    vec3 color = mix(uColorA, uColorB, colorMix * 0.4);
+
+    // Brighten the core even more
+    color += uColorB * core * 0.3;
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -156,7 +165,7 @@ export function ParticleField() {
 
     const container = containerRef.current;
     const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 800 : 3000;
+    const PARTICLE_COUNT = isMobile ? 1200 : 4500;
 
     // ─── Scene Setup ───
     const scene = new THREE.Scene();
@@ -185,11 +194,11 @@ export function ParticleField() {
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       // Spread particles in a large volume
-      positions[i * 3] = (Math.random() - 0.5) * 14;     // x
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 10; // y
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 8;  // z
+      positions[i * 3] = (Math.random() - 0.5) * 16;     // x — wider
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 12; // y — taller
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 6;  // z — less depth so more are visible
 
-      sizes[i] = Math.random() * 3.0 + 1.0;
+      sizes[i] = Math.random() * 4.5 + 1.5; // bigger particles
       phases[i] = Math.random();
     }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "react-hello-dnd";
 import { GripVertical, Plus, Trash2, Save, PlayCircle, Library } from "lucide-react";
 
 // Fallback to simpler implementation if react-hello-dnd fails

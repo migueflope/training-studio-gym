@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Chatbot } from "@/components/ui/Chatbot";
+import { ParticleField } from "@/components/ui/ParticleField";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -32,6 +33,7 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark scroll-smooth">
       <body className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} font-body min-h-screen bg-background text-foreground antialiased overflow-x-hidden selection:bg-primary selection:text-primary-foreground`}>
+        <ParticleField />
         {children}
         <Chatbot />
       </body>

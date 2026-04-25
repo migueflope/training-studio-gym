@@ -6,15 +6,15 @@ import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-rea
 import { QRCodeSVG } from "qrcode.react";
 
 const basicServices = [
-  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false },
-  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false },
-  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false },
+  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF" },
+  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false, discount: "-50% OFF" },
+  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false, discount: "-50% OFF" },
 ];
 
 const customPackages = [
-  { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false },
-  { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true },
-  { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false },
+  { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false, discount: "-38% OFF" },
+  { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true, discount: "-38% OFF" },
+  { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false, discount: "-38% OFF" },
 ];
 
 const allPlans = [...basicServices, ...customPackages];
@@ -89,7 +89,12 @@ export default function PlanesPage() {
                       <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
                       <div className="flex items-end gap-2 mb-6">
                         <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
-                        <span className="text-muted-foreground line-through text-xs mb-1">{plan.originalPrice}</span>
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground line-through text-xs">{plan.originalPrice}</span>
+                            <span className="bg-destructive/10 text-destructive text-[9px] font-bold px-1.5 py-0.5 rounded-sm">{plan.discount}</span>
+                          </div>
+                        </div>
                       </div>
                       <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                         Seleccionar
@@ -120,7 +125,12 @@ export default function PlanesPage() {
                       <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
                       <div className="flex items-end gap-2 mb-6">
                         <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
-                        <span className="text-muted-foreground line-through text-xs mb-1">{plan.originalPrice}</span>
+                        <div className="flex flex-col items-start gap-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground line-through text-xs">{plan.originalPrice}</span>
+                            <span className="bg-destructive/10 text-destructive text-[9px] font-bold px-1.5 py-0.5 rounded-sm">{plan.discount}</span>
+                          </div>
+                        </div>
                       </div>
                       <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                         Seleccionar

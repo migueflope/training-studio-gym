@@ -6,18 +6,18 @@ import { ArrowRight, ChevronDown } from "lucide-react";
 
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background">
-      {/* Video Background Placeholder */}
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      {/* Video Background Placeholder — semi-transparent to let particles through */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-background/80 z-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent z-10" />
+        <div className="absolute inset-0 bg-background/60 z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent z-10" />
         <img
           src="/assets/hero-bg.jpg" // We'll add a script to generate this or use a placeholder
           alt="Atletas entrenando"
-          className="w-full h-full object-cover opacity-50"
+          className="w-full h-full object-cover opacity-30"
         />
         {/* Placeholder if image is missing */}
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-40 mix-blend-luminosity" />
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center opacity-20 mix-blend-luminosity" />
       </div>
 
       <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center mt-16">

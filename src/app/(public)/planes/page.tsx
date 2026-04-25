@@ -5,12 +5,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
-const plans = [
-  { id: "mensualidad", name: "Mensualidad Básica", price: "$60.000", originalPrice: "$90.000", isPopular: false },
+const basicServices = [
+  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false },
+  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false },
+  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false },
+];
+
+const customPackages = [
   { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false },
   { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true },
   { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false },
 ];
+
+const allPlans = [...basicServices, ...customPackages];
 
 const paymentMethods = [
   { id: "bancolombia", name: "Bancolombia", account: "Ahorros 123-456789-00" },
@@ -61,37 +68,67 @@ export default function PlanesPage() {
         </div>
 
         <AnimatePresence mode="wait">
-          {/* STEP 1: SELECT PLAN */}
           {step === 1 && (
             <motion.div
               key="step1"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              className="space-y-16"
             >
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                  className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)]' : 'border-border hover:border-primary/50'}`}
-                >
-                  {plan.isPopular && (
-                    <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                      MÁS POPULAR
+              {/* SERVICIOS BÁSICOS */}
+              <div>
+                <h2 className="text-2xl font-display font-bold text-center mb-8 uppercase tracking-wider text-primary">Servicios</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {basicServices.map((plan) => (
+                    <div
+                      key={plan.id}
+                      onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
+                      className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02]"
+                    >
+                      <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
+                      <div className="flex items-end gap-2 mb-6">
+                        <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
+                        <span className="text-muted-foreground line-through text-xs mb-1">{plan.originalPrice}</span>
+                      </div>
+                      <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        Seleccionar
+                      </div>
                     </div>
-                  )}
-                  <h3 className="text-2xl font-display font-bold mb-2">{plan.name}</h3>
-                  <div className="flex items-end gap-2 mb-4">
-                    <span className="text-4xl font-bold font-mono text-primary">{plan.price}</span>
-                    <span className="text-muted-foreground line-through text-sm mb-1">{plan.originalPrice}</span>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-6">Acceso completo a instalaciones y app.</p>
-                  <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    Seleccionar
-                  </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+
+              {/* SERVICIOS COMPLEMENTARIOS */}
+              <div>
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-display font-bold uppercase tracking-wider text-primary mb-1">Servicios Complementarios</h2>
+                  <p className="text-muted-foreground">Entrenamiento Personalizado</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {customPackages.map((plan) => (
+                    <div
+                      key={plan.id}
+                      onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
+                      className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] md:-translate-y-2' : 'border-border hover:border-primary/50'}`}
+                    >
+                      {plan.isPopular && (
+                        <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                          MÁS POPULAR
+                        </div>
+                      )}
+                      <h3 className="text-xl font-display font-bold mb-2">{plan.name}</h3>
+                      <div className="flex items-end gap-2 mb-6">
+                        <span className="text-3xl font-bold font-mono text-primary">{plan.price}</span>
+                        <span className="text-muted-foreground line-through text-xs mb-1">{plan.originalPrice}</span>
+                      </div>
+                      <div className="w-full text-center py-3 rounded-lg border border-primary text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        Seleccionar
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </motion.div>
           )}
 
@@ -204,7 +241,7 @@ export default function PlanesPage() {
                   <div className="md:w-1/2 p-8 flex flex-col justify-center relative z-10">
                     <div className="mb-8">
                       <h4 className="text-lg font-bold mb-1">Total a pagar:</h4>
-                      <p className="text-4xl font-mono text-primary font-bold">{plans.find(p => p.id === selectedPlan)?.price}</p>
+                      <p className="text-4xl font-mono text-primary font-bold">{allPlans.find(p => p.id === selectedPlan)?.price}</p>
                     </div>
 
                     <div className="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-secondary/10 group">

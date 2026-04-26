@@ -42,8 +42,8 @@ export function ParticleField() {
     if (!ctx) return;
 
     const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 600 : 1800;
-    const SPHERE_RADIUS_FACTOR = isMobile ? 0.35 : 0.38; // fraction of viewport min dimension
+    const PARTICLE_COUNT = isMobile ? 800 : 2500;
+    const SPHERE_RADIUS_FACTOR = isMobile ? 0.4 : 0.45; // fraction of viewport min dimension
 
     // ─── Colors (gold palette) ───
     const COLORS = [
@@ -72,10 +72,10 @@ export function ParticleField() {
         sx: x * rFactor,
         sy: y * rFactor,
         sz: z * rFactor,
-        size: Math.random() * 4 + 2, // dash length in px
+        size: Math.random() * 7 + 3, // dash length in px
         angle: Math.random() * Math.PI * 2,
         shade: Math.floor(Math.random() * COLORS.length),
-        opacity: 0.4 + Math.random() * 0.6,
+        opacity: 0.5 + Math.random() * 0.5,
       });
     }
 
@@ -201,8 +201,8 @@ export function ParticleField() {
         if (alpha < 0.05) continue;
 
         const color = COLORS[item.p.shade];
-        const dashLength = item.p.size * (0.5 + depthNorm * 0.5);
-        const dashWidth = 1.5;
+        const dashLength = item.p.size * (0.6 + depthNorm * 0.6);
+        const dashWidth = 2;
 
         ctx.save();
         ctx.translate(item.screenX, item.screenY);

@@ -96,10 +96,12 @@ export function ParticleField() {
     };
 
     const handleScroll = () => {
-      // Fade out over the first viewport height of scroll
+      // Fade from 100% in Hero to 15% in other sections (never fully invisible)
       const scrollY = window.scrollY;
       const viewportH = window.innerHeight;
-      scrollOpacity = Math.max(0, 1 - scrollY / (viewportH * 0.8));
+      const MIN_OPACITY = 0.15;
+      const fadeProgress = Math.min(1, scrollY / (viewportH * 0.8));
+      scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY); // 1.0 → 0.15
     };
 
     if (!isMobile) {

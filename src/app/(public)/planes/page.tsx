@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -28,6 +28,14 @@ const paymentMethods = [
 ];
 
 export default function PlanesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-background" />}>
+      <PlanesContent />
+    </Suspense>
+  );
+}
+
+function PlanesContent() {
   const searchParams = useSearchParams();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);

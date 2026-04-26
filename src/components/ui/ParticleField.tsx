@@ -82,16 +82,31 @@ export function ParticleField() {
     // ─── Mouse state ───
     const mouse = { x: 0, y: 0 };
     const smoothMouse = { x: 0, y: 0 };
+    // Mouse position in pixels for sphere center tracking
+    const mousePixel = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const smoothMousePixel = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     const LERP = 0.05;
+    let scrollOpacity = 1;
 
     const handleMouseMove = (e: MouseEvent) => {
       mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      mousePixel.x = e.clientX;
+      mousePixel.y = e.clientY;
+    };
+
+    const handleScroll = () => {
+      // Fade out over the first viewport height of scroll
+      const scrollY = window.scrollY;
+      const viewportH = window.innerHeight;
+      scrollOpacity = Math.max(0, 1 - scrollY / (viewportH * 0.8));
     };
 
     if (!isMobile) {
       window.addEventListener("mousemove", handleMouseMove);
     }
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll(); // init
 
     // ─── Resize ───
     const resize = () => {
@@ -126,15 +141,26 @@ export function ParticleField() {
       animationId = requestAnimationFrame(animate);
       const elapsed = (performance.now() - startTime) / 1000;
 
-      // Smooth mouse
+      // Skip rendering if fully transparent (performance optimization)
+      if (scrollOpacity <= 0) {
+        ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        return;
+      }
+
+      // Smooth mouse for tilt
       smoothMouse.x += (mouse.x - smoothMouse.x) * LERP;
       smoothMouse.y += (mouse.y - smoothMouse.y) * LERP;
+
+      // Smooth mouse pixel position for sphere center tracking
+      smoothMousePixel.x += (mousePixel.x - smoothMousePixel.x) * LERP;
+      smoothMousePixel.y += (mousePixel.y - smoothMousePixel.y) * LERP;
 
       // Clear
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
+      // Sphere center follows the cursor
+      const cx = smoothMousePixel.x;
+      const cy = smoothMousePixel.y;
       const sphereRadius = Math.min(window.innerWidth, window.innerHeight) * SPHERE_RADIUS_FACTOR;
 
       // Auto-rotation angles
@@ -197,7 +223,7 @@ export function ParticleField() {
         const depthNorm = (item.depth + 1) / 2; // 0 = back, 1 = front
         if (depthNorm < 0.25) continue; // skip particles on the back
 
-        const alpha = item.p.opacity * Math.pow(depthNorm, 1.5);
+        const alpha = item.p.opacity * Math.pow(depthNorm, 1.5) * scrollOpacity;
         if (alpha < 0.05) continue;
 
         const color = COLORS[item.p.shade];
@@ -224,6 +250,7 @@ export function ParticleField() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", resize);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, [mounted]);
 

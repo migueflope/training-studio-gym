@@ -3,20 +3,76 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, Loader2, Phone } from "lucide-react";
+import { User, Mail, Lock, Loader2, Phone, MailCheck, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 
 export default function RegisterPage() {
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    // Simulate API call for now (Supabase auth will go here)
-    setTimeout(() => {
-      setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+
+    const supabase = createClient();
+    const { error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/`,
+        data: {
+          full_name: fullName,
+          phone,
+        },
+      },
+    });
+
+    setIsLoading(false);
+
+    if (signUpError) {
+      setError(translateAuthError(signUpError.message));
+      return;
+    }
+
+    setEmailSent(true);
   };
+
+  if (emailSent) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center"
+      >
+        <div className="mx-auto w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-6">
+          <MailCheck className="w-7 h-7 text-primary" />
+        </div>
+        <h1 className="text-2xl font-display font-bold mb-2">Revisa tu correo</h1>
+        <p className="text-muted-foreground text-sm mb-6">
+          Te enviamos un enlace de confirmación a <span className="text-foreground font-medium">{email}</span>.
+          Haz click en el enlace del correo para activar tu cuenta.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          ¿No te llegó? Revisa tu carpeta de spam o{" "}
+          <button
+            onClick={() => setEmailSent(false)}
+            className="text-primary hover:underline font-medium"
+          >
+            usa otro correo
+          </button>
+          .
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
@@ -31,6 +87,21 @@ export default function RegisterPage() {
         </p>
       </div>
 
+      <GoogleButton mode="signup" />
+
+      <div className="flex items-center gap-3 my-6">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground uppercase tracking-wider">o</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      {error && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
           <label className="text-sm font-medium text-muted-foreground pl-1">Nombre Completo</label>
@@ -39,6 +110,8 @@ export default function RegisterPage() {
             <input
               type="text"
               required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="Juan Pérez"
             />
@@ -52,6 +125,8 @@ export default function RegisterPage() {
             <input
               type="tel"
               required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="300 123 4567"
             />
@@ -65,6 +140,8 @@ export default function RegisterPage() {
             <input
               type="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="tu@email.com"
             />
@@ -78,6 +155,9 @@ export default function RegisterPage() {
             <input
               type="password"
               required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="••••••••"
             />
@@ -85,9 +165,9 @@ export default function RegisterPage() {
         </div>
 
         <div className="flex items-start gap-2 pt-2 pb-2">
-          <input 
-            type="checkbox" 
-            id="terms" 
+          <input
+            type="checkbox"
+            id="terms"
             required
             className="mt-1 h-4 w-4 rounded border-border bg-secondary text-primary focus:ring-primary"
           />
@@ -113,4 +193,12 @@ export default function RegisterPage() {
       </div>
     </motion.div>
   );
+}
+
+function translateAuthError(message: string): string {
+  if (/already registered/i.test(message)) return "Ese correo ya tiene una cuenta. Inicia sesión.";
+  if (/password/i.test(message) && /6/.test(message)) return "La contraseña debe tener al menos 6 caracteres.";
+  if (/invalid email/i.test(message)) return "El correo no es válido.";
+  if (/rate limit/i.test(message)) return "Demasiados intentos. Espera un momento e intenta de nuevo.";
+  return message;
 }

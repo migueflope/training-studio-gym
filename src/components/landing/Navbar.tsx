@@ -5,8 +5,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { AvatarMenu } from "@/components/auth/AvatarMenu";
+import type { UserProfile } from "@/lib/auth/getUserProfile";
 
-export function Navbar() {
+interface NavbarProps {
+  profile: UserProfile | null;
+}
+
+export function Navbar({ profile }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -59,12 +65,21 @@ export function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Iniciar Sesión
-          </Link>
+          {profile ? (
+            <AvatarMenu
+              fullName={profile.fullName}
+              initials={profile.initials}
+              avatarUrl={profile.avatarUrl}
+              email={profile.email}
+            />
+          ) : (
+            <Link
+              href="/login"
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
+              Iniciar Sesión
+            </Link>
+          )}
           <Link
             href="/contacto"
             className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-md shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.6)] hover:-translate-y-0.5 transition-all"
@@ -112,13 +127,50 @@ export function Navbar() {
                 </Link>
               ))}
               <div className="h-px w-full bg-border my-2" />
-              <Link
-                href="/login"
-                className="text-lg font-medium p-2 hover:text-primary transition-colors"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Iniciar Sesión
-              </Link>
+              {profile ? (
+                <>
+                  <div className="flex items-center gap-3 p-2">
+                    {profile.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={profile.avatarUrl}
+                        alt={profile.fullName}
+                        className="w-10 h-10 rounded-full object-cover border border-primary/30"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-primary font-bold border border-primary/30">
+                        {profile.initials}
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate">{profile.fullName}</p>
+                      <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
+                    </div>
+                  </div>
+                  <Link
+                    href="/dashboard"
+                    className="text-base font-medium p-2 hover:text-primary transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Mi Panel
+                  </Link>
+                  <Link
+                    href="/dashboard/perfil"
+                    className="text-base font-medium p-2 hover:text-primary transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Mi Perfil
+                  </Link>
+                </>
+              ) : (
+                <Link
+                  href="/login"
+                  className="text-lg font-medium p-2 hover:text-primary transition-colors"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Iniciar Sesión
+                </Link>
+              )}
               <Link
                 href="/contacto"
                 className="flex items-center justify-center p-3 text-base font-bold bg-primary text-primary-foreground rounded-md shadow-[0_0_15px_rgba(212,175,55,0.3)] mt-4"

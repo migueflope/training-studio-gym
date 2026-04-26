@@ -1,21 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { GoogleButton } from "@/components/auth/GoogleButton";
 
-export default function LoginPage() {
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Surface error messages bounced back from /auth/callback (Google OAuth, expired links, etc.)
+  useEffect(() => {
+    const errParam = searchParams.get("error");
+    if (errParam) setError(translateAuthError(decodeURIComponent(errParam)));
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsLoading(true);
-    // Simulate API call for now (Supabase auth will go here)
-    setTimeout(() => {
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (signInError) {
       setIsLoading(false);
-      window.location.href = "/dashboard";
-    }, 1500);
+      setError(translateAuthError(signInError.message));
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
   };
 
   return (
@@ -31,6 +56,21 @@ export default function LoginPage() {
         </p>
       </div>
 
+      <GoogleButton mode="login" />
+
+      <div className="flex items-center gap-3 my-6">
+        <div className="h-px flex-1 bg-border" />
+        <span className="text-xs text-muted-foreground uppercase tracking-wider">o</span>
+        <div className="h-px flex-1 bg-border" />
+      </div>
+
+      {error && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1">
           <label className="text-sm font-medium text-muted-foreground pl-1">Correo Electrónico</label>
@@ -39,6 +79,8 @@ export default function LoginPage() {
             <input
               type="email"
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="tu@email.com"
             />
@@ -57,6 +99,8 @@ export default function LoginPage() {
             <input
               type="password"
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
               placeholder="••••••••"
             />
@@ -80,4 +124,20 @@ export default function LoginPage() {
       </div>
     </motion.div>
   );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function translateAuthError(message: string): string {
+  if (/invalid login credentials/i.test(message)) return "Correo o contraseña incorrectos.";
+  if (/email not confirmed/i.test(message)) return "Confirma tu correo antes de iniciar sesión. Revisa tu bandeja.";
+  if (/rate limit/i.test(message)) return "Demasiados intentos. Espera un momento e intenta de nuevo.";
+  if (/missing_code/i.test(message)) return "El enlace expiró o está incompleto. Intenta de nuevo.";
+  return message;
 }

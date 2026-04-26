@@ -1,19 +1,16 @@
-"use client";
-
-import { motion } from "framer-motion";
 import { AlertCircle, Calendar, Flame, Trophy, Play, Activity } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getUserProfile } from "@/lib/auth/getUserProfile";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const profile = await getUserProfile();
+  if (!profile) redirect("/login?next=/dashboard");
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      
-      {/* Alert if less than 7 days */}
-      <motion.div 
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 flex items-start gap-3"
-      >
+
+      <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 flex items-start gap-3">
         <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
         <div>
           <h4 className="font-bold text-sm">Tu membresía vence en 5 días</h4>
@@ -22,10 +19,10 @@ export default function DashboardPage() {
         <button className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1.5 rounded hover:bg-destructive/90 transition-colors">
           Renovar
         </button>
-      </motion.div>
+      </div>
 
       <div>
-        <h1 className="text-3xl font-display font-bold mb-2">Hola, Juan 👋</h1>
+        <h1 className="text-3xl font-display font-bold mb-2">Hola, {profile.firstName} 👋</h1>
         <p className="text-muted-foreground">Aquí está el resumen de tu progreso.</p>
       </div>
 
@@ -40,7 +37,7 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground mb-1">Membresía</p>
           <h3 className="text-xl font-bold font-display mb-1">Paquete 15 Clases</h3>
           <p className="text-sm font-mono">Vence: 15 Mayo 2026</p>
-          
+
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex justify-between text-xs mb-1">
               <span>Clases Restantes</span>
@@ -75,7 +72,7 @@ export default function DashboardPage() {
           <p className="text-sm text-muted-foreground mb-1">Meta Principal</p>
           <h3 className="text-lg font-bold font-display mb-1">Bajar 5kg</h3>
           <p className="text-sm font-mono text-muted-foreground">Progreso: 2.5kg / 5kg</p>
-          
+
           <div className="mt-4 pt-4 border-t border-border">
             <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
               <div className="h-full bg-success w-[50%]" />
@@ -94,6 +91,7 @@ export default function DashboardPage() {
           <div className="glass-panel p-6 rounded-2xl border border-border group cursor-pointer hover:border-primary/50 transition-colors">
             <div className="flex gap-4">
               <div className="w-24 h-24 rounded-xl bg-secondary overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop" alt="Rutina" className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-500" />
               </div>
               <div className="flex-1 flex flex-col justify-center">

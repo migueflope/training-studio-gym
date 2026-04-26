@@ -69,3 +69,4 @@ Busca en el código fuente (puedes usar el buscador de Visual Studio Code) estas
 
 ---
 ¡Éxitos con tu nuevo sistema! Si tienes dudas, revisa la documentación de Vercel o Supabase.
+   

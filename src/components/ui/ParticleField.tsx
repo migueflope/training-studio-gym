@@ -2,27 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/**
- * ParticleField — Antigravity-style interactive particle cloud.
- * 
- * Uses Canvas 2D for guaranteed cross-browser rendering (no WebGL shader issues).
- * Particles form a large spherical cloud of small dashes that:
- * - Rotate continuously in 3D
- * - Tilt based on mouse position (parallax)
- * - Are scattered in a spherical distribution (dense center, empty corners)
- * 
- * Colors: gold tones from the site's palette.
- */
-
 interface Particle {
-  // Position on the unit sphere
+  // Rest position on the unit sphere
   sx: number;
   sy: number;
   sz: number;
+  // Screen-space displacement from rest (pixels) and velocity
+  ox: number;
+  oy: number;
+  vx: number;
+  vy: number;
   // Visual properties
   size: number;
-  angle: number; // dash rotation angle
-  shade: number; // 0 = primary gold, 1 = light gold
+  angle: number;
+  shade: number;
   opacity: number;
 }
 
@@ -43,19 +36,24 @@ export function ParticleField() {
 
     const isMobile = window.innerWidth < 768;
     const PARTICLE_COUNT = isMobile ? 800 : 2500;
-    const SPHERE_RADIUS_FACTOR = isMobile ? 0.4 : 0.45; // fraction of viewport min dimension
+    const SPHERE_RADIUS_FACTOR = isMobile ? 0.4 : 0.45;
 
-    // ─── Colors (gold palette) ───
+    // Repulsion / spring tuning — matches the antigravity.google feel
+    const REPEL_RADIUS = isMobile ? 130 : 200;
+    const REPEL_STRENGTH = 2200;
+    const SPRING = 0.045;
+    const DAMPING = 0.86;
+    const MAX_OFFSET = 260;
+
     const COLORS = [
-      { r: 212, g: 175, b: 55 },   // #D4AF37 primary gold
-      { r: 244, g: 212, b: 122 },  // #F4D47A light gold
-      { r: 184, g: 148, b: 36 },   // darker gold
-      { r: 255, g: 230, b: 150 },  // pale gold
+      { r: 212, g: 175, b: 55 },
+      { r: 244, g: 212, b: 122 },
+      { r: 184, g: 148, b: 36 },
+      { r: 255, g: 230, b: 150 },
     ];
 
-    // ─── Create Particles (Fibonacci sphere) ───
     const particles: Particle[] = [];
-    const phi = Math.PI * (3 - Math.sqrt(5)); // golden angle
+    const phi = Math.PI * (3 - Math.sqrt(5));
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const y = 1 - (i / (PARTICLE_COUNT - 1)) * 2;
@@ -65,52 +63,57 @@ export function ParticleField() {
       const x = Math.cos(theta) * radiusAtY;
       const z = Math.sin(theta) * radiusAtY;
 
-      // Slight random offset from the sphere surface for organic feel
       const rFactor = 0.9 + Math.random() * 0.2;
 
       particles.push({
         sx: x * rFactor,
         sy: y * rFactor,
         sz: z * rFactor,
-        size: Math.random() * 7 + 3, // dash length in px
+        ox: 0,
+        oy: 0,
+        vx: 0,
+        vy: 0,
+        size: Math.random() * 7 + 3,
         angle: Math.random() * Math.PI * 2,
         shade: Math.floor(Math.random() * COLORS.length),
         opacity: 0.5 + Math.random() * 0.5,
       });
     }
 
-    // ─── Mouse state ───
-    const mouse = { x: 0, y: 0 };
-    const smoothMouse = { x: 0, y: 0 };
-    // Mouse position in pixels for sphere center tracking
-    const mousePixel = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    const smoothMousePixel = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
-    const LERP = 0.05;
+    // Cursor in pixel coordinates. Off-screen sentinel disables repulsion until the user moves.
+    const mouse = { x: -10000, y: -10000, active: false };
+    // Smoothed cursor used for the sphere center so it trails the pointer instead of snapping.
+    const sphereCenter = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const CENTER_LERP = 0.06;
     let scrollOpacity = 1;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      mousePixel.x = e.clientX;
-      mousePixel.y = e.clientY;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    };
+
+    const handleMouseLeave = () => {
+      mouse.active = false;
+      mouse.x = -10000;
+      mouse.y = -10000;
     };
 
     const handleScroll = () => {
-      // Fade from 100% in Hero to 15% in other sections (never fully invisible)
       const scrollY = window.scrollY;
       const viewportH = window.innerHeight;
       const MIN_OPACITY = 0.35;
       const fadeProgress = Math.min(1, scrollY / (viewportH * 0.8));
-      scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY); // 1.0 → 0.35
+      scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY);
     };
 
     if (!isMobile) {
       window.addEventListener("mousemove", handleMouseMove);
+      document.documentElement.addEventListener("mouseleave", handleMouseLeave);
     }
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll(); // init
+    handleScroll();
 
-    // ─── Resize ───
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio, 2);
       canvas.width = window.innerWidth * dpr;
@@ -122,7 +125,6 @@ export function ParticleField() {
     resize();
     window.addEventListener("resize", resize);
 
-    // ─── 3D Rotation Helpers ───
     function rotateY(x: number, y: number, z: number, angle: number) {
       const c = Math.cos(angle);
       const s = Math.sin(angle);
@@ -135,95 +137,116 @@ export function ParticleField() {
       return { x, y: y * c - z * s, z: y * s + z * c };
     }
 
-    // ─── Animation Loop ───
     let animationId: number;
-    let startTime = performance.now();
+    const startTime = performance.now();
 
     const animate = () => {
       animationId = requestAnimationFrame(animate);
       const elapsed = (performance.now() - startTime) / 1000;
 
-      // Skip rendering if fully transparent (performance optimization)
       if (scrollOpacity <= 0) {
         ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
         return;
       }
 
-      // Smooth mouse for tilt
-      smoothMouse.x += (mouse.x - smoothMouse.x) * LERP;
-      smoothMouse.y += (mouse.y - smoothMouse.y) * LERP;
-
-      // Smooth mouse pixel position for sphere center tracking
-      smoothMousePixel.x += (mousePixel.x - smoothMousePixel.x) * LERP;
-      smoothMousePixel.y += (mousePixel.y - smoothMousePixel.y) * LERP;
-
-      // Clear
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
-      // Sphere center follows the cursor
-      const cx = smoothMousePixel.x;
-      const cy = smoothMousePixel.y;
+      // Sphere center trails the cursor with a slow lerp.
+      // When the cursor hasn't moved yet (or has left the window) it eases back to the viewport center.
+      const targetX = mouse.active ? mouse.x : window.innerWidth / 2;
+      const targetY = mouse.active ? mouse.y : window.innerHeight / 2;
+      sphereCenter.x += (targetX - sphereCenter.x) * CENTER_LERP;
+      sphereCenter.y += (targetY - sphereCenter.y) * CENTER_LERP;
+      const cx = sphereCenter.x;
+      const cy = sphereCenter.y;
       const sphereRadius = Math.min(window.innerWidth, window.innerHeight) * SPHERE_RADIUS_FACTOR;
 
-      // Auto-rotation angles
-      const autoRotY = elapsed * 0.15;
-      const autoRotX = elapsed * 0.05;
+      const autoRotY = elapsed * 0.12;
+      const autoRotX = elapsed * 0.04;
 
-      // Mouse-driven tilt (parallax)
-      const mouseRotY = smoothMouse.x * 0.4;
-      const mouseRotX = smoothMouse.y * 0.4;
+      const repelR2 = REPEL_RADIUS * REPEL_RADIUS;
 
-      // Sort particles by depth for proper layering
       const projected: Array<{
         screenX: number;
         screenY: number;
         depth: number;
         p: Particle;
         angle2d: number;
+        scale: number;
       }> = [];
 
       for (const p of particles) {
-        let { x, y, z } = { x: p.sx, y: p.sy, z: p.sz };
-
-        // Apply auto-rotation
-        const r1 = rotateY(x, y, z, autoRotY);
+        const r1 = rotateY(p.sx, p.sy, p.sz, autoRotY);
         const r2 = rotateX(r1.x, r1.y, r1.z, autoRotX);
 
-        // Apply mouse parallax tilt
-        const r3 = rotateY(r2.x, r2.y, r2.z, mouseRotY);
-        const r4 = rotateX(r3.x, r3.y, r3.z, mouseRotX);
-
-        // Simple perspective projection
         const perspective = 3;
-        const scale = perspective / (perspective + r4.z);
+        const scale = perspective / (perspective + r2.z);
 
-        const screenX = cx + r4.x * sphereRadius * scale;
-        const screenY = cy - r4.y * sphereRadius * scale;
+        const restX = cx + r2.x * sphereRadius * scale;
+        const restY = cy - r2.y * sphereRadius * scale;
 
-        // Calculate 2D dash angle from the tangent of the sphere rotation
-        // The tangent at any point on the sphere is cross(pos, up)
-        const tx = -r4.z;
-        const tz = r4.x;
+        // Repel from cursor (screen-space physics on the offset)
+        if (mouse.active) {
+          const curX = restX + p.ox;
+          const curY = restY + p.oy;
+          const dx = curX - mouse.x;
+          const dy = curY - mouse.y;
+          const d2 = dx * dx + dy * dy;
+          if (d2 < repelR2 && d2 > 1) {
+            const d = Math.sqrt(d2);
+            const falloff = 1 - d / REPEL_RADIUS;
+            const force = (REPEL_STRENGTH * falloff * falloff) / d;
+            p.vx += dx * force * 0.016;
+            p.vy += dy * force * 0.016;
+          }
+        }
+
+        // Spring back to rest + damping
+        p.vx -= p.ox * SPRING;
+        p.vy -= p.oy * SPRING;
+        p.vx *= DAMPING;
+        p.vy *= DAMPING;
+        p.ox += p.vx;
+        p.oy += p.vy;
+
+        // Clamp displacement so nothing flies off the screen
+        const offMag2 = p.ox * p.ox + p.oy * p.oy;
+        if (offMag2 > MAX_OFFSET * MAX_OFFSET) {
+          const m = MAX_OFFSET / Math.sqrt(offMag2);
+          p.ox *= m;
+          p.oy *= m;
+        }
+
+        // Dash orientation follows the tangent of the sphere's rotation,
+        // tilted toward the velocity vector when the particle is being pushed.
+        const tx = -r2.z;
+        const tz = r2.x;
         const tLen = Math.sqrt(tx * tx + tz * tz);
-        const angle2d = tLen > 0.001 ? Math.atan2(-r4.y * (tz / tLen), tx / tLen * scale) : p.angle;
+        let angle2d =
+          tLen > 0.001
+            ? Math.atan2(-r2.y * (tz / tLen), (tx / tLen) * scale)
+            : p.angle;
+        const speed2 = p.vx * p.vx + p.vy * p.vy;
+        if (speed2 > 0.5) {
+          const blend = Math.min(1, speed2 / 40);
+          angle2d = angle2d * (1 - blend) + Math.atan2(p.vy, p.vx) * blend;
+        }
 
         projected.push({
-          screenX,
-          screenY,
-          depth: r4.z,
+          screenX: restX + p.ox,
+          screenY: restY + p.oy,
+          depth: r2.z,
           p,
           angle2d,
+          scale,
         });
       }
 
-      // Sort back to front
       projected.sort((a, b) => a.depth - b.depth);
 
-      // Draw each particle as a small oriented dash
       for (const item of projected) {
-        // Depth-based visibility: hide back-facing particles
-        const depthNorm = (item.depth + 1) / 2; // 0 = back, 1 = front
-        if (depthNorm < 0.25) continue; // skip particles on the back
+        const depthNorm = (item.depth + 1) / 2;
+        if (depthNorm < 0.25) continue;
 
         const alpha = item.p.opacity * Math.pow(depthNorm, 1.5) * scrollOpacity;
         if (alpha < 0.02) continue;
@@ -247,10 +270,10 @@ export function ParticleField() {
 
     animate();
 
-    // ─── Cleanup ───
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("mousemove", handleMouseMove);
+      document.documentElement.removeEventListener("mouseleave", handleMouseLeave);
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", handleScroll);
     };

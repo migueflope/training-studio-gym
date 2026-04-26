@@ -74,14 +74,14 @@ const vertexShader = `
     gl_Position = projectionMatrix * mvPos;
 
     // 6. Depth fading (hide particles on the back of the sphere)
-    // sphere radius is approx 4.0, z is 7.0. mvPos.z goes from -3.0 to -11.0
-    float depthNormalized = (mvPos.z + 11.0) / 8.0; // 0 (back) to 1 (front)
+    // sphere radius is approx 4.5, camera z is 8.0. mvPos.z goes from -3.5 to -12.5
+    float depthNormalized = (mvPos.z + 12.0) / 8.0; // 0 (back) to 1 (front)
     
     // Smooth fade out at the edges and back
-    vAlpha = smoothstep(0.3, 0.8, depthNormalized);
+    vAlpha = smoothstep(0.2, 0.8, depthNormalized) * 1.5; // Boost alpha to make them pop
 
     // Make points large enough to hold the rotated dash
-    gl_PointSize = aSize * uPixelRatio * (15.0 / -mvPos.z);
+    gl_PointSize = aSize * uPixelRatio * (30.0 / -mvPos.z);
   }
 `;
 
@@ -104,7 +104,6 @@ const fragmentShader = `
     pt = rot * pt;
 
     // Stretch to make a dash (short line)
-    // X is length-wise, Y is thickness-wise
     pt.x *= 1.0;  // length
     pt.y *= 3.5;  // thickness (squish)
 
@@ -112,17 +111,22 @@ const fragmentShader = `
     
     if (distFromCenter > 0.5) discard;
 
-    // Smooth edge for the dash
-    float intensity = smoothstep(0.5, 0.2, distFromCenter);
+    // Bright core and soft edge
+    float core = smoothstep(0.15, 0.0, distFromCenter);
+    float glow = smoothstep(0.5, 0.1, distFromCenter) * 0.5;
+    float intensity = core + glow;
 
     // Discard if invisible to save overdraw
     if (intensity * vAlpha < 0.01) discard;
 
-    float alpha = intensity * vAlpha * 0.9;
+    float alpha = intensity * vAlpha;
 
     // Subtle color variation based on position in dash
     float colorMix = smoothstep(0.0, 0.5, abs(pt.x));
     vec3 color = mix(uColorA, uColorB, colorMix);
+
+    // Boost core brightness
+    color += uColorB * core * 0.5;
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -136,8 +140,8 @@ export function ParticleField() {
 
     const container = containerRef.current;
     const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 1500 : 4500;
-    const SPHERE_RADIUS = 3.5;
+    const PARTICLE_COUNT = isMobile ? 2000 : 5500;
+    const SPHERE_RADIUS = 4.5;
 
     // ─── Scene Setup ───
     const scene = new THREE.Scene();
@@ -147,7 +151,7 @@ export function ParticleField() {
       0.1,
       100
     );
-    camera.position.z = 9;
+    camera.position.z = 8;
 
     const renderer = new THREE.WebGLRenderer({
       antialias: true,
@@ -182,7 +186,7 @@ export function ParticleField() {
       basePositions[i * 3 + 1] = y * r;
       basePositions[i * 3 + 2] = z * r;
 
-      sizes[i] = Math.random() * 3.0 + 2.0;
+      sizes[i] = Math.random() * 4.0 + 3.0; // Larger particles
     }
 
     geometry.setAttribute("aBasePosition", new THREE.BufferAttribute(basePositions, 3));

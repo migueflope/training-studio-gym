@@ -63,25 +63,28 @@ const vertexShader = `
     if (length(tangent) < 0.01) tangent = vec3(1.0, 0.0, 0.0);
     tangent = normalize(tangent);
 
-    // 5. Project to screen
+    // Project to screen
     vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
     
-    // Pass angle of the tangent projected to screen
+    // Safely calculate angle
     vec4 tangentMv = modelViewMatrix * vec4(pos + tangent, 1.0);
     vec2 screenDir = tangentMv.xy - mvPos.xy;
-    vAngle = atan(screenDir.y, screenDir.x);
+    if (length(screenDir) > 0.001) {
+      vAngle = atan(screenDir.y, screenDir.x);
+    } else {
+      vAngle = 0.0;
+    }
 
     gl_Position = projectionMatrix * mvPos;
 
-    // 6. Depth fading (hide particles on the back of the sphere)
-    // sphere radius is approx 4.5, camera z is 8.0. mvPos.z goes from -3.5 to -12.5
-    float depthNormalized = (mvPos.z + 12.0) / 8.0; // 0 (back) to 1 (front)
+    // Depth fading (hide particles on the back of the sphere)
+    float depthNormalized = (mvPos.z + 12.0) / 8.0; 
     
-    // Smooth fade out at the edges and back
-    vAlpha = smoothstep(0.2, 0.8, depthNormalized) * 1.5; // Boost alpha to make them pop
+    // Smooth fade out
+    vAlpha = smoothstep(0.2, 0.8, depthNormalized) * 2.0; // Boosted alpha
 
-    // Make points large enough to hold the rotated dash
-    gl_PointSize = aSize * uPixelRatio * (30.0 / -mvPos.z);
+    // Make points large enough
+    gl_PointSize = aSize * uPixelRatio * (40.0 / -mvPos.z);
   }
 `;
 
@@ -94,39 +97,32 @@ const fragmentShader = `
   varying float vAngle;
 
   void main() {
-    // Center point coord
     vec2 pt = gl_PointCoord - vec2(0.5);
 
-    // Rotate point coord by vAngle
+    // Rotate point coord by vAngle for the dash effect
     float s = sin(-vAngle);
     float c = cos(-vAngle);
     mat2 rot = mat2(c, -s, s, c);
     pt = rot * pt;
 
-    // Stretch to make a dash (short line)
-    pt.x *= 1.0;  // length
-    pt.y *= 3.5;  // thickness (squish)
+    // Gentle stretch for a soft dash (less aggressive than before so it doesn't clip)
+    pt.x *= 1.0;
+    pt.y *= 2.0; 
 
     float distFromCenter = length(pt);
     
     if (distFromCenter > 0.5) discard;
 
-    // Bright core and soft edge
-    float core = smoothstep(0.15, 0.0, distFromCenter);
-    float glow = smoothstep(0.5, 0.1, distFromCenter) * 0.5;
-    float intensity = core + glow;
-
-    // Discard if invisible to save overdraw
-    if (intensity * vAlpha < 0.01) discard;
+    // Smooth soft particle
+    float intensity = smoothstep(0.5, 0.1, distFromCenter);
 
     float alpha = intensity * vAlpha;
 
-    // Subtle color variation based on position in dash
-    float colorMix = smoothstep(0.0, 0.5, abs(pt.x));
-    vec3 color = mix(uColorA, uColorB, colorMix);
+    // Mix colors based on position
+    vec3 color = mix(uColorA, uColorB, smoothstep(0.0, 0.5, abs(pt.x)));
 
-    // Boost core brightness
-    color += uColorB * core * 0.5;
+    // Extra glow
+    color += uColorB * smoothstep(0.3, 0.0, distFromCenter) * 0.8;
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -285,7 +281,7 @@ export function ParticleField() {
         left: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: -1,
+        zIndex: 0,
         pointerEvents: "none",
       }}
       aria-hidden="true"

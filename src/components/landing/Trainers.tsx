@@ -10,14 +10,14 @@ const trainers = [
     specialty: "Hipertrofia y Fuerza",
     experience: "8 años de experiencia",
     bio: "Especialista en biomecánica y desarrollo muscular. Si tu objetivo es ganar masa muscular de forma efectiva y segura, Camilo diseñará la estrategia perfecta para tu cuerpo.",
-    image: "/assets/camilo-ortiz.jpg"
+    image: "/images/camilo-ortiz.png"
   },
   {
     name: "Juan Carlos Bork",
     specialty: "Funcional y Pérdida de Peso",
     experience: "10 años de experiencia",
     bio: "Experto en acondicionamiento físico integral. Transforma tu metabolismo con rutinas dinámicas que combinan fuerza y resistencia cardiovascular.",
-    image: "/assets/juan-carlos-bork.jpg"
+    image: "/images/juan-carlos-bork.png"
   }
 ];
 

@@ -99,9 +99,9 @@ export function ParticleField() {
       // Fade from 100% in Hero to 15% in other sections (never fully invisible)
       const scrollY = window.scrollY;
       const viewportH = window.innerHeight;
-      const MIN_OPACITY = 0.15;
+      const MIN_OPACITY = 0.35;
       const fadeProgress = Math.min(1, scrollY / (viewportH * 0.8));
-      scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY); // 1.0 → 0.15
+      scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY); // 1.0 → 0.35
     };
 
     if (!isMobile) {
@@ -226,7 +226,7 @@ export function ParticleField() {
         if (depthNorm < 0.25) continue; // skip particles on the back
 
         const alpha = item.p.opacity * Math.pow(depthNorm, 1.5) * scrollOpacity;
-        if (alpha < 0.05) continue;
+        if (alpha < 0.02) continue;
 
         const color = COLORS[item.p.shade];
         const dashLength = item.p.size * (0.6 + depthNorm * 0.6);

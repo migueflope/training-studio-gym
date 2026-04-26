@@ -3,124 +3,126 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-// ─── Simplex Noise GLSL ───
-const simplexNoiseGLSL = `
-  vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-  vec4 permute(vec4 x) { return mod289(((x*34.0)+1.0)*x); }
-  vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
-
-  float snoise(vec3 v) {
-    const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-    const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-    vec3 i  = floor(v + dot(v, C.yyy));
-    vec3 x0 = v - i + dot(i, C.xxx);
-    vec3 g = step(x0.yzx, x0.xyz);
-    vec3 l = 1.0 - g;
-    vec3 i1 = min(g.xyz, l.zxy);
-    vec3 i2 = max(g.xyz, l.zxy);
-    vec3 x1 = x0 - i1 + C.xxx;
-    vec3 x2 = x0 - i2 + C.yyy;
-    vec3 x3 = x0 - D.yyy;
-    i = mod289(i);
-    vec4 p = permute(permute(permute(
-              i.z + vec4(0.0, i1.z, i2.z, 1.0))
-            + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-            + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-    float n_ = 0.142857142857;
-    vec3 ns = n_ * D.wyz - D.xzx;
-    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
-    vec4 x_ = floor(j * ns.z);
-    vec4 y_ = floor(j - 7.0 * x_);
-    vec4 x = x_ *ns.x + ns.yyyy;
-    vec4 y = y_ *ns.x + ns.yyyy;
-    vec4 h = 1.0 - abs(x) - abs(y);
-    vec4 b0 = vec4(x.xy, y.xy);
-    vec4 b1 = vec4(x.zw, y.zw);
-    vec4 s0 = floor(b0)*2.0 + 1.0;
-    vec4 s1 = floor(b1)*2.0 + 1.0;
-    vec4 sh = -step(h, vec4(0.0));
-    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-    vec3 p0 = vec3(a0.xy, h.x);
-    vec3 p1 = vec3(a0.zw, h.y);
-    vec3 p2 = vec3(a1.xy, h.z);
-    vec3 p3 = vec3(a1.zw, h.w);
-    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2,p2), dot(p3,p3)));
-    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-    m = m * m;
-    return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-  }
-`;
-
-// ─── Vertex Shader: particles cluster around uMouseWorld ───
+// ─── Vertex Shader ───
 const vertexShader = `
-  ${simplexNoiseGLSL}
-
   uniform float uTime;
-  uniform vec3 uMouseWorld;
+  uniform vec2 uMouse;
   uniform float uPixelRatio;
 
   attribute float aSize;
-  attribute float aPhase;
-  attribute vec3 aOffset;  // each particle's unique offset within the cloud
+  attribute vec3 aBasePosition;
 
   varying float vAlpha;
-  varying float vDistFromCenter;
+  varying float vAngle;
 
   void main() {
-    // Organic micro-movement via simplex noise
-    float nx = snoise(vec3(aOffset.x * 2.0, aOffset.y * 2.0, uTime * 0.2 + aPhase));
-    float ny = snoise(vec3(aOffset.y * 2.0, aOffset.z * 2.0, uTime * 0.2 + aPhase + 50.0));
-    float nz = snoise(vec3(aOffset.z * 2.0, aOffset.x * 2.0, uTime * 0.15 + aPhase + 100.0));
+    // 1. Initial position on the sphere
+    vec3 pos = aBasePosition;
 
-    // Position = mouse world pos + cloud offset + noise
-    vec3 pos = uMouseWorld + aOffset + vec3(nx, ny, nz) * 0.3;
+    // 2. Base rotation of the sphere (auto-rotation)
+    float timeRotY = uTime * 0.15;
+    float timeRotX = uTime * 0.05;
+    
+    mat3 rotY = mat3(
+      cos(timeRotY), 0.0, sin(timeRotY),
+      0.0, 1.0, 0.0,
+      -sin(timeRotY), 0.0, cos(timeRotY)
+    );
+    
+    mat3 rotX = mat3(
+      1.0, 0.0, 0.0,
+      0.0, cos(timeRotX), -sin(timeRotX),
+      0.0, sin(timeRotX), cos(timeRotX)
+    );
 
+    pos = rotY * rotX * pos;
+
+    // 3. Parallax tilt based on mouse (normalized -1 to 1)
+    // The sphere tilts slightly to look at the mouse
+    float targetTiltY = uMouse.x * 0.5;
+    float targetTiltX = uMouse.y * 0.5;
+
+    mat3 mouseRotY = mat3(
+      cos(targetTiltY), 0.0, sin(targetTiltY),
+      0.0, 1.0, 0.0,
+      -sin(targetTiltY), 0.0, cos(targetTiltY)
+    );
+
+    mat3 mouseRotX = mat3(
+      1.0, 0.0, 0.0,
+      0.0, cos(targetTiltX), -sin(targetTiltX),
+      0.0, sin(targetTiltX), cos(targetTiltX)
+    );
+
+    pos = mouseRotY * mouseRotX * pos;
+
+    // 4. Calculate local tangent for the dash rotation (flow direction)
+    // The particles flow around the sphere, so the dash should follow the longitude/latitude
+    // A simple approximation is the screen-space tangent of rotation
+    vec3 tangent = cross(pos, vec3(0.0, 1.0, 0.0));
+    if (length(tangent) < 0.01) tangent = vec3(1.0, 0.0, 0.0);
+    tangent = normalize(tangent);
+
+    // 5. Project to screen
     vec4 mvPos = modelViewMatrix * vec4(pos, 1.0);
-    float depth = -mvPos.z;
-
-    // Particles closer to center of cloud are brighter
-    float dist = length(aOffset);
-    float maxRadius = 2.5;
-    vDistFromCenter = dist / maxRadius;
-    vAlpha = smoothstep(1.0, 0.0, vDistFromCenter) * 0.95;
-
-    // Pulsing size
-    float pulse = 0.85 + 0.3 * sin(uTime * 1.8 + aPhase * 6.28);
+    
+    // Pass angle of the tangent projected to screen
+    vec4 tangentMv = modelViewMatrix * vec4(pos + tangent, 1.0);
+    vec2 screenDir = tangentMv.xy - mvPos.xy;
+    vAngle = atan(screenDir.y, screenDir.x);
 
     gl_Position = projectionMatrix * mvPos;
-    gl_PointSize = aSize * pulse * uPixelRatio * (5.0 / max(depth, 0.5));
+
+    // 6. Depth fading (hide particles on the back of the sphere)
+    // sphere radius is approx 4.0, z is 7.0. mvPos.z goes from -3.0 to -11.0
+    float depthNormalized = (mvPos.z + 11.0) / 8.0; // 0 (back) to 1 (front)
+    
+    // Smooth fade out at the edges and back
+    vAlpha = smoothstep(0.3, 0.8, depthNormalized);
+
+    // Make points large enough to hold the rotated dash
+    gl_PointSize = aSize * uPixelRatio * (15.0 / -mvPos.z);
   }
 `;
 
-// ─── Fragment Shader with glow ───
+// ─── Fragment Shader ───
 const fragmentShader = `
   uniform vec3 uColorA;
   uniform vec3 uColorB;
-  uniform float uTime;
-
+  
   varying float vAlpha;
-  varying float vDistFromCenter;
+  varying float vAngle;
 
   void main() {
-    float distFromCenter = length(gl_PointCoord - vec2(0.5));
+    // Center point coord
+    vec2 pt = gl_PointCoord - vec2(0.5);
+
+    // Rotate point coord by vAngle
+    float s = sin(-vAngle);
+    float c = cos(-vAngle);
+    mat2 rot = mat2(c, -s, s, c);
+    pt = rot * pt;
+
+    // Stretch to make a dash (short line)
+    // X is length-wise, Y is thickness-wise
+    pt.x *= 1.0;  // length
+    pt.y *= 3.5;  // thickness (squish)
+
+    float distFromCenter = length(pt);
+    
     if (distFromCenter > 0.5) discard;
 
-    // Bright core + soft glow
-    float core = smoothstep(0.5, 0.02, distFromCenter);
-    float glow = smoothstep(0.5, 0.0, distFromCenter) * 0.5;
-    float intensity = core + glow;
+    // Smooth edge for the dash
+    float intensity = smoothstep(0.5, 0.2, distFromCenter);
 
-    float alpha = intensity * vAlpha;
+    // Discard if invisible to save overdraw
+    if (intensity * vAlpha < 0.01) discard;
 
-    // Color: particles near center are brighter/whiter gold
-    float colorMix = sin(gl_PointCoord.x * 3.14 + uTime * 0.5) * 0.5 + 0.5;
-    vec3 color = mix(uColorA, uColorB, colorMix * 0.5 + (1.0 - vDistFromCenter) * 0.3);
+    float alpha = intensity * vAlpha * 0.9;
 
-    // Extra brightness at the core of the cloud
-    color += uColorB * core * 0.2 * (1.0 - vDistFromCenter);
+    // Subtle color variation based on position in dash
+    float colorMix = smoothstep(0.0, 0.5, abs(pt.x));
+    vec3 color = mix(uColorA, uColorB, colorMix);
 
     gl_FragColor = vec4(color, alpha);
   }
@@ -134,66 +136,65 @@ export function ParticleField() {
 
     const container = containerRef.current;
     const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 800 : 3000;
-    const CLOUD_RADIUS = isMobile ? 1.8 : 2.2;  // world units
+    const PARTICLE_COUNT = isMobile ? 1500 : 4500;
+    const SPHERE_RADIUS = 3.5;
 
     // ─── Scene Setup ───
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
-      60,
+      45,
       window.innerWidth / window.innerHeight,
       0.1,
       100
     );
-    camera.position.z = 6;
+    camera.position.z = 9;
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: false,
+      antialias: true,
       alpha: true,
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.setClearColor(0x000000, 0);
+    renderer.setClearColor(0x000000, 0); // transparent
     container.appendChild(renderer.domElement);
 
-    // ─── Geometry ───
+    // ─── Geometry (Fibonacci Sphere Distribution) ───
     const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(PARTICLE_COUNT * 3);  // will be overwritten by shader
-    const offsets = new Float32Array(PARTICLE_COUNT * 3);
+    const basePositions = new Float32Array(PARTICLE_COUNT * 3);
     const sizes = new Float32Array(PARTICLE_COUNT);
-    const phases = new Float32Array(PARTICLE_COUNT);
+
+    const phi = Math.PI * (3 - Math.sqrt(5)); // golden angle
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
-      // Cloud shape: random points inside a sphere
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const r = Math.pow(Math.random(), 0.6) * CLOUD_RADIUS; // pow < 1 = denser center
+      // Uniform distribution on a sphere
+      const y = 1 - (i / (PARTICLE_COUNT - 1)) * 2; // y goes from 1 to -1
+      const radiusAtY = Math.sqrt(1 - y * y); // radius at y
 
-      offsets[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      offsets[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      offsets[i * 3 + 2] = r * Math.cos(phi) * 0.4; // flatten z for more screen-facing spread
+      const theta = phi * i; // golden angle increment
 
-      // Initial positions (will be overridden by shader)
-      positions[i * 3] = offsets[i * 3];
-      positions[i * 3 + 1] = offsets[i * 3 + 1];
-      positions[i * 3 + 2] = offsets[i * 3 + 2];
+      const x = Math.cos(theta) * radiusAtY;
+      const z = Math.sin(theta) * radiusAtY;
 
-      sizes[i] = Math.random() * 3.5 + 1.5;
-      phases[i] = Math.random();
+      // Add a slight noise/thickness to the shell
+      const r = SPHERE_RADIUS + (Math.random() * 0.4 - 0.2);
+
+      basePositions[i * 3] = x * r;
+      basePositions[i * 3 + 1] = y * r;
+      basePositions[i * 3 + 2] = z * r;
+
+      sizes[i] = Math.random() * 3.0 + 2.0;
     }
 
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("aOffset", new THREE.BufferAttribute(offsets, 3));
+    geometry.setAttribute("aBasePosition", new THREE.BufferAttribute(basePositions, 3));
     geometry.setAttribute("aSize", new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute("aPhase", new THREE.BufferAttribute(phases, 1));
 
-    // ─── Colors from palette ───
+    // Colors from palette
     const goldPrimary = new THREE.Color(0xd4af37);
     const goldLight = new THREE.Color(0xf4d47a);
 
     const uniforms = {
       uTime: { value: 0 },
-      uMouseWorld: { value: new THREE.Vector3(0, 0, 0) },
+      uMouse: { value: new THREE.Vector2(0, 0) },
       uPixelRatio: { value: renderer.getPixelRatio() },
       uColorA: { value: goldPrimary },
       uColorB: { value: goldLight },
@@ -211,29 +212,15 @@ export function ParticleField() {
     const points = new THREE.Points(geometry, material);
     scene.add(points);
 
-    // ─── Mouse → World Coordinates ───
-    const mouseNDC = new THREE.Vector2(0, 0);
-    const mouseWorld = new THREE.Vector3(0, 0, 0);
-    const smoothMouseWorld = new THREE.Vector3(0, 0, 0);
-    const LERP_FACTOR = 0.06;
-    let hasMouseMoved = false;
-
-    // Helper: convert screen mouse to world position on z=0 plane
-    const raycaster = new THREE.Raycaster();
-    const zPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
-    const intersectPoint = new THREE.Vector3();
+    // ─── Mouse Tracking (Smooth Lerp) ───
+    const targetMouse = { x: 0, y: 0 };
+    const currentMouse = { x: 0, y: 0 };
+    const LERP_FACTOR = 0.05;
 
     const handleMouseMove = (e: MouseEvent) => {
-      mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
-      mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
-      hasMouseMoved = true;
-
-      // Project mouse onto z=0 plane in world space
-      raycaster.setFromCamera(mouseNDC, camera);
-      raycaster.ray.intersectPlane(zPlane, intersectPoint);
-      if (intersectPoint) {
-        mouseWorld.copy(intersectPoint);
-      }
+      // Normalized coordinates: -1 to 1
+      targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      targetMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
     };
 
     if (!isMobile) {
@@ -257,21 +244,12 @@ export function ParticleField() {
     const animate = () => {
       animationId = requestAnimationFrame(animate);
 
-      const elapsed = clock.getElapsedTime();
-      uniforms.uTime.value = elapsed;
+      uniforms.uTime.value = clock.getElapsedTime();
 
-      if (isMobile || !hasMouseMoved) {
-        // Autonomous floating on mobile or before first mouse move
-        mouseWorld.x = Math.sin(elapsed * 0.3) * 2.5;
-        mouseWorld.y = Math.cos(elapsed * 0.2) * 1.5;
-        mouseWorld.z = 0;
-      }
-
-      // Smooth interpolation toward mouse
-      smoothMouseWorld.x += (mouseWorld.x - smoothMouseWorld.x) * LERP_FACTOR;
-      smoothMouseWorld.y += (mouseWorld.y - smoothMouseWorld.y) * LERP_FACTOR;
-      smoothMouseWorld.z += (mouseWorld.z - smoothMouseWorld.z) * LERP_FACTOR;
-      uniforms.uMouseWorld.value.copy(smoothMouseWorld);
+      // Smooth mouse interpolation for the tilt effect
+      currentMouse.x += (targetMouse.x - currentMouse.x) * LERP_FACTOR;
+      currentMouse.y += (targetMouse.y - currentMouse.y) * LERP_FACTOR;
+      uniforms.uMouse.value.set(currentMouse.x, currentMouse.y);
 
       renderer.render(scene, camera);
     };

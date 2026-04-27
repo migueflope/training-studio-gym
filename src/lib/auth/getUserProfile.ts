@@ -1,15 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { isAdminRole, type UserProfile, type UserRole } from "@/lib/auth/roles";
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  fullName: string;
-  firstName: string;
-  initials: string;
-  phone: string | null;
-  avatarUrl: string | null;
-  role: "owner" | "partner" | "member";
-}
+export { isAdminRole };
+export type { UserProfile, UserRole };
 
 /**
  * Server-side helper to load the current user + their profile row.

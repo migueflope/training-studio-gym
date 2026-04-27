@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AvatarMenu } from "@/components/auth/AvatarMenu";
-import type { UserProfile } from "@/lib/auth/getUserProfile";
+import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface NavbarProps {
   profile: UserProfile | null;
@@ -30,6 +30,8 @@ export function Navbar({ profile }: NavbarProps) {
     { name: "Entrenadores", href: "/entrenadores" },
     { name: "Rutinas", href: "/rutinas" },
   ];
+
+  const isAdmin = !!profile && isAdminRole(profile.role);
 
   return (
     <header
@@ -65,6 +67,16 @@ export function Navbar({ profile }: NavbarProps) {
         </nav>
 
         <div className="hidden md:flex items-center gap-4">
+          {isAdmin && (
+            <Link
+              href="/admin"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-md border border-primary/40 text-primary hover:bg-primary/10 transition-colors"
+              title="Panel de administración"
+            >
+              <Shield className="w-3.5 h-3.5" />
+              Panel de Admin
+            </Link>
+          )}
           {profile ? (
             <AvatarMenu
               fullName={profile.fullName}
@@ -161,6 +173,16 @@ export function Navbar({ profile }: NavbarProps) {
                   >
                     Mi Perfil
                   </Link>
+                  {isAdmin && (
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-2 text-base font-bold p-2 text-primary hover:bg-primary/10 rounded-md transition-colors"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Shield className="w-4 h-4" />
+                      Panel de Admin
+                    </Link>
+                  )}
                 </>
               ) : (
                 <Link

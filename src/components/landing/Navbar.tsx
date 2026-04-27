@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Menu, X, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AvatarMenu } from "@/components/auth/AvatarMenu";
-import { isAdminRole, type UserProfile } from "@/lib/auth/getUserProfile";
+import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface NavbarProps {
   profile: UserProfile | null;

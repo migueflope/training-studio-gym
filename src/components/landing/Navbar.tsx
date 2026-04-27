@@ -50,7 +50,7 @@ export function Navbar({ profile }: NavbarProps) {
             : "bg-background/55 backdrop-blur-lg border-primary/15 shadow-[0_4px_24px_-6px_rgba(0,0,0,0.35)]"
         }`}
       >
-        <div className="px-3 md:px-5 py-2 md:py-2.5 flex items-center justify-between gap-3">
+        <div className="px-4 md:px-6 py-2.5 md:py-3.5 flex items-center justify-between gap-3">
           <Link href="/" className="flex items-center shrink-0">
             <motion.div
               whileHover={{ scale: 1.08, rotate: -3 }}
@@ -63,7 +63,7 @@ export function Navbar({ profile }: NavbarProps) {
                 alt="Training Studio Gym Logo"
                 width={928}
                 height={1105}
-                className="h-9 md:h-10 w-auto object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.35)]"
+                className="h-11 md:h-12 w-auto object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.35)]"
                 priority
               />
             </motion.div>
@@ -81,7 +81,7 @@ export function Navbar({ profile }: NavbarProps) {
                   key={link.name}
                   href={link.href}
                   onMouseEnter={() => setHoveredLink(link.name)}
-                  className="relative px-4 py-2 text-sm font-medium"
+                  className="relative px-4 py-2 text-[15px] font-medium"
                 >
                   {isActive && (
                     <motion.span
@@ -136,7 +136,7 @@ export function Navbar({ profile }: NavbarProps) {
             )}
             <Link
               href="/contacto"
-              className="px-4 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-full shadow-[0_0_15px_rgba(212,175,55,0.35)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:-translate-y-0.5 transition-all"
+              className="px-5 py-2.5 text-[15px] font-bold bg-primary text-primary-foreground rounded-full shadow-[0_0_15px_rgba(212,175,55,0.35)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:-translate-y-0.5 transition-all"
             >
               Agendar Valoración
             </Link>

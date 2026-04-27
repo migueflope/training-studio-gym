@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Dumbbell, LayoutDashboard, CreditCard, Activity, Target, Users, Settings, LogOut } from "lucide-react";
+import { Dumbbell, LayoutDashboard, CreditCard, Activity, Target, Users, Settings, LogOut, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const menuItems = [
@@ -15,7 +15,11 @@ const menuItems = [
   { icon: Settings, label: "Perfil", href: "/dashboard/perfil" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  isAdmin: boolean;
+}
+
+export function Sidebar({ isAdmin }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -47,8 +51,8 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                isActive 
-                  ? "bg-primary/10 text-primary" 
+                isActive
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground"
               }`}
             >
@@ -57,6 +61,19 @@ export function Sidebar() {
             </Link>
           );
         })}
+
+        {isAdmin && (
+          <>
+            <div className="my-3 border-t border-border" />
+            <Link
+              href="/admin"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-bold text-primary border border-primary/30 bg-primary/5 hover:bg-primary/15 transition-all"
+            >
+              <Shield className="w-5 h-5" />
+              Panel de Admin
+            </Link>
+          </>
+        )}
       </nav>
 
       <div className="p-4 border-t border-border">

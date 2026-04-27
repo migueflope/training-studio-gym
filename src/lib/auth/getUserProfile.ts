@@ -51,6 +51,10 @@ export async function getUserProfile(): Promise<UserProfile | null> {
   };
 }
 
+export function isAdminRole(role: UserProfile["role"]): boolean {
+  return role === "owner" || role === "partner";
+}
+
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";

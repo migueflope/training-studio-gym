@@ -1,11 +1,19 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Dumbbell, LayoutDashboard, Users, CreditCard, Dumbbell as DumbbellIcon, Key, Settings, LogOut } from "lucide-react";
+import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const profile = await getUserProfile();
+  if (!profile) redirect("/login?next=/admin");
+  if (!isAdminRole(profile.role)) redirect("/dashboard");
+
+  const roleLabel = profile.role === "owner" ? "Propietario" : "Partner";
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Admin Sidebar */}
@@ -59,12 +67,21 @@ export default function AdminLayout({
           <h2 className="font-display font-bold text-lg">Centro de Control</h2>
           <div className="flex items-center gap-3 border-l border-border pl-4">
             <div className="text-right">
-              <p className="text-sm font-bold leading-none mb-1">Camilo Ortiz</p>
-              <p className="text-xs text-muted-foreground leading-none">Propietario</p>
+              <p className="text-sm font-bold leading-none mb-1">{profile.fullName}</p>
+              <p className="text-xs text-muted-foreground leading-none">{roleLabel}</p>
             </div>
-            <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-              CO
-            </div>
+            {profile.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.avatarUrl}
+                alt={profile.fullName}
+                className="w-9 h-9 rounded-full object-cover border border-primary/30"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                {profile.initials}
+              </div>
+            )}
           </div>
         </header>
         <main className="flex-1 overflow-y-auto p-8">

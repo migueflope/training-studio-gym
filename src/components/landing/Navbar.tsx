@@ -116,7 +116,7 @@ export function Navbar({ profile }: NavbarProps) {
                 title="Panel de administración"
               >
                 <Shield className="w-3.5 h-3.5" />
-                Admin
+                Panel de Admin
               </Link>
             )}
             {profile ? (

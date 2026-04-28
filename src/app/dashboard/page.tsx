@@ -1,29 +1,85 @@
-import { AlertCircle, Calendar, Flame, Trophy, Play, Activity } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getUserProfile } from "@/lib/auth/getUserProfile";
+import {
+  AlertCircle,
+  Calendar,
+  Flame,
+  Trophy,
+  Sparkles,
+  Dumbbell,
+  CreditCard,
+  TrendingUp,
+  Users,
+  ArrowRight,
+} from "lucide-react";
+import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
+import { getActiveMembership } from "@/lib/auth/getActiveMembership";
+
+export const dynamic = "force-dynamic";
+
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("es-CO", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
 
 export default async function DashboardPage() {
   const profile = await getUserProfile();
   if (!profile) redirect("/login?next=/dashboard");
 
+  const isAdmin = isAdminRole(profile.role);
+  const membership = isAdmin ? null : await getActiveMembership(profile.id);
+
+  let timeProgress = 0;
+  if (membership) {
+    const start = new Date(membership.startDate).getTime();
+    const end = new Date(membership.endDate).getTime();
+    const now = Date.now();
+    const total = end - start;
+    timeProgress = total > 0 ? Math.min(100, Math.max(0, ((now - start) / total) * 100)) : 0;
+  }
+
+  const expiringSoon = !!membership && membership.daysRemaining <= 7;
+
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-
-      <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 flex items-start gap-3">
-        <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-        <div>
-          <h4 className="font-bold text-sm">Tu membresía vence en 5 días</h4>
-          <p className="text-xs opacity-90 mt-1">Renueva ahora para no perder tu racha ni el acceso a tus rutinas personalizadas.</p>
+      {expiringSoon && (
+        <div className="bg-destructive/10 border border-destructive/30 text-destructive rounded-lg p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <h4 className="font-bold text-sm">
+              {membership!.daysRemaining === 0
+                ? "Tu membresía vence hoy"
+                : membership!.daysRemaining === 1
+                ? "Tu membresía vence mañana"
+                : `Tu membresía vence en ${membership!.daysRemaining} días`}
+            </h4>
+            <p className="text-xs opacity-90 mt-1">
+              Renová ahora para no perder el acceso al club ni tu rutina personalizada.
+            </p>
+          </div>
+          <Link
+            href="/planes"
+            className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1.5 rounded hover:bg-destructive/90 transition-colors shrink-0"
+          >
+            Renovar
+          </Link>
         </div>
-        <button className="ml-auto bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1.5 rounded hover:bg-destructive/90 transition-colors">
-          Renovar
-        </button>
-      </div>
+      )}
 
       <div>
-        <h1 className="text-3xl font-display font-bold mb-2">Hola, {profile.firstName} 👋</h1>
-        <p className="text-muted-foreground">Aquí está el resumen de tu progreso.</p>
+        <h1 className="text-3xl font-display font-bold mb-2">
+          Hola, {profile.firstName} 👋
+        </h1>
+        <p className="text-muted-foreground">
+          {isAdmin
+            ? "Tenés acceso completo al club. Acá tu vista de socio."
+            : membership
+            ? "Acá está tu resumen del club."
+            : "Bienvenido a Training Studio."}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -32,105 +88,177 @@ export default async function DashboardPage() {
             <div className="p-2 bg-primary/10 rounded-lg">
               <Calendar className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-success/20 text-success rounded-full">Activa</span>
+            {isAdmin ? (
+              <span className="text-xs font-bold px-2 py-1 bg-primary/20 text-primary rounded-full">
+                Admin
+              </span>
+            ) : membership ? (
+              <span
+                className={`text-xs font-bold px-2 py-1 rounded-full ${
+                  expiringSoon
+                    ? "bg-destructive/20 text-destructive"
+                    : "bg-success/20 text-success"
+                }`}
+              >
+                Activa
+              </span>
+            ) : (
+              <span className="text-xs font-bold px-2 py-1 bg-muted/30 text-muted-foreground rounded-full">
+                Inactiva
+              </span>
+            )}
           </div>
           <p className="text-sm text-muted-foreground mb-1">Membresía</p>
-          <h3 className="text-xl font-bold font-display mb-1">Paquete 15 Clases</h3>
-          <p className="text-sm font-mono">Vence: 15 Mayo 2026</p>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex justify-between text-xs mb-1">
-              <span>Clases Restantes</span>
-              <span className="font-bold">6/15</span>
-            </div>
-            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-primary w-[40%]" />
-            </div>
-          </div>
+          {isAdmin ? (
+            <>
+              <h3 className="text-xl font-bold font-display mb-1">
+                Acceso de administrador
+              </h3>
+              <p className="text-sm text-muted-foreground">Sin fecha de vencimiento</p>
+            </>
+          ) : membership ? (
+            <>
+              <h3 className="text-xl font-bold font-display mb-1">
+                {membership.planName}
+              </h3>
+              <p className="text-sm font-mono text-muted-foreground">
+                Vence: {fmtDate(membership.endDate)}
+              </p>
+              <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex justify-between text-xs mb-1">
+                  <span>Días restantes</span>
+                  <span className="font-bold">{membership.daysRemaining}</span>
+                </div>
+                <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${expiringSoon ? "bg-destructive" : "bg-primary"}`}
+                    style={{ width: `${100 - timeProgress}%` }}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <h3 className="text-xl font-bold font-display mb-1">Sin plan activo</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Activá un plan para empezar.
+              </p>
+              <Link
+                href="/planes"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
+              >
+                Ver planes <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </>
+          )}
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border">
+        <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
           <div className="flex justify-between items-start mb-4">
             <div className="p-2 bg-accent/10 rounded-lg">
               <Flame className="w-5 h-5 text-accent" />
             </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
+              Próximamente
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Racha Actual</p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-4xl font-bold font-display text-foreground">4</h3>
-            <span className="text-muted-foreground">días seguidos</span>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">¡Estás en fuego! Entrena mañana para mantener la racha.</p>
+          <p className="text-sm text-muted-foreground mb-1">Racha de asistencias</p>
+          <h3 className="text-xl font-bold font-display mb-1">Activá tu racha</h3>
+          <p className="text-sm text-muted-foreground mt-2">
+            Pronto vas a poder ver cuántos días seguidos venís entrenando.
+          </p>
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border">
+        <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
           <div className="flex justify-between items-start mb-4">
             <div className="p-2 bg-success/10 rounded-lg">
               <Trophy className="w-5 h-5 text-success" />
             </div>
+            <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
+              Próximamente
+            </span>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Meta Principal</p>
-          <h3 className="text-lg font-bold font-display mb-1">Bajar 5kg</h3>
-          <p className="text-sm font-mono text-muted-foreground">Progreso: 2.5kg / 5kg</p>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
-              <div className="h-full bg-success w-[50%]" />
-            </div>
-            <p className="text-xs text-right mt-1 text-muted-foreground">50% completado</p>
-          </div>
+          <p className="text-sm text-muted-foreground mb-1">Tu meta principal</p>
+          <h3 className="text-xl font-bold font-display mb-1">Ponete un objetivo</h3>
+          <p className="text-sm text-muted-foreground mt-2">
+            Definí qué querés lograr y seguí tu progreso semana a semana.
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-display font-bold">Rutina de Hoy</h3>
-            <Link href="/dashboard/rutinas" className="text-sm text-primary hover:underline">Ver todas</Link>
-          </div>
-          <div className="glass-panel p-6 rounded-2xl border border-border group cursor-pointer hover:border-primary/50 transition-colors">
-            <div className="flex gap-4">
-              <div className="w-24 h-24 rounded-xl bg-secondary overflow-hidden shrink-0">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=2070&auto=format&fit=crop" alt="Rutina" className="w-full h-full object-cover opacity-60 group-hover:scale-110 transition-transform duration-500" />
-              </div>
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-xs text-primary font-bold mb-1 uppercase tracking-wider">Día 3</p>
-                <h4 className="text-lg font-bold mb-2">Tren Superior (Hipertrofia)</h4>
-                <p className="text-sm text-muted-foreground line-clamp-2">Pecho, espalda y brazos. 6 ejercicios, 45 mins estimados.</p>
-              </div>
-            </div>
-            <button className="w-full mt-6 py-3 bg-secondary text-foreground font-bold rounded-lg group-hover:bg-primary group-hover:text-primary-foreground transition-colors flex items-center justify-center gap-2">
-              <Play className="w-4 h-4" /> Empezar Entrenamiento
-            </button>
-          </div>
-        </div>
-
-        <div>
-           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-display font-bold">Actividad Reciente</h3>
-          </div>
-          <div className="glass-panel rounded-2xl border border-border p-2">
-            {[
-              { title: "Entrenamiento completado", desc: "Día 2: Pierna", time: "Ayer" },
-              { title: "Nuevo Récord", desc: "Sentadilla libre: 80kg", time: "Hace 2 días" },
-              { title: "Registro de peso", desc: "78.5kg", time: "Hace 1 semana" },
-            ].map((item, i) => (
-              <div key={i} className="flex gap-4 p-4 hover:bg-secondary/30 rounded-xl transition-colors">
-                <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                  <Activity className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <h5 className="font-bold text-sm">{item.title}</h5>
-                  <p className="text-xs text-muted-foreground">{item.desc}</p>
-                </div>
-                <span className="ml-auto text-xs text-muted-foreground">{item.time}</span>
-              </div>
-            ))}
-          </div>
+      <div>
+        <h3 className="text-xl font-display font-bold mb-4">Atajos</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <ShortcutCard
+            href="/dashboard/membresia"
+            icon={<CreditCard className="w-5 h-5" />}
+            title="Mi membresía"
+            description="Plan, fechas, pagos"
+          />
+          <ShortcutCard
+            href="/dashboard/rutinas"
+            icon={<Dumbbell className="w-5 h-5" />}
+            title="Rutinas"
+            description="Tu plan de entrenamiento"
+          />
+          <ShortcutCard
+            href="/dashboard/progreso"
+            icon={<TrendingUp className="w-5 h-5" />}
+            title="Progreso y Metas"
+            description="Pesos, medidas, objetivos"
+          />
+          <ShortcutCard
+            href="/dashboard/referidos"
+            icon={<Users className="w-5 h-5" />}
+            title="Referidos"
+            description="Invitá amigos al club"
+          />
         </div>
       </div>
 
+      <div className="glass-panel rounded-2xl border border-primary/20 bg-primary/5 p-6">
+        <div className="flex items-start gap-4">
+          <div className="p-2 bg-primary/15 rounded-lg shrink-0">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-display font-bold text-lg mb-1">
+              Estamos construyendo más cosas
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Pronto vas a poder armar rutinas, registrar tu progreso y trackear
+              metas dentro del panel. Por ahora explorá las secciones disponibles.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
+  );
+}
+
+function ShortcutCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="glass-panel p-5 rounded-2xl border border-border hover:border-primary/40 hover:bg-primary/5 transition-colors group"
+    >
+      <div className="p-2 bg-primary/10 rounded-lg w-fit mb-3 text-primary">
+        {icon}
+      </div>
+      <h4 className="font-bold text-sm mb-0.5 group-hover:text-primary transition-colors">
+        {title}
+      </h4>
+      <p className="text-xs text-muted-foreground">{description}</p>
+    </Link>
   );
 }

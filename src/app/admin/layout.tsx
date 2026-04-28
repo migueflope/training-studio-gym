@@ -1,6 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
-import { Dumbbell, LayoutDashboard, Users, CreditCard, Dumbbell as DumbbellIcon, Key, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, CreditCard, Dumbbell as DumbbellIcon, Key, Settings, LogOut } from "lucide-react";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 
 export default async function AdminLayout({
@@ -18,11 +19,15 @@ export default async function AdminLayout({
     <div className="flex min-h-screen bg-background">
       {/* Admin Sidebar */}
       <aside className="w-64 bg-card border-r border-border h-screen sticky top-0 hidden md:flex flex-col">
-        <div className="p-6 border-b border-border bg-primary/10">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center shadow-sm">
-              <Dumbbell className="w-4 h-4" />
-            </div>
+        <div className="p-5 border-b border-border bg-primary/10">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <Image
+              src="/assets/logo-transparent.png"
+              alt="Training Studio Gym"
+              width={928}
+              height={1105}
+              className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.35)] transition-transform group-hover:scale-105"
+            />
             <div>
               <span className="font-display font-bold text-sm tracking-tight block">ADMIN</span>
               <span className="text-xs text-muted-foreground">Training Studio</span>

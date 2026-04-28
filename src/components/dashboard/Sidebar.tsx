@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { Dumbbell, LayoutDashboard, CreditCard, Activity, Target, Users, Settings, LogOut, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -32,11 +33,15 @@ export function Sidebar({ isAdmin }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-card border-r border-border h-screen sticky top-0 hidden md:flex flex-col">
-      <div className="p-6 border-b border-border">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded bg-gradient-to-br from-primary to-primary/50 text-primary-foreground shadow-sm">
-            <Dumbbell className="w-4 h-4" />
-          </div>
+      <div className="p-5 border-b border-border">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <Image
+            src="/assets/logo-transparent.png"
+            alt="Training Studio Gym"
+            width={928}
+            height={1105}
+            className="h-10 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.3)] transition-transform group-hover:scale-105"
+          />
           <span className="font-display font-bold text-sm tracking-tight truncate">
             TRAINING STUDIO
           </span>

@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Dumbbell, Link as LinkIcon, MapPin, Phone, Mail, Clock } from "lucide-react";
+import Image from "next/image";
+import { Link as LinkIcon, MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -9,10 +10,14 @@ export function Footer() {
           
           {/* Brand */}
           <div className="space-y-6">
-            <Link href="/" className="flex items-center gap-2 group inline-flex">
-              <div className="relative flex items-center justify-center w-8 h-8 rounded bg-gradient-to-br from-primary to-primary/50 text-primary-foreground">
-                <Dumbbell className="w-5 h-5" />
-              </div>
+            <Link href="/" className="flex items-center gap-3 group inline-flex">
+              <Image
+                src="/assets/logo-transparent.png"
+                alt="Training Studio Gym"
+                width={928}
+                height={1105}
+                className="h-11 w-auto object-contain drop-shadow-[0_0_10px_rgba(212,175,55,0.3)] transition-transform group-hover:scale-105"
+              />
               <span className="font-display font-bold text-lg tracking-tight">
                 TRAINING STUDIO
                 <span className="text-primary ml-1">GYM</span>
@@ -53,7 +58,9 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <span>+57 (Próximamente)</span>
+                <a href="https://wa.me/573122765732" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  +57 312 276 5732
+                </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />

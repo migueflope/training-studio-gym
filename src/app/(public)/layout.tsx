@@ -1,6 +1,7 @@
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
-import { getUserProfile } from "@/lib/auth/getUserProfile";
+import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
+import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 
 export default async function PublicLayout({
   children,
@@ -8,10 +9,14 @@ export default async function PublicLayout({
   children: React.ReactNode;
 }) {
   const profile = await getUserProfile();
+  let hasActiveMembership = false;
+  if (profile && !isAdminRole(profile.role)) {
+    hasActiveMembership = !!(await getActiveMembership(profile.id));
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar profile={profile} />
+      <Navbar profile={profile} hasActiveMembership={hasActiveMembership} />
       <main className="flex-1">
         {children}
       </main>

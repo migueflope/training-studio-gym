@@ -4,19 +4,29 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, X, Shield } from "lucide-react";
+import { Menu, X, Shield, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AvatarMenu } from "@/components/auth/AvatarMenu";
+import { LockedAccessDialog } from "@/components/landing/LockedAccessDialog";
 import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface NavbarProps {
   profile: UserProfile | null;
+  hasActiveMembership?: boolean;
 }
 
-export function Navbar({ profile }: NavbarProps) {
+interface NavLink {
+  name: string;
+  href: string;
+  requiresAuth?: boolean;
+  matchPrefix?: boolean;
+}
+
+export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [lockedDialogOpen, setLockedDialogOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -27,16 +37,28 @@ export function Navbar({ profile }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  const navLinks: NavLink[] = [
     { name: "Inicio", href: "/" },
     { name: "Planes", href: "/planes" },
     { name: "Entrenadores", href: "/entrenadores" },
-    { name: "Rutinas", href: "/rutinas" },
+    { name: "Mi Panel", href: "/dashboard", requiresAuth: true, matchPrefix: true },
   ];
 
   const isAdmin = !!profile && isAdminRole(profile.role);
+  const canAccessDashboard = isAdmin || hasActiveMembership;
+  const lockedMode: "unauthenticated" | "no-membership" = profile
+    ? "no-membership"
+    : "unauthenticated";
+
+  const matchesActive = (link: NavLink) =>
+    link.matchPrefix ? pathname.startsWith(link.href) : pathname === link.href;
   const activeLinkName =
-    hoveredLink ?? navLinks.find((l) => l.href === pathname)?.name ?? null;
+    hoveredLink ?? navLinks.find(matchesActive)?.name ?? null;
+
+  const handleLockedClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLockedDialogOpen(true);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 md:px-6 pt-3 md:pt-4">
@@ -76,13 +98,9 @@ export function Navbar({ profile }: NavbarProps) {
           >
             {navLinks.map((link) => {
               const isActive = activeLinkName === link.name;
-              return (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  onMouseEnter={() => setHoveredLink(link.name)}
-                  className="relative px-4 py-2 text-[15px] font-medium"
-                >
+              const isLocked = !!link.requiresAuth && !canAccessDashboard;
+              const innerContent = (
+                <>
                   {isActive && (
                     <motion.span
                       layoutId="navbar-active-pill"
@@ -95,14 +113,40 @@ export function Navbar({ profile }: NavbarProps) {
                     />
                   )}
                   <span
-                    className={`relative z-10 transition-colors duration-200 ${
+                    className={`relative z-10 inline-flex items-center gap-1.5 transition-colors duration-200 ${
                       isActive
                         ? "text-primary"
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {link.name}
+                    {isLocked && <Lock className="w-3.5 h-3.5 opacity-70" />}
                   </span>
+                </>
+              );
+
+              if (isLocked) {
+                return (
+                  <button
+                    key={link.name}
+                    type="button"
+                    onClick={handleLockedClick}
+                    onMouseEnter={() => setHoveredLink(link.name)}
+                    className="relative px-4 py-2 text-[15px] font-medium cursor-pointer"
+                  >
+                    {innerContent}
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onMouseEnter={() => setHoveredLink(link.name)}
+                  className="relative px-4 py-2 text-[15px] font-medium"
+                >
+                  {innerContent}
                 </Link>
               );
             })}
@@ -169,16 +213,36 @@ export function Navbar({ profile }: NavbarProps) {
           >
             <div className="flex flex-col px-4 py-5 space-y-1">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = matchesActive(link);
+                const isLocked = !!link.requiresAuth && !canAccessDashboard;
+                const baseClass = `text-base font-medium px-3 py-2.5 rounded-xl transition-colors flex items-center gap-2 ${
+                  isActive
+                    ? "bg-primary/15 text-primary border border-primary/30"
+                    : "hover:text-primary hover:bg-primary/10"
+                }`;
+
+                if (isLocked) {
+                  return (
+                    <button
+                      key={link.name}
+                      type="button"
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        setLockedDialogOpen(true);
+                      }}
+                      className={`${baseClass} text-left w-full`}
+                    >
+                      {link.name}
+                      <Lock className="w-3.5 h-3.5 opacity-70" />
+                    </button>
+                  );
+                }
+
                 return (
                   <Link
                     key={link.name}
                     href={link.href}
-                    className={`text-base font-medium px-3 py-2.5 rounded-xl transition-colors ${
-                      isActive
-                        ? "bg-primary/15 text-primary border border-primary/30"
-                        : "hover:text-primary hover:bg-primary/10"
-                    }`}
+                    className={baseClass}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.name}
@@ -255,6 +319,12 @@ export function Navbar({ profile }: NavbarProps) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <LockedAccessDialog
+        open={lockedDialogOpen}
+        mode={lockedMode}
+        onClose={() => setLockedDialogOpen(false)}
+      />
     </header>
   );
 }

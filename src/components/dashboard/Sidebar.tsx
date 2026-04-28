@@ -3,15 +3,14 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Dumbbell, LayoutDashboard, CreditCard, Activity, Target, Users, Settings, LogOut, Shield } from "lucide-react";
+import { Dumbbell, LayoutDashboard, CreditCard, TrendingUp, Users, Settings, LogOut, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Resumen", href: "/dashboard" },
   { icon: CreditCard, label: "Mi Membresía", href: "/dashboard/membresia" },
   { icon: Dumbbell, label: "Rutinas", href: "/dashboard/rutinas" },
-  { icon: Activity, label: "Progreso", href: "/dashboard/progreso" },
-  { icon: Target, label: "Mis Metas", href: "/dashboard/metas" },
+  { icon: TrendingUp, label: "Progreso y Metas", href: "/dashboard/progreso" },
   { icon: Users, label: "Referidos", href: "/dashboard/referidos" },
   { icon: Settings, label: "Perfil", href: "/dashboard/perfil" },
 ];

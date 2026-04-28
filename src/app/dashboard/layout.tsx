@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/dashboard/Sidebar";
 import { TopNav } from "@/components/dashboard/TopNav";
-import { MembershipGate } from "@/components/dashboard/MembershipGate";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 
@@ -16,9 +15,9 @@ export default async function DashboardLayout({
   const isAdmin = isAdminRole(profile.role);
   if (!isAdmin) {
     const membership = await getActiveMembership(profile.id);
-    if (!membership) {
-      return <MembershipGate fullName={profile.fullName} />;
-    }
+    // Members without an active plan are sent to the public hero. The navbar's
+    // "Mi Panel" item shows a tailored modal when they try to come back here.
+    if (!membership) redirect("/");
   }
 
   return (

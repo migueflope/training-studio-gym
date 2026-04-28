@@ -12,6 +12,7 @@ import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface NavbarProps {
   profile: UserProfile | null;
+  hasActiveMembership?: boolean;
 }
 
 interface NavLink {
@@ -21,7 +22,7 @@ interface NavLink {
   matchPrefix?: boolean;
 }
 
-export function Navbar({ profile }: NavbarProps) {
+export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
@@ -44,6 +45,10 @@ export function Navbar({ profile }: NavbarProps) {
   ];
 
   const isAdmin = !!profile && isAdminRole(profile.role);
+  const canAccessDashboard = isAdmin || hasActiveMembership;
+  const lockedMode: "unauthenticated" | "no-membership" = profile
+    ? "no-membership"
+    : "unauthenticated";
 
   const matchesActive = (link: NavLink) =>
     link.matchPrefix ? pathname.startsWith(link.href) : pathname === link.href;
@@ -93,7 +98,7 @@ export function Navbar({ profile }: NavbarProps) {
           >
             {navLinks.map((link) => {
               const isActive = activeLinkName === link.name;
-              const isLocked = link.requiresAuth && !profile;
+              const isLocked = !!link.requiresAuth && !canAccessDashboard;
               const innerContent = (
                 <>
                   {isActive && (
@@ -209,7 +214,7 @@ export function Navbar({ profile }: NavbarProps) {
             <div className="flex flex-col px-4 py-5 space-y-1">
               {navLinks.map((link) => {
                 const isActive = matchesActive(link);
-                const isLocked = link.requiresAuth && !profile;
+                const isLocked = !!link.requiresAuth && !canAccessDashboard;
                 const baseClass = `text-base font-medium px-3 py-2.5 rounded-xl transition-colors flex items-center gap-2 ${
                   isActive
                     ? "bg-primary/15 text-primary border border-primary/30"
@@ -317,6 +322,7 @@ export function Navbar({ profile }: NavbarProps) {
 
       <LockedAccessDialog
         open={lockedDialogOpen}
+        mode={lockedMode}
         onClose={() => setLockedDialogOpen(false)}
       />
     </header>

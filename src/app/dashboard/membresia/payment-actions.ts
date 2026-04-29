@@ -39,9 +39,6 @@ export async function submitPayment(input: SubmitPaymentInput) {
     };
   }
 
-  if (!input.transactionRef.trim()) {
-    return { ok: false as const, error: "Ingresá el número de referencia del banco" };
-  }
   if (!Number.isFinite(input.amountCop) || input.amountCop <= 0) {
     return { ok: false as const, error: "Monto inválido" };
   }
@@ -51,7 +48,7 @@ export async function submitPayment(input: SubmitPaymentInput) {
     plan_id: input.planId,
     amount_cop: input.amountCop,
     method: input.method,
-    transaction_ref: input.transactionRef.trim(),
+    transaction_ref: input.transactionRef.trim() || null,
     proof_url: input.proofPath,
     status: "pending",
   });

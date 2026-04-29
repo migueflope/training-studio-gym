@@ -200,14 +200,13 @@ export function UploadPaymentDialog({
 
           <div className="sm:col-span-2">
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Número de referencia / transacción
+              Número de referencia <span className="text-muted-foreground/60 normal-case font-normal">(opcional)</span>
             </label>
             <input
               type="text"
               value={transactionRef}
               onChange={(e) => setTransactionRef(e.target.value)}
-              placeholder="Lo encontrás en el recibo del banco"
-              required
+              placeholder="Lo encontrás en el recibo — ayuda a verificar más rápido"
               className="mt-1 w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none text-sm font-mono"
             />
           </div>

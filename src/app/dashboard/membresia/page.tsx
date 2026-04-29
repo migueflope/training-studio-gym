@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 import { MembershipTabs } from "./MembershipTabs";
+import { PaymentsTab, type UserPaymentRow } from "./PaymentsTab";
+import type { PlanOption } from "./UploadPaymentDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,48 @@ export default async function MembershipPage() {
     };
   });
 
+  const { data: rawPayments } = await supabase
+    .from("payments")
+    .select(
+      "id, amount_cop, method, status, transaction_ref, rejection_reason, proof_url, created_at, plans(name)",
+    )
+    .eq("user_id", profile.id)
+    .order("created_at", { ascending: false });
+
+  const payments: UserPaymentRow[] = await Promise.all(
+    (rawPayments ?? []).map(async (p) => {
+      const plan = Array.isArray(p.plans) ? p.plans[0] : p.plans;
+      let signedUrl: string | null = null;
+      if (p.proof_url) {
+        const { data: signed } = await supabase.storage
+          .from("payment-receipts")
+          .createSignedUrl(p.proof_url, 60 * 30);
+        signedUrl = signed?.signedUrl ?? null;
+      }
+      return {
+        id: p.id,
+        planName: plan?.name ?? "Plan",
+        amountCop: Number(p.amount_cop),
+        method: p.method,
+        status: p.status,
+        rejectionReason: p.rejection_reason,
+        transactionRef: p.transaction_ref,
+        proofUrl: signedUrl,
+        createdAt: p.created_at,
+      };
+    }),
+  );
+
+  const { data: rawPlans } = await supabase
+    .from("plans")
+    .select("id, name, price_cop")
+    .order("price_cop", { ascending: true });
+  const plans: PlanOption[] = (rawPlans ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    priceCop: Number(p.price_cop),
+  }));
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -60,11 +104,11 @@ export default async function MembershipPage() {
       </div>
 
       <MembershipTabs
-        activeContent={
-          <ActiveSection isAdmin={isAdmin} membership={active} />
-        }
+        activeContent={<ActiveSection isAdmin={isAdmin} membership={active} />}
         historyContent={<HistorySection history={history} />}
-        paymentsContent={<PaymentsPlaceholder />}
+        paymentsContent={
+          <PaymentsTab userId={profile.id} payments={payments} plans={plans} />
+        }
       />
     </div>
   );
@@ -271,19 +315,3 @@ function StatusBadge({ status }: { status: MembershipHistoryRow["status"] }) {
   );
 }
 
-function PaymentsPlaceholder() {
-  return (
-    <div className="glass-panel rounded-2xl border border-border p-8 text-center">
-      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-4">
-        <Clock className="w-6 h-6 text-primary" />
-      </div>
-      <h3 className="font-display font-bold text-lg mb-1">
-        Subir comprobante — próximamente
-      </h3>
-      <p className="text-sm text-muted-foreground max-w-md mx-auto">
-        Pronto vas a poder subir el comprobante de tu transferencia y ver el
-        historial de pagos confirmados acá mismo.
-      </p>
-    </div>
-  );
-}

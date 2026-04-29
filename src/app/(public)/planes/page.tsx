@@ -2,10 +2,11 @@
 
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, QrCode, Copy, ArrowLeft } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { WizardUploadPanel } from "./WizardUploadPanel";
 
 const basicServices = [
   { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF", features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"] },
@@ -48,23 +49,15 @@ function PlanesContent() {
       setStep(parseInt(stepParam));
     }
   }, [searchParams]);
+
   const [contactData, setContactData] = useState({ name: "", whatsapp: "", email: "" });
   const [selectedMethod, setSelectedMethod] = useState(paymentMethods[0]);
   const [isCopied, setIsCopied] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedMethod.account);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
-  };
-
-  const handleUpload = () => {
-    setIsUploading(true);
-    setTimeout(() => {
-      setIsUploading(false);
-      setStep(4);
-    }, 2000);
   };
 
   return (
@@ -283,32 +276,15 @@ function PlanesContent() {
                     </div>
                   </div>
 
-                  {/* Right Side: Upload Proof */}
+                  {/* Right Side: Inline upload */}
                   <div className="md:w-1/2 p-8 flex flex-col justify-center relative z-10">
-                    <div className="mb-8">
-                      <h4 className="text-lg font-bold mb-1">Total a pagar:</h4>
-                      <p className="text-4xl font-mono text-primary font-bold">{allPlans.find(p => p.id === selectedPlan)?.price}</p>
-                    </div>
-
-                    <div className="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-secondary/10 group">
-                      <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
-                        <UploadCloud className="w-8 h-8" />
-                      </div>
-                      <h5 className="font-bold mb-2">Sube tu comprobante</h5>
-                      <p className="text-sm text-muted-foreground mb-6">Arrastra la imagen o haz clic para buscar</p>
-                      <button 
-                        onClick={handleUpload}
-                        disabled={isUploading}
-                        className="px-6 py-2 bg-secondary text-foreground rounded-lg text-sm font-bold hover:bg-secondary/80 transition-all flex items-center gap-2"
-                      >
-                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Simular Subida"}
-                      </button>
-                    </div>
-                    
-                    <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                      <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                      Tu reserva expira en 15:00
-                    </div>
+                    <WizardUploadPanel
+                      wizardPlanId={selectedPlan}
+                      method={selectedMethod.id}
+                      priceLabel={
+                        allPlans.find((p) => p.id === selectedPlan)?.price ?? "—"
+                      }
+                    />
                   </div>
                 </div>
               </div>

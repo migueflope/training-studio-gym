@@ -206,6 +206,7 @@ export default async function DashboardPage() {
             icon={<Users className="w-5 h-5" />}
             title="Referidos"
             description="Invitá amigos al club"
+            comingSoon
           />
         </div>
       </div>
@@ -235,12 +236,31 @@ function ShortcutCard({
   icon,
   title,
   description,
+  comingSoon = false,
 }: {
   href: string;
   icon: React.ReactNode;
   title: string;
   description: string;
+  comingSoon?: boolean;
 }) {
+  if (comingSoon) {
+    return (
+      <div
+        aria-disabled
+        className="glass-panel p-5 rounded-2xl border border-border opacity-60 cursor-not-allowed relative overflow-hidden"
+      >
+        <span className="absolute top-2 right-2 text-[9px] font-bold tracking-wider uppercase bg-primary/15 text-primary px-2 py-0.5 rounded-full border border-primary/30">
+          Próximamente
+        </span>
+        <div className="p-2 bg-primary/10 rounded-lg w-fit mb-3 text-primary">
+          {icon}
+        </div>
+        <h4 className="font-bold text-sm mb-0.5">{title}</h4>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+    );
+  }
   return (
     <Link
       href={href}

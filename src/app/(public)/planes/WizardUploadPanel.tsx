@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   UploadCloud,
   Loader2,
@@ -12,9 +11,11 @@ import {
   Phone,
   ShieldAlert,
   ArrowRight,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { submitPayment } from "@/app/dashboard/membresia/payment-actions";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 interface WizardUploadPanelProps {
   /** Wizard plan id like "mensualidad", "12-clases", "sesion"… */
@@ -25,20 +26,56 @@ interface WizardUploadPanelProps {
   priceLabel: string;
 }
 
-/** Wizard plan ids that map to a real DB plan (memberships). */
-const WIZARD_TO_DB_NAME: Record<string, string> = {
-  mensualidad: "Mensualidad del Gym",
-  "12-clases": "Paquete 12 Clases",
-  "15-clases": "Paquete 15 Clases",
-  "20-clases": "Paquete 20 Clases",
+interface RealPlan {
+  dbPlanId: string;
+  amountCop: number;
+  displayName: string;
+}
+
+/**
+ * Maps the wizard's hardcoded plan ids to the membership plans seeded into
+ * Supabase by migration 0008. Services that aren't real memberships (single
+ * sessions, fitness assessments) are deliberately not in this map — those
+ * fall back to the "coordinate at the club" panel.
+ */
+const WIZARD_TO_DB: Record<string, RealPlan> = {
+  mensualidad: {
+    dbPlanId: "d5f76b5d-e134-4bc9-bb7d-b5f76b5de134",
+    amountCop: 60000,
+    displayName: "Mensualidad del Gym",
+  },
+  "12-clases": {
+    dbPlanId: "c4e65a4c-d023-3ab8-aa6c-a4e65a4cd023",
+    amountCop: 150000,
+    displayName: "Paquete 12 Clases",
+  },
+  "15-clases": {
+    dbPlanId: "b3d5493b-c912-29a7-995b-93d5493bc912",
+    amountCop: 200000,
+    displayName: "Paquete 15 Clases",
+  },
+  "20-clases": {
+    dbPlanId: "a2c4382a-b801-1896-884a-82c4382ab801",
+    amountCop: 250000,
+    displayName: "Paquete 20 Clases",
+  },
+};
+
+const METHOD_LABEL: Record<string, string> = {
+  bancolombia: "Bancolombia",
+  nequi: "Nequi",
+  daviplata: "Daviplata",
 };
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const MAX_BYTES = 5 * 1024 * 1024;
 
-interface DbPlan {
-  id: string;
-  priceCop: number;
+function fmtCop(value: number): string {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export function WizardUploadPanel({
@@ -46,9 +83,10 @@ export function WizardUploadPanel({
   method,
   priceLabel,
 }: WizardUploadPanelProps) {
-  const router = useRouter();
+  const realPlan = wizardPlanId ? WIZARD_TO_DB[wizardPlanId] ?? null : null;
+
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
-  const [dbPlan, setDbPlan] = useState<DbPlan | null | undefined>(undefined);
+  const [userName, setUserName] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
   const [transactionRef, setTransactionRef] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -56,28 +94,25 @@ export function WizardUploadPanel({
   const [success, setSuccess] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
-  // Load session and DB plan in parallel.
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id ?? null));
+    supabase.auth.getUser().then(async ({ data }) => {
+      const id = data.user?.id ?? null;
+      setUserId(id);
+      if (id) {
+        const meta = data.user?.user_metadata ?? {};
+        const fallback = meta.full_name ?? meta.name ?? data.user?.email?.split("@")[0] ?? "";
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", id)
+          .maybeSingle();
+        setUserName(profile?.full_name ?? fallback);
+      }
+    });
+  }, []);
 
-    const dbName = wizardPlanId ? WIZARD_TO_DB_NAME[wizardPlanId] : null;
-    if (!dbName) {
-      setDbPlan(null);
-      return;
-    }
-    supabase
-      .from("plans")
-      .select("id, price_cop")
-      .eq("name", dbName)
-      .maybeSingle()
-      .then(({ data }) => {
-        setDbPlan(data ? { id: data.id, priceCop: Number(data.price_cop) } : null);
-      });
-  }, [wizardPlanId]);
-
-  // Loading state
-  if (userId === undefined || dbPlan === undefined) {
+  if (userId === undefined) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
         <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
@@ -85,8 +120,8 @@ export function WizardUploadPanel({
     );
   }
 
-  // Service plans (sesion, valoracion) — pay in person, no upload
-  if (!dbPlan) {
+  // One-off services — pay in person
+  if (!realPlan) {
     return (
       <div className="space-y-4">
         <Header priceLabel={priceLabel} />
@@ -94,8 +129,8 @@ export function WizardUploadPanel({
           <Phone className="w-8 h-8 text-primary mx-auto mb-3" />
           <h5 className="font-bold mb-2">Coordiná en el club</h5>
           <p className="text-sm text-muted-foreground mb-4">
-            Para este servicio podés pagar directamente en el club o
-            coordinar por WhatsApp con el equipo.
+            Para este servicio podés pagar directamente en el club o coordinar
+            por WhatsApp con el equipo.
           </p>
           <Link
             href="/contacto"
@@ -109,19 +144,16 @@ export function WizardUploadPanel({
     );
   }
 
-  // Not logged in — prompt sign-in/up, preserving wizard state on return
   if (!userId) {
-    const next = encodeURIComponent(
-      `/planes?plan=${wizardPlanId}&step=3`,
-    );
+    const next = encodeURIComponent(`/planes?plan=${wizardPlanId}&step=3`);
     return (
       <div className="space-y-4">
         <Header priceLabel={priceLabel} />
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-6">
           <h5 className="font-bold mb-2">Crea tu cuenta para activar el plan</h5>
           <p className="text-sm text-muted-foreground mb-4">
-            Necesitamos asociar el comprobante a tu cuenta para que el
-            equipo pueda verificar tu pago y activarte la membresía.
+            Necesitamos asociar el comprobante a tu cuenta para que el equipo
+            pueda verificar tu pago y activarte la membresía.
           </p>
           <Link
             href={`/login?next=${next}`}
@@ -136,8 +168,21 @@ export function WizardUploadPanel({
     );
   }
 
-  // Success state
   if (success) {
+    const lines = [
+      `Hola! Acabo de pagar mi membresía:`,
+      ``,
+      `📋 Plan: ${realPlan.displayName}`,
+      `💵 Monto: ${fmtCop(realPlan.amountCop)}`,
+      `🏦 Método: ${METHOD_LABEL[method] ?? method}`,
+    ];
+    if (transactionRef.trim()) {
+      lines.push(`🔢 Ref: ${transactionRef.trim()}`);
+    }
+    lines.push(``, `Ya subí el comprobante a la app. Avísame cuando lo confirmes 🙏`);
+    if (userName) lines.push(`— ${userName}`);
+    const waLink = whatsappUrl(lines.join("\n"));
+
     return (
       <div className="space-y-4">
         <Header priceLabel={priceLabel} />
@@ -145,12 +190,21 @@ export function WizardUploadPanel({
           <CheckCircle2 className="w-12 h-12 text-success mx-auto mb-3" />
           <h5 className="font-bold mb-2">¡Comprobante enviado!</h5>
           <p className="text-sm text-muted-foreground mb-4">
-            El equipo verifica tu pago contra el banco. Apenas se confirme
-            te activamos la membresía. Suele tardar pocas horas.
+            El equipo verifica el pago contra el banco. Apenas se confirme te
+            activamos la membresía.
           </p>
+          <a
+            href={waLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white rounded-lg text-sm font-bold hover:bg-[#1fb157] transition-colors mb-3"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Avisar al equipo por WhatsApp
+          </a>
           <Link
             href="/dashboard/membresia"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary/10 text-primary border border-primary/30 rounded-lg text-sm font-bold hover:bg-primary/20 transition-colors"
           >
             Ir a mi panel
             <ArrowRight className="w-4 h-4" />
@@ -184,8 +238,8 @@ export function WizardUploadPanel({
       if (uploadError) throw uploadError;
 
       const res = await submitPayment({
-        planId: dbPlan.id,
-        amountCop: dbPlan.priceCop,
+        planId: realPlan.dbPlanId,
+        amountCop: realPlan.amountCop,
         method,
         transactionRef,
         proofPath: path,

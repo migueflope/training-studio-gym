@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { CreditCard, History, Receipt } from "lucide-react";
 
 interface MembershipTabsProps {
@@ -22,7 +23,9 @@ export function MembershipTabs({
   historyContent,
   paymentsContent,
 }: MembershipTabsProps) {
-  const [tab, setTab] = useState<Tab>("active");
+  const searchParams = useSearchParams();
+  const initial: Tab = searchParams.get("upload") === "1" ? "payments" : "active";
+  const [tab, setTab] = useState<Tab>(initial);
 
   return (
     <div>

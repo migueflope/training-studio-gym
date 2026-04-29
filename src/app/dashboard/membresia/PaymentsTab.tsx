@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Receipt,
   Upload,
@@ -60,8 +61,22 @@ const METHOD_LABELS: Record<string, string> = {
 export function PaymentsTab({ userId, payments, plans }: PaymentsTabProps) {
   const [showDialog, setShowDialog] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const hasPending = payments.some((p) => p.status === "pending");
+
+  // Auto-open the upload dialog when arriving from /planes with ?upload=1.
+  useEffect(() => {
+    if (searchParams.get("upload") === "1" && !hasPending) {
+      setShowDialog(true);
+      // Clean the query string so the dialog doesn't reopen on refresh.
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("upload");
+      const next = params.toString() ? `?${params}` : "";
+      router.replace(`/dashboard/membresia${next}`);
+    }
+  }, [searchParams, hasPending, router]);
 
   return (
     <div className="space-y-6">

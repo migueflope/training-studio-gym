@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import {
   AlertCircle,
   Calendar,
@@ -12,8 +11,7 @@ import {
   Users,
   ArrowRight,
 } from "lucide-react";
-import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
-import { getActiveMembership } from "@/lib/auth/getActiveMembership";
+import { requireActiveMembership } from "@/lib/auth/requireActiveMembership";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +24,7 @@ function fmtDate(iso: string): string {
 }
 
 export default async function DashboardPage() {
-  const profile = await getUserProfile();
-  if (!profile) redirect("/login?next=/dashboard");
-
-  const isAdmin = isAdminRole(profile.role);
-  const membership = isAdmin ? null : await getActiveMembership(profile.id);
+  const { profile, isAdmin, membership } = await requireActiveMembership();
 
   let timeProgress = 0;
   if (membership) {

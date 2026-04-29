@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getUserProfile } from "@/lib/auth/getUserProfile";
+import { requireActiveMembership } from "@/lib/auth/requireActiveMembership";
 import { BodyMetricsSection, type BodyMetricRow } from "./BodyMetricsSection";
 import { AttendanceSection } from "./AttendanceSection";
 import {
@@ -18,9 +17,7 @@ import { computeAttendanceStreak } from "./streak";
 export const dynamic = "force-dynamic";
 
 export default async function ProgressPage() {
-  const profile = await getUserProfile();
-  if (!profile) redirect("/login?next=/dashboard/progreso");
-
+  const { profile } = await requireActiveMembership();
   const supabase = await createClient();
 
   const [

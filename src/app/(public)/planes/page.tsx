@@ -2,10 +2,11 @@
 
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, QrCode, UploadCloud, Copy, ArrowLeft, Loader2 } from "lucide-react";
+import { Check, QrCode, UploadCloud, Copy, ArrowLeft, ArrowRight, LogIn } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 const basicServices = [
   { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF", features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"] },
@@ -37,8 +38,10 @@ export default function PlanesPage() {
 
 function PlanesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const planParam = searchParams.get('plan');
@@ -48,10 +51,15 @@ function PlanesContent() {
       setStep(parseInt(stepParam));
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => setIsLoggedIn(!!data.user));
+  }, []);
+
   const [contactData, setContactData] = useState({ name: "", whatsapp: "", email: "" });
   const [selectedMethod, setSelectedMethod] = useState(paymentMethods[0]);
   const [isCopied, setIsCopied] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedMethod.account);
@@ -59,12 +67,12 @@ function PlanesContent() {
     setTimeout(() => setIsCopied(false), 2000);
   };
 
-  const handleUpload = () => {
-    setIsUploading(true);
-    setTimeout(() => {
-      setIsUploading(false);
-      setStep(4);
-    }, 2000);
+  const goToUpload = () => {
+    if (isLoggedIn) {
+      router.push("/dashboard/membresia?upload=1");
+    } else {
+      router.push("/login?next=" + encodeURIComponent("/dashboard/membresia?upload=1"));
+    }
   };
 
   return (
@@ -291,24 +299,39 @@ function PlanesContent() {
                     </div>
 
                     <div className="border-2 border-dashed border-border rounded-2xl p-8 flex flex-col items-center justify-center text-center hover:border-primary/50 transition-colors bg-secondary/10 group">
-                      <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4 group-hover:bg-primary/20 group-hover:text-primary transition-colors">
+                      <div className="w-16 h-16 rounded-full bg-primary/15 flex items-center justify-center mb-4 text-primary border border-primary/30">
                         <UploadCloud className="w-8 h-8" />
                       </div>
-                      <h5 className="font-bold mb-2">Sube tu comprobante</h5>
-                      <p className="text-sm text-muted-foreground mb-6">Arrastra la imagen o haz clic para buscar</p>
-                      <button 
-                        onClick={handleUpload}
-                        disabled={isUploading}
-                        className="px-6 py-2 bg-secondary text-foreground rounded-lg text-sm font-bold hover:bg-secondary/80 transition-all flex items-center gap-2"
+                      <h5 className="font-bold mb-2">Subí tu comprobante</h5>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        {isLoggedIn === false
+                          ? "Necesitás una cuenta para que el equipo verifique tu pago y active tu membresía."
+                          : "Cuando termines la transferencia, subí la foto del recibo desde tu panel para que activemos tu plan."}
+                      </p>
+                      <button
+                        onClick={goToUpload}
+                        disabled={isLoggedIn === null}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold shadow-[0_0_18px_rgba(212,175,55,0.4)] hover:-translate-y-0.5 hover:shadow-[0_0_28px_rgba(212,175,55,0.6)] transition-all disabled:opacity-60"
                       >
-                        {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Simular Subida"}
+                        {isLoggedIn === false ? (
+                          <>
+                            <LogIn className="w-4 h-4" />
+                            Crear cuenta y subir comprobante
+                          </>
+                        ) : (
+                          <>
+                            <UploadCloud className="w-4 h-4" />
+                            Subir comprobante
+                            <ArrowRight className="w-4 h-4" />
+                          </>
+                        )}
                       </button>
                     </div>
-                    
-                    <div className="mt-6 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                      <div className="w-2 h-2 rounded-full bg-destructive animate-pulse" />
-                      Tu reserva expira en 15:00
-                    </div>
+
+                    <p className="mt-4 text-xs text-muted-foreground text-center">
+                      El equipo verifica el pago contra el banco antes de activar la
+                      membresía. En general no tarda más de unas horas.
+                    </p>
                   </div>
                 </div>
               </div>

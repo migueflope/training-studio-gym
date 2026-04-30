@@ -3,15 +3,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Dumbbell, LayoutDashboard, CreditCard, TrendingUp, Users, Settings, LogOut, Shield } from "lucide-react";
+import { Dumbbell, LayoutDashboard, CreditCard, TrendingUp, Users, Settings, LogOut, Shield, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const menuItems = [
+type MenuItem = {
+  icon: typeof LayoutDashboard;
+  label: string;
+  href: string;
+  disabled?: boolean;
+};
+
+const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Resumen", href: "/dashboard" },
   { icon: CreditCard, label: "Mi Membresía", href: "/dashboard/membresia" },
-  { icon: Dumbbell, label: "Rutinas", href: "/dashboard/rutinas" },
+  { icon: Dumbbell, label: "Rutinas", href: "/dashboard/rutinas", disabled: true },
   { icon: TrendingUp, label: "Progreso y Metas", href: "/dashboard/progreso" },
-  { icon: Users, label: "Referidos", href: "/dashboard/referidos" },
+  { icon: Users, label: "Referidos", href: "/dashboard/referidos", disabled: true },
   { icon: Settings, label: "Perfil", href: "/dashboard/perfil" },
 ];
 
@@ -49,6 +56,22 @@ export function Sidebar({ isAdmin }: SidebarProps) {
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
+          if (item.disabled) {
+            return (
+              <div
+                key={item.href}
+                aria-disabled
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/60 cursor-not-allowed select-none"
+              >
+                <item.icon className="w-5 h-5 text-muted-foreground/60" />
+                <span>{item.label}</span>
+                <span className="ml-auto flex items-center gap-1 text-[9px] font-bold tracking-wider uppercase bg-primary/10 text-primary/80 px-1.5 py-0.5 rounded-full border border-primary/20">
+                  <Lock className="w-2.5 h-2.5" />
+                  Pronto
+                </span>
+              </div>
+            );
+          }
           const isActive = pathname === item.href;
           return (
             <Link

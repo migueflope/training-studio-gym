@@ -16,7 +16,7 @@ type MenuItem = {
 const menuItems: MenuItem[] = [
   { icon: LayoutDashboard, label: "Resumen", href: "/dashboard" },
   { icon: CreditCard, label: "Mi Membresía", href: "/dashboard/membresia" },
-  { icon: Dumbbell, label: "Rutinas", href: "/dashboard/rutinas" },
+  { icon: Dumbbell, label: "Rutinas", href: "/dashboard/rutinas", disabled: true },
   { icon: TrendingUp, label: "Progreso y Metas", href: "/dashboard/progreso" },
   { icon: Users, label: "Referidos", href: "/dashboard/referidos", disabled: true },
   { icon: Settings, label: "Perfil", href: "/dashboard/perfil" },

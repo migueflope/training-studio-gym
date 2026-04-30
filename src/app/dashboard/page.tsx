@@ -194,6 +194,7 @@ export default async function DashboardPage() {
             icon={<Dumbbell className="w-5 h-5" />}
             title="Rutinas"
             description="Tu plan de entrenamiento"
+            comingSoon
           />
           <ShortcutCard
             href="/dashboard/progreso"

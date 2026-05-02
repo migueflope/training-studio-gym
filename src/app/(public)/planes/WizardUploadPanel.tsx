@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { submitPayment } from "@/app/dashboard/membresia/payment-actions";
-import { whatsappUrl } from "@/lib/whatsapp";
+import { whatsappUrlFor } from "@/lib/whatsapp";
 
 interface WizardUploadPanelProps {
   /** Wizard plan id like "mensualidad", "12-clases", "sesion"… */
@@ -24,6 +24,8 @@ interface WizardUploadPanelProps {
   method: string;
   /** Display total e.g. "$60.000" — only for the header */
   priceLabel: string;
+  /** WhatsApp number from CMS, used for the "coordinate at the club" panel. */
+  whatsappNumber: string;
 }
 
 interface RealPlan {
@@ -82,6 +84,7 @@ export function WizardUploadPanel({
   wizardPlanId,
   method,
   priceLabel,
+  whatsappNumber,
 }: WizardUploadPanelProps) {
   const realPlan = wizardPlanId ? WIZARD_TO_DB[wizardPlanId] ?? null : null;
 
@@ -181,7 +184,7 @@ export function WizardUploadPanel({
     }
     lines.push(``, `Ya subí el comprobante a la app. Avísame cuando lo confirmes 🙏`);
     if (userName) lines.push(`— ${userName}`);
-    const waLink = whatsappUrl(lines.join("\n"));
+    const waLink = whatsappUrlFor(whatsappNumber, lines.join("\n"));
 
     return (
       <div className="space-y-4">

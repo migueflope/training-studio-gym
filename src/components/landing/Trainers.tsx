@@ -4,24 +4,40 @@ import { motion } from "framer-motion";
 import { Award, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-const trainers = [
+export type TrainerCardData = {
+  name: string;
+  specialty: string;
+  experience: string;
+  bio: string;
+  image: string;
+  enabled: boolean;
+};
+
+const FALLBACK_TRAINERS: TrainerCardData[] = [
   {
     name: "Camilo Ortiz",
     specialty: "Hipertrofia y Fuerza",
     experience: "8 años de experiencia",
     bio: "Especialista en biomecánica y desarrollo muscular. Si tu objetivo es ganar masa muscular de forma efectiva y segura, Camilo diseñará la estrategia perfecta para tu cuerpo.",
-    image: "/images/camilo-ortiz.png"
+    image: "/images/camilo-ortiz.png",
+    enabled: true,
   },
   {
     name: "Juan Carlos Bork",
     specialty: "Funcional y Pérdida de Peso",
     experience: "10 años de experiencia",
     bio: "Experto en acondicionamiento físico integral. Transforma tu metabolismo con rutinas dinámicas que combinan fuerza y resistencia cardiovascular.",
-    image: "/images/juan-carlos-bork.png"
-  }
+    image: "/images/juan-carlos-bork.png",
+    enabled: true,
+  },
 ];
 
-export function Trainers() {
+export function Trainers({
+  trainers = FALLBACK_TRAINERS,
+}: {
+  trainers?: TrainerCardData[];
+} = {}) {
+  const visible = trainers.filter((t) => t.enabled);
   return (
     <section className="py-24 bg-card relative">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -35,7 +51,7 @@ export function Trainers() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto">
-          {trainers.map((trainer, index) => (
+          {visible.map((trainer, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, x: index === 0 ? -20 : 20 }}

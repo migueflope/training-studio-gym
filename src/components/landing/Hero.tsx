@@ -4,7 +4,13 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, ChevronDown } from "lucide-react";
 
-export function Hero() {
+export function Hero({
+  badge = "Tu mejor versión empieza hoy",
+  subtitle = "El primer estudio de entrenamiento en Cartagena donde la tecnología se une al músculo para darte resultados medibles.",
+}: {
+  badge?: string;
+  subtitle?: string;
+} = {}) {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Video Background Placeholder — semi-transparent to let particles through */}
@@ -28,16 +34,16 @@ export function Hero() {
           className="max-w-4xl mx-auto space-y-8"
         >
           <div className="inline-block px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-md mb-4">
-            <span className="text-primary font-medium text-sm">Tu mejor versión empieza hoy</span>
+            <span className="text-primary font-medium text-sm">{badge}</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-7xl font-display font-bold tracking-tight text-foreground uppercase">
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.
           </h1>
-          
+
           <p className="text-xl md:text-2xl text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed">
-            El primer estudio de entrenamiento en Cartagena donde la tecnología se une al músculo para darte resultados medibles.
+            {subtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">

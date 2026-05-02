@@ -3,6 +3,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { LayoutDashboard, Users, CreditCard, Dumbbell as DumbbellIcon, Key, Settings, LogOut } from "lucide-react";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLayout({
   children,
@@ -14,6 +15,13 @@ export default async function AdminLayout({
   if (!isAdminRole(profile.role)) redirect("/dashboard");
 
   const roleLabel = profile.role === "owner" ? "Propietario" : "Partner";
+
+  const supabase = await createClient();
+  const { count: pendingPayments } = await supabase
+    .from("payments")
+    .select("id", { count: "exact", head: true })
+    .eq("status", "pending");
+  const pendingBadge = pendingPayments ?? 0;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -46,7 +54,11 @@ export default async function AdminLayout({
             <div className="flex items-center gap-3">
               <CreditCard className="w-5 h-5" /> Pagos
             </div>
-            <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+            {pendingBadge > 0 && (
+              <span className="bg-destructive text-destructive-foreground text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {pendingBadge}
+              </span>
+            )}
           </Link>
           <Link href="/admin/rutinas" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
             <DumbbellIcon className="w-5 h-5" /> Rutinas IA

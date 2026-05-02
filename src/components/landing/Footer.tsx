@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Link as LinkIcon, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { getCmsContent } from "@/lib/cms";
 
-export function Footer() {
+export async function Footer() {
+  const cms = await getCmsContent();
   return (
     <footer className="bg-secondary/30 border-t border-border pt-16 pb-8">
       <div className="container mx-auto px-4 md:px-6">
@@ -54,17 +56,17 @@ export function Footer() {
             <ul className="space-y-4 text-sm text-muted-foreground">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                <span>Urb. Villa Sol 2 Mz. E22 Variante Mamonal<br />Calle Principal, Cartagena</span>
+                <span>{cms.address}</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <a href="https://wa.me/573122765732" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                  +57 312 276 5732
+                <a href={`https://wa.me/${cms.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                  {cms.whatsapp_display}
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
-                <span>info@trainingstudiogym.com</span>
+                <span>{cms.contact_email}</span>
               </li>
             </ul>
           </div>
@@ -77,19 +79,19 @@ export function Footer() {
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <Clock className="w-4 h-4 text-primary" /> Lunes a Viernes
                 </span>
-                <span className="pl-6">5:00 A.M. – 11:00 A.M.<br />2:30 P.M. – 9:00 P.M.</span>
+                <span className="pl-6">{cms.hours_weekdays}</span>
               </li>
               <li className="flex flex-col gap-1">
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <Clock className="w-4 h-4 text-primary" /> Sábado
                 </span>
-                <span className="pl-6">6:30 A.M. – 11:00 A.M.<br />2:30 P.M. – 6:00 P.M.</span>
+                <span className="pl-6">{cms.hours_saturday}</span>
               </li>
               <li className="flex flex-col gap-1">
                 <span className="flex items-center gap-2 font-semibold text-foreground">
                   <Clock className="w-4 h-4 text-primary" /> Dom. y Festivos
                 </span>
-                <span className="pl-6">7:00 A.M. – 12:00 P.M.</span>
+                <span className="pl-6">{cms.hours_sunday}</span>
               </li>
             </ul>
           </div>

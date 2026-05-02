@@ -7,13 +7,17 @@ export const dynamic = "force-dynamic";
 export default async function AdminPaymentsPage() {
   const supabase = await createClient();
 
-  const { data: rows } = await supabase
+  const { data: rows, error: rowsErr } = await supabase
     .from("payments")
     .select(
-      "id, user_id, amount_cop, method, status, transaction_ref, rejection_reason, proof_url, created_at, plans(id, name, price_cop), profiles(id, full_name, avatar_url)",
+      "id, user_id, amount_cop, method, status, transaction_ref, rejection_reason, proof_url, created_at, plans(id, name, price_cop), profiles!payments_user_id_fkey(id, full_name, avatar_url)",
     )
     .order("created_at", { ascending: false })
     .limit(500);
+
+  if (rowsErr) {
+    console.error("[admin/pagos] payments query failed:", rowsErr);
+  }
 
   const userIds = Array.from(
     new Set((rows ?? []).map((r) => r.user_id).filter(Boolean)),

@@ -1,23 +1,53 @@
-"use client";
-
+import Link from "next/link";
 import { Users, CreditCard, TrendingUp, AlertTriangle } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import {
+  getDashboardStats,
+  formatCop,
+  formatDeltaPct,
+} from "@/lib/admin/dashboardStats";
+import { GrowthChart } from "./GrowthChart";
 
-const data = [
-  { name: 'Ene', usuarios: 40, ingresos: 2400000 },
-  { name: 'Feb', usuarios: 55, ingresos: 3300000 },
-  { name: 'Mar', usuarios: 85, ingresos: 5100000 },
-  { name: 'Abr', usuarios: 120, ingresos: 7200000 },
-  { name: 'May', usuarios: 165, ingresos: 9900000 },
-  { name: 'Jun', usuarios: 210, ingresos: 12600000 },
-];
+export const dynamic = "force-dynamic";
 
-export default function AdminDashboardPage() {
+function DeltaBadge({
+  pct,
+  tone = "success",
+}: {
+  pct: number | null;
+  tone?: "success" | "destructive";
+}) {
+  if (pct === null) {
+    return (
+      <span className="text-xs font-bold px-2 py-1 bg-secondary text-muted-foreground rounded-full">
+        Sin datos
+      </span>
+    );
+  }
+  const positive = pct >= 0;
+  const cls = positive
+    ? "bg-success/20 text-success"
+    : tone === "destructive"
+      ? "bg-destructive/20 text-destructive"
+      : "bg-secondary text-muted-foreground";
+  return (
+    <span className={`text-xs font-bold px-2 py-1 rounded-full ${cls}`}>
+      {formatDeltaPct(pct)}
+    </span>
+  );
+}
+
+export default async function AdminDashboardPage() {
+  const stats = await getDashboardStats();
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold mb-2">Resumen Financiero</h1>
-        <p className="text-muted-foreground">Métricas clave del rendimiento del gimnasio.</p>
+        <h1 className="text-3xl font-display font-bold mb-2">
+          Resumen Financiero
+        </h1>
+        <p className="text-muted-foreground">
+          Métricas clave del rendimiento del gimnasio.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -26,10 +56,12 @@ export default function AdminDashboardPage() {
             <div className="p-2 bg-primary/10 rounded-lg">
               <Users className="w-5 h-5 text-primary" />
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-success/20 text-success rounded-full">+12% este mes</span>
+            <DeltaBadge pct={stats.activeMembersDeltaPct} />
           </div>
           <p className="text-sm text-muted-foreground mb-1">Miembros Activos</p>
-          <h3 className="text-3xl font-bold font-display">210</h3>
+          <h3 className="text-3xl font-bold font-display">
+            {stats.activeMembers}
+          </h3>
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-border">
@@ -37,10 +69,14 @@ export default function AdminDashboardPage() {
             <div className="p-2 bg-success/10 rounded-lg">
               <TrendingUp className="w-5 h-5 text-success" />
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-success/20 text-success rounded-full">+25% este mes</span>
+            <DeltaBadge pct={stats.monthlyRevenueDeltaPct} />
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Ingresos (Mensual)</p>
-          <h3 className="text-3xl font-bold font-display">$12.6M</h3>
+          <p className="text-sm text-muted-foreground mb-1">
+            Ingresos (Mensual)
+          </p>
+          <h3 className="text-3xl font-bold font-display">
+            {formatCop(stats.monthlyRevenueCop)}
+          </h3>
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-border">
@@ -48,10 +84,21 @@ export default function AdminDashboardPage() {
             <div className="p-2 bg-accent/10 rounded-lg">
               <CreditCard className="w-5 h-5 text-accent" />
             </div>
-            <span className="text-xs font-bold px-2 py-1 bg-destructive/20 text-destructive rounded-full">3 Pendientes</span>
+            {stats.pendingPayments > 0 ? (
+              <span className="text-xs font-bold px-2 py-1 bg-destructive/20 text-destructive rounded-full">
+                {stats.pendingPayments} Pendiente
+                {stats.pendingPayments === 1 ? "" : "s"}
+              </span>
+            ) : (
+              <span className="text-xs font-bold px-2 py-1 bg-success/20 text-success rounded-full">
+                Al día
+              </span>
+            )}
           </div>
           <p className="text-sm text-muted-foreground mb-1">Pagos por Validar</p>
-          <h3 className="text-3xl font-bold font-display">3</h3>
+          <h3 className="text-3xl font-bold font-display">
+            {stats.pendingPayments}
+          </h3>
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-border">
@@ -60,51 +107,68 @@ export default function AdminDashboardPage() {
               <AlertTriangle className="w-5 h-5 text-destructive" />
             </div>
           </div>
-          <p className="text-sm text-muted-foreground mb-1">Vencen en &lt; 7 días</p>
-          <h3 className="text-3xl font-bold font-display text-destructive">15</h3>
+          <p className="text-sm text-muted-foreground mb-1">
+            Vencen en &lt; 7 días
+          </p>
+          <h3
+            className={`text-3xl font-bold font-display ${
+              stats.expiringSoon > 0 ? "text-destructive" : ""
+            }`}
+          >
+            {stats.expiringSoon}
+          </h3>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 glass-panel p-6 rounded-2xl border border-border">
-          <h3 className="text-xl font-display font-bold mb-6">Crecimiento de Usuarios</h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222222" vertical={false} />
-                <XAxis dataKey="name" stroke="#9A9A9A" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#9A9A9A" fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#111111', borderColor: '#222222', borderRadius: '8px' }}
-                  itemStyle={{ color: '#D4AF37' }}
-                />
-                <Line type="monotone" dataKey="usuarios" stroke="#D4AF37" strokeWidth={3} dot={{ fill: '#D4AF37', strokeWidth: 2 }} activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+          <h3 className="text-xl font-display font-bold mb-6">
+            Crecimiento de Usuarios
+          </h3>
+          <GrowthChart data={stats.growth} />
         </div>
 
         <div className="glass-panel p-6 rounded-2xl border border-border flex flex-col">
-          <h3 className="text-xl font-display font-bold mb-6">Acciones Rápidas</h3>
+          <h3 className="text-xl font-display font-bold mb-6">
+            Acciones Rápidas
+          </h3>
           <div className="space-y-4 flex-1">
-            <button className="w-full p-4 bg-secondary rounded-xl text-left hover:bg-secondary/80 transition-colors border border-border flex items-center justify-between group">
+            <Link
+              href="/admin/pagos"
+              className="w-full p-4 bg-secondary rounded-xl text-left hover:bg-secondary/80 transition-colors border border-border flex items-center justify-between group"
+            >
               <div>
                 <h4 className="font-bold text-sm">Validar Transferencias</h4>
-                <p className="text-xs text-muted-foreground">3 comprobantes nuevos</p>
+                <p className="text-xs text-muted-foreground">
+                  {stats.pendingPayments === 0
+                    ? "Sin comprobantes pendientes"
+                    : `${stats.pendingPayments} comprobante${
+                        stats.pendingPayments === 1 ? "" : "s"
+                      } nuevo${stats.pendingPayments === 1 ? "" : "s"}`}
+                </p>
               </div>
               <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <CreditCard className="w-4 h-4" />
               </div>
-            </button>
-            <button className="w-full p-4 bg-secondary rounded-xl text-left hover:bg-secondary/80 transition-colors border border-border flex items-center justify-between group">
+            </Link>
+            <Link
+              href="/admin/usuarios"
+              className="w-full p-4 bg-secondary rounded-xl text-left hover:bg-secondary/80 transition-colors border border-border flex items-center justify-between group"
+            >
               <div>
                 <h4 className="font-bold text-sm">Enviar Recordatorios</h4>
-                <p className="text-xs text-muted-foreground">15 usuarios por vencer</p>
+                <p className="text-xs text-muted-foreground">
+                  {stats.expiringSoon === 0
+                    ? "Nadie por vencer esta semana"
+                    : `${stats.expiringSoon} usuario${
+                        stats.expiringSoon === 1 ? "" : "s"
+                      } por vencer`}
+                </p>
               </div>
               <div className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
                 <AlertTriangle className="w-4 h-4" />
               </div>
-            </button>
+            </Link>
           </div>
         </div>
       </div>

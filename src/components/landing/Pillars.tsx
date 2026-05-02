@@ -26,7 +26,11 @@ const pillars = [
   }
 ];
 
-export function Pillars() {
+export function Pillars({
+  description = "No somos un gimnasio convencional. Somos un estudio donde fusionamos el entrenamiento duro con las herramientas tecnológicas necesarias para alcanzar tu meta.",
+}: {
+  description?: string;
+} = {}) {
   return (
     <section className="py-24 bg-card relative overflow-hidden">
       {/* Subtle Grid Background */}
@@ -37,9 +41,7 @@ export function Pillars() {
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">
             ¿Por qué <span className="text-primary">Training Studio?</span>
           </h2>
-          <p className="text-muted-foreground text-lg">
-            No somos un gimnasio convencional. Somos un estudio donde fusionamos el entrenamiento duro con las herramientas tecnológicas necesarias para alcanzar tu meta.
-          </p>
+          <p className="text-muted-foreground text-lg">{description}</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

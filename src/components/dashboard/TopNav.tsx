@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Menu } from "lucide-react";
 import { getUserProfile } from "@/lib/auth/getUserProfile";
 import { getMyNotifications } from "@/lib/notifications";
@@ -33,16 +34,24 @@ export async function TopNav() {
               {profile ? roleLabel(profile.role) : "Sin sesión"}
             </p>
           </div>
-          {profile?.avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={profile.avatarUrl}
-              alt={profile.fullName}
-              className="w-9 h-9 rounded-full object-cover border border-primary/20"
-            />
+          {profile ? (
+            <Link href="/dashboard/perfil" aria-label="Mi perfil">
+              {profile.avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={profile.avatarUrl}
+                  alt={profile.fullName}
+                  className="w-9 h-9 rounded-full object-cover border border-primary/20"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-primary font-bold border border-primary/20">
+                  {profile.initials}
+                </div>
+              )}
+            </Link>
           ) : (
             <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center text-primary font-bold border border-primary/20">
-              {profile?.initials ?? "?"}
+              ?
             </div>
           )}
         </div>

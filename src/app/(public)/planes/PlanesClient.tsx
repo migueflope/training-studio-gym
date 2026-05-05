@@ -8,6 +8,12 @@ import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { WizardUploadPanel } from "./WizardUploadPanel";
 
+const BANK_LOGOS: Record<string, string> = {
+  bancolombia: "/assets/banks/bancolombia.svg",
+  nequi: "/assets/banks/nequi.svg",
+  daviplata: "/assets/banks/daviplata.svg",
+};
+
 const basicServices = [
   { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF", features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"] },
   { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false, discount: "-50% OFF", features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"] },
@@ -264,15 +270,27 @@ function PlanesContent({
                     </h3>
                     
                     <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-                      {paymentMethods.map(method => (
-                        <button
-                          key={method.id}
-                          onClick={() => setSelectedMethod(method)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${selectedMethod.id === method.id ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground hover:bg-secondary/80'}`}
-                        >
-                          {method.name}
-                        </button>
-                      ))}
+                      {paymentMethods.map(method => {
+                        const logo = BANK_LOGOS[method.id];
+                        const isActive = selectedMethod.id === method.id;
+                        return (
+                          <button
+                            key={method.id}
+                            onClick={() => setSelectedMethod(method)}
+                            aria-label={method.name}
+                            aria-pressed={isActive}
+                            title={method.name}
+                            className={`shrink-0 inline-flex items-center justify-center rounded-full px-4 py-2 transition-all ring-2 ${isActive ? 'ring-primary bg-white' : 'ring-transparent bg-white/85 hover:bg-white'}`}
+                          >
+                            {logo ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={logo} alt={method.name} className="block h-5 w-auto max-w-none" />
+                            ) : (
+                              <span className="text-sm font-medium text-foreground">{method.name}</span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
 
                     <div className="bg-white p-4 rounded-xl flex items-center justify-center mx-auto w-48 h-48 mb-6 relative">

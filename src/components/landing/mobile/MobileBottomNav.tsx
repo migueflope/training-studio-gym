@@ -56,19 +56,16 @@ export function MobileBottomNav({ profile, hasActiveMembership }: Props) {
 
             const inner = (
               <span
-                className={`flex flex-col items-center justify-center gap-1 px-3 py-2.5 transition-colors ${
+                className={`flex items-center justify-center px-2 py-3 transition-colors ${
                   active
                     ? "text-primary"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon
-                  className={`w-5 h-5 ${active ? "fill-primary/20" : ""}`}
+                  className={`w-7 h-7 ${active ? "fill-primary/20" : ""}`}
                   strokeWidth={active ? 2.4 : 2}
                 />
-                <span className="text-[10px] font-medium tracking-tight">
-                  {item.label}
-                </span>
               </span>
             );
 

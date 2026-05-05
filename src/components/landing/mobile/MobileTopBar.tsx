@@ -11,9 +11,15 @@ interface Props {
   profile: UserProfile | null;
 }
 
-const EDGE_THRESHOLD_PX = 24; // touch must start within this many px of left edge
-const OPEN_DELTA_PX = 60; // and travel at least this far right
-const OPEN_VELOCITY_PX_MS = 0.3; // …or be a fast flick
+// Swipe-right anywhere (not just edge) but with strict thresholds so
+// vertical scrolls and casual taps don't trigger the drawer. Avoiding the
+// edge also dodges iOS Safari's "swipe-back" gesture which used to make
+// the drawer open compete with browser navigation.
+const EDGE_DEAD_ZONE_PX = 24; // ignore swipes that START within this px of the edge (iOS back gesture)
+const OPEN_DELTA_PX = 100; // must travel ≥ this far right
+const OPEN_VELOCITY_PX_MS = 0.4; // …or be a fast flick
+const HORIZONTAL_RATIO = 2; // dx must be at least this many times dy
+const MAX_DURATION_MS = 600; // ignore very slow drags (probably text selection)
 
 export function MobileTopBar({ profile }: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -27,14 +33,26 @@ export function MobileTopBar({ profile }: Props) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Swipe-right from left edge to open drawer (Twitter/X style).
+  // Swipe-right anywhere on the screen to open the drawer. We deliberately
+  // ignore touches that start in the very-left-edge dead zone so iOS Safari's
+  // own "swipe back" gesture wins there (the drawer would otherwise compete
+  // with browser navigation and feel laggy).
   useEffect(() => {
     if (drawerOpen) return;
+
+    const isInteractive = (target: EventTarget | null): boolean => {
+      if (!(target instanceof Element)) return false;
+      // Don't trigger when starting on form controls / scrollable carousels.
+      return !!target.closest(
+        'input, textarea, select, button, a[role="slider"], [data-no-swipe]',
+      );
+    };
 
     const onTouchStart = (e: TouchEvent) => {
       const t = e.touches[0];
       if (!t) return;
-      if (t.clientX > EDGE_THRESHOLD_PX) return; // must start near edge
+      if (t.clientX <= EDGE_DEAD_ZONE_PX) return; // let iOS handle edge back-gesture
+      if (isInteractive(e.target)) return;
       swipeRef.current = { x: t.clientX, y: t.clientY, t: performance.now() };
     };
 
@@ -45,12 +63,14 @@ export function MobileTopBar({ profile }: Props) {
       const t = e.changedTouches[0];
       if (!t) return;
       const dx = t.clientX - start.x;
-      const dy = Math.abs(t.clientY - start.y);
+      const adx = Math.abs(dx);
+      const ady = Math.abs(t.clientY - start.y);
       const dt = Math.max(1, performance.now() - start.t);
+      if (dt > MAX_DURATION_MS) return;
+      if (dx <= 0) return; // must move right
+      if (adx < ady * HORIZONTAL_RATIO) return; // must be clearly horizontal
       const vx = dx / dt;
-      // Mostly horizontal, far enough OR fast enough.
-      if (dy > Math.abs(dx)) return;
-      if (dx > OPEN_DELTA_PX || vx > OPEN_VELOCITY_PX_MS) {
+      if (adx >= OPEN_DELTA_PX || vx >= OPEN_VELOCITY_PX_MS) {
         setDrawerOpen(true);
       }
     };

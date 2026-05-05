@@ -1,7 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Award, Dumbbell, Heart, Trophy, MessageCircle } from "lucide-react";
+import { Award, Dumbbell, Heart, Trophy } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { whatsappUrlFor } from "@/lib/whatsapp";
 import { FALLBACK_TRAINERS, type Trainer } from "./trainers-data";
 
@@ -134,7 +135,7 @@ export default function EntrenadoresClient({
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:-translate-y-0.5 transition-all"
                   >
-                    <MessageCircle className="w-4 h-4" />
+                    <WhatsAppIcon className="w-4 h-4" />
                     Agendar sesión con {trainer.name.split(" ")[0]}
                   </a>
                 </div>

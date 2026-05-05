@@ -11,8 +11,8 @@ import {
   Phone,
   ShieldAlert,
   ArrowRight,
-  MessageCircle,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { createClient } from "@/lib/supabase/client";
 import { submitPayment } from "@/app/dashboard/membresia/payment-actions";
 import { whatsappUrlFor } from "@/lib/whatsapp";
@@ -202,7 +202,7 @@ export function WizardUploadPanel({
             rel="noopener noreferrer"
             className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#25D366] text-white rounded-lg text-sm font-bold hover:bg-[#1fb157] transition-colors mb-3"
           >
-            <MessageCircle className="w-4 h-4" />
+            <WhatsAppIcon className="w-4 h-4" />
             Avisar al equipo por WhatsApp
           </a>
           <Link

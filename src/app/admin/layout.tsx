@@ -6,6 +6,7 @@ import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { createClient } from "@/lib/supabase/server";
 import { getMyNotifications } from "@/lib/notifications";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { AdminMobileShell } from "@/components/admin/mobile/AdminMobileShell";
 import { AdminNav } from "./AdminNav";
 
 export default async function AdminLayout({
@@ -30,7 +31,15 @@ export default async function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Admin Sidebar */}
+      {/* Mobile shell (top bar + drawer + bottom tab bar) */}
+      <AdminMobileShell
+        profile={profile}
+        pendingBadge={pendingBadge}
+        notifItems={notifItems}
+        notifUnread={unreadCount}
+      />
+
+      {/* Admin Sidebar — desktop only */}
       <aside className="w-64 bg-card border-r border-border h-screen sticky top-0 hidden md:flex flex-col">
         <div className="p-5 border-b border-border bg-primary/10">
           <Link href="/" className="flex items-center gap-2.5 group">
@@ -59,7 +68,7 @@ export default async function AdminLayout({
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-card border-b border-border flex items-center justify-between px-8 sticky top-0 z-30">
+        <header className="hidden md:flex h-16 bg-card border-b border-border items-center justify-between px-8 sticky top-0 z-30">
           <h2 className="font-display font-bold text-lg">Centro de Control</h2>
           <div className="flex items-center gap-4">
             <NotificationBell
@@ -72,22 +81,24 @@ export default async function AdminLayout({
                 <p className="text-sm font-bold leading-none mb-1">{profile.fullName}</p>
                 <p className="text-xs text-muted-foreground leading-none">{roleLabel}</p>
               </div>
-              {profile.avatarUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={profile.avatarUrl}
-                  alt={profile.fullName}
-                  className="w-9 h-9 rounded-full object-cover border border-primary/30"
-                />
-              ) : (
-                <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                  {profile.initials}
-                </div>
-              )}
+              <Link href="/dashboard/perfil" aria-label="Mi perfil">
+                {profile.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.fullName}
+                    className="w-9 h-9 rounded-full object-cover border border-primary/30"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
+                    {profile.initials}
+                  </div>
+                )}
+              </Link>
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pt-20 md:pt-8 pb-24 md:pb-8">
           {children}
         </main>
       </div>

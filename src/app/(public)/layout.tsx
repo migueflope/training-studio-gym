@@ -17,7 +17,7 @@ export default async function PublicLayout({
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar profile={profile} hasActiveMembership={hasActiveMembership} />
-      <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
         {children}
       </main>
       <Footer />

@@ -269,7 +269,7 @@ function PlanesContent({
                       <QrCode className="w-6 h-6" /> Escanea para Pagar
                     </h3>
                     
-                    <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <div className="flex flex-wrap gap-2 mb-6">
                       {paymentMethods.map(method => {
                         const logo = BANK_LOGOS[method.id];
                         const isActive = selectedMethod.id === method.id;
@@ -280,13 +280,17 @@ function PlanesContent({
                             aria-label={method.name}
                             aria-pressed={isActive}
                             title={method.name}
-                            className={`shrink-0 inline-flex items-center justify-center rounded-full px-4 py-2 transition-all ring-2 ${isActive ? 'ring-primary bg-white' : 'ring-transparent bg-white/85 hover:bg-white'}`}
+                            className={`flex-1 min-w-0 inline-flex items-center justify-center rounded-full px-4 py-2.5 transition-all ${isActive ? 'bg-primary' : 'bg-secondary hover:bg-secondary/70'}`}
                           >
                             {logo ? (
                               // eslint-disable-next-line @next/next/no-img-element
-                              <img src={logo} alt={method.name} className="block h-5 w-auto max-w-none" />
+                              <img
+                                src={logo}
+                                alt={method.name}
+                                className={`block h-5 w-auto max-w-full ${isActive ? '[filter:brightness(0)]' : '[filter:brightness(0)_invert(1)]'}`}
+                              />
                             ) : (
-                              <span className="text-sm font-medium text-foreground">{method.name}</span>
+                              <span className={`text-sm font-medium ${isActive ? 'text-primary-foreground' : 'text-foreground'}`}>{method.name}</span>
                             )}
                           </button>
                         );

@@ -1,8 +1,13 @@
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import { getUserProfile } from "@/lib/auth/getUserProfile";
+import { getMyNotifications } from "@/lib/notifications";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 
 export async function TopNav() {
   const profile = await getUserProfile();
+  const { items, unreadCount } = profile
+    ? await getMyNotifications(30)
+    : { items: [], unreadCount: 0 };
 
   return (
     <header className="h-16 bg-card border-b border-border flex items-center justify-between px-4 md:px-8 sticky top-0 z-30">
@@ -14,10 +19,13 @@ export async function TopNav() {
       </div>
 
       <div className="flex items-center gap-4">
-        <button className="relative p-2 text-muted-foreground hover:text-foreground transition-colors">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-        </button>
+        {profile && (
+          <NotificationBell
+            userId={profile.id}
+            initialItems={items}
+            initialUnread={unreadCount}
+          />
+        )}
         <div className="flex items-center gap-3 border-l border-border pl-4">
           <div className="text-right hidden sm:block">
             <p className="text-sm font-bold leading-none mb-1">{profile?.fullName ?? "Invitado"}</p>

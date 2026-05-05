@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  MessageCircle,
   MapPin,
   Clock,
   Mail,
@@ -11,6 +10,7 @@ import {
   ArrowRight,
   Send,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { whatsappUrlFor } from "@/lib/whatsapp";
 
 const goalOptions = [
@@ -111,7 +111,7 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <MessageCircle className="w-7 h-7" />
+                  <WhatsAppIcon className="w-7 h-7" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">

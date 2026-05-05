@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Link as LinkIcon, MapPin, Phone, Mail, Clock } from "lucide-react";
+import { MapPin, Mail, Clock } from "lucide-react";
+import { InstagramIcon, FacebookIcon, WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { getCmsContent } from "@/lib/cms";
 
 export async function Footer() {
@@ -29,11 +30,11 @@ export async function Footer() {
               No somos un gimnasio más, somos tu estudio de entrenamiento personalizado. Entrena la mente. Transforma el cuerpo.
             </p>
             <div className="flex items-center gap-4">
-              <a href="https://www.instagram.com/trainingstudiogym/" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-all">
-                <LinkIcon className="w-5 h-5" />
+              <a href="https://www.instagram.com/trainingstudiogym/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-all">
+                <InstagramIcon className="w-5 h-5" />
               </a>
-              <a href="https://www.facebook.com/share/1CTu4s3t3F/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-all">
-                <LinkIcon className="w-5 h-5" />
+              <a href="https://www.facebook.com/share/1CTu4s3t3F/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-foreground hover:bg-primary hover:text-primary-foreground transition-all">
+                <FacebookIcon className="w-5 h-5" />
               </a>
             </div>
           </div>
@@ -59,7 +60,7 @@ export async function Footer() {
                 <span>{cms.address}</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary shrink-0" />
+                <WhatsAppIcon className="w-5 h-5 text-primary shrink-0" />
                 <a href={`https://wa.me/${cms.whatsapp_number}`} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
                   {cms.whatsapp_display}
                 </a>

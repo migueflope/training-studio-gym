@@ -147,37 +147,86 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-accent/10 rounded-lg">
-              <Flame className="w-5 h-5 text-accent" />
+        {isAdmin ? (
+          <>
+            <div className="glass-panel p-6 rounded-2xl border border-border">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-accent/10 rounded-lg">
+                  <Flame className="w-5 h-5 text-accent" />
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 bg-primary/15 text-primary rounded-full uppercase tracking-wider border border-primary/30">
+                  Preview
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Racha de asistencias</p>
+              <h3 className="text-3xl font-bold font-display mb-3">5 días</h3>
+              <div className="flex items-center gap-1.5">
+                {[true, true, true, true, true, false, false].map((on, i) => (
+                  <div
+                    key={i}
+                    className={`h-2 flex-1 rounded-full ${on ? "bg-accent" : "bg-muted/40"}`}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">L M M J V · 2 días para tu mejor racha</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
-              Próximamente
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mb-1">Racha de asistencias</p>
-          <h3 className="text-xl font-bold font-display mb-1">Activá tu racha</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Pronto vas a poder ver cuántos días seguidos venís entrenando.
-          </p>
-        </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-success/10 rounded-lg">
-              <Trophy className="w-5 h-5 text-success" />
+            <div className="glass-panel p-6 rounded-2xl border border-border">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-success/10 rounded-lg">
+                  <Trophy className="w-5 h-5 text-success" />
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 bg-primary/15 text-primary rounded-full uppercase tracking-wider border border-primary/30">
+                  Preview
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Tu meta principal</p>
+              <h3 className="text-xl font-bold font-display mb-3">Bajar 5 kg</h3>
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-muted-foreground">Progreso</span>
+                <span className="font-bold">3 / 5 kg</span>
+              </div>
+              <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
+                <div className="h-full bg-success" style={{ width: "60%" }} />
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">Quedan 2 kg para llegar al objetivo</p>
             </div>
-            <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
-              Próximamente
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mb-1">Tu meta principal</p>
-          <h3 className="text-xl font-bold font-display mb-1">Ponete un objetivo</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            Definí qué querés lograr y seguí tu progreso semana a semana.
-          </p>
-        </div>
+          </>
+        ) : (
+          <>
+            <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-accent/10 rounded-lg">
+                  <Flame className="w-5 h-5 text-accent" />
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
+                  Próximamente
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Racha de asistencias</p>
+              <h3 className="text-xl font-bold font-display mb-1">Activá tu racha</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Pronto vas a poder ver cuántos días seguidos venís entrenando.
+              </p>
+            </div>
+
+            <div className="glass-panel p-6 rounded-2xl border border-border opacity-80">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2 bg-success/10 rounded-lg">
+                  <Trophy className="w-5 h-5 text-success" />
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 bg-muted/40 text-muted-foreground rounded-full uppercase tracking-wider">
+                  Próximamente
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">Tu meta principal</p>
+              <h3 className="text-xl font-bold font-display mb-1">Ponete un objetivo</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                Definí qué querés lograr y seguí tu progreso semana a semana.
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       <div>
@@ -194,7 +243,7 @@ export default async function DashboardPage() {
             icon={<Dumbbell className="w-5 h-5" />}
             title="Rutinas"
             description="Tu plan de entrenamiento"
-            comingSoon
+            comingSoon={!isAdmin}
           />
           <ShortcutCard
             href="/dashboard/progreso"
@@ -207,27 +256,29 @@ export default async function DashboardPage() {
             icon={<Users className="w-5 h-5" />}
             title="Referidos"
             description="Invitá amigos al club"
-            comingSoon
+            comingSoon={!isAdmin}
           />
         </div>
       </div>
 
-      <div className="glass-panel rounded-2xl border border-primary/20 bg-primary/5 p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-2 bg-primary/15 rounded-lg shrink-0">
-            <Sparkles className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h3 className="font-display font-bold text-lg mb-1">
-              Estamos construyendo más cosas
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              Pronto vas a poder armar rutinas, registrar tu progreso y trackear
-              metas dentro del panel. Por ahora explorá las secciones disponibles.
-            </p>
+      {!isAdmin && (
+        <div className="glass-panel rounded-2xl border border-primary/20 bg-primary/5 p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-primary/15 rounded-lg shrink-0">
+              <Sparkles className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-lg mb-1">
+                Estamos construyendo más cosas
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Pronto vas a poder armar rutinas, registrar tu progreso y trackear
+                metas dentro del panel. Por ahora explorá las secciones disponibles.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -56,7 +56,7 @@ export function Sidebar({ isAdmin }: SidebarProps) {
 
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {menuItems.map((item) => {
-          if (item.disabled) {
+          if (item.disabled && !isAdmin) {
             return (
               <div
                 key={item.href}

@@ -1,8 +1,6 @@
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
-import EntrenadoresClient, {
-  FALLBACK_TRAINERS,
-  type Trainer,
-} from "./EntrenadoresClient";
+import EntrenadoresClient from "./EntrenadoresClient";
+import { FALLBACK_TRAINERS, type Trainer } from "./trainers-data";
 
 export const dynamic = "force-dynamic";
 

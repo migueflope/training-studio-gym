@@ -18,7 +18,7 @@ export function Hero({
         <div className="absolute inset-0 bg-background/50 z-10" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent z-10" />
         <img
-          src="/assets/hero-bg.jpg" // We'll add a script to generate this or use a placeholder
+          src="/hero-bg.png"
           alt="Atletas entrenando"
           className="w-full h-full object-cover opacity-30"
         />

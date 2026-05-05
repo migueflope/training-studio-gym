@@ -47,13 +47,6 @@
   * {
     border-color: var(--color-border);
   }
-  html,
-  body {
-    /* Block iOS Safari's swipe-to-go-back animation (which exposes a black
-       backdrop) and any horizontal overscroll bouncing on mobile. Vertical
-       scroll, pinch-zoom, and our JS swipe-to-open-drawer keep working. */
-    overscroll-behavior-x: none;
-  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);

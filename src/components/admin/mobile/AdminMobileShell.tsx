@@ -15,6 +15,7 @@ import {
   Key,
   Settings,
   LogOut,
+  ArrowLeft,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -190,15 +191,18 @@ export function AdminMobileShell({
             <Menu className="w-6 h-6" />
           </button>
 
-          <Link href="/admin" aria-label="Centro de Control" className="flex items-center">
+          <Link href="/" aria-label="Training Studio Gym" className="flex items-center gap-2 min-w-0">
             <Image
               src="/assets/logo-transparent.png"
-              alt="Training Studio Gym"
+              alt=""
               width={928}
               height={1105}
-              className="h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.35)]"
+              className="h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.35)] shrink-0"
               priority
             />
+            <span className="font-display font-bold text-sm tracking-tight truncate">
+              TRAINING STUDIO
+            </span>
           </Link>
 
           <div className="flex items-center gap-1">
@@ -318,7 +322,15 @@ export function AdminMobileShell({
                 })}
               </nav>
 
-              <div className="px-5 py-4 border-t border-border space-y-2">
+              <div className="px-5 py-4 border-t border-border space-y-1">
+                <Link
+                  href="/"
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Volver al sitio
+                </Link>
                 <Link
                   href="/dashboard"
                   onClick={() => setDrawerOpen(false)}

@@ -104,16 +104,19 @@ export function MobileTopBar({ profile }: Props) {
             <Menu className="w-6 h-6" />
           </button>
 
-          {/* Logo centered */}
-          <Link href="/" aria-label="Inicio" className="flex items-center">
+          {/* Logo + name centered, tap → hero */}
+          <Link href="/" aria-label="Training Studio Gym" className="flex items-center gap-2 min-w-0">
             <Image
               src="/assets/logo-transparent.png"
-              alt="Training Studio Gym"
+              alt=""
               width={928}
               height={1105}
-              className="h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.35)]"
+              className="h-9 w-auto object-contain drop-shadow-[0_0_8px_rgba(212,175,55,0.35)] shrink-0"
               priority
             />
+            <span className="font-display font-bold text-sm tracking-tight truncate">
+              TRAINING STUDIO
+            </span>
           </Link>
 
           {/* Right slot: notif bell (logged in) or login link (guest) */}

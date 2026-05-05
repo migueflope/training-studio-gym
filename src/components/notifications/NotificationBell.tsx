@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -78,11 +78,14 @@ export function NotificationBell({
     return () => window.removeEventListener("mousedown", onClick);
   }, [open]);
 
-  // Realtime subscription
+  // Realtime subscription. We use a unique channel id per mount so that
+  // multiple bells (e.g. desktop header + mobile shell hidden via CSS) don't
+  // step on each other's Supabase subscription.
+  const instanceId = useId();
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
-      .channel(`notifications:${userId}`)
+      .channel(`notifications:${userId}:${instanceId}`)
       .on(
         "postgres_changes",
         {
@@ -134,7 +137,7 @@ export function NotificationBell({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [userId, instanceId]);
 
   const handleMarkAllRead = useCallback(async () => {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));

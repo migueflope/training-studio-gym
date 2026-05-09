@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Upload, Trash2, Loader2, UserCircle2, RotateCw } from "lucide-react";
 import { uploadTrainerPhoto, removeTrainerPhoto } from "./actions";
+import { shrinkForUpload } from "@/lib/clientImageResize";
 
 type TrainerKey = "trainer_1" | "trainer_2";
 
@@ -29,14 +30,20 @@ export function TrainerPhotoUploader({
     setError(null);
     startTransition(async () => {
       try {
+        const shrunk = await shrinkForUpload(file, { baseName: trainerKey });
+        if (shrunk.size > 4 * 1024 * 1024) {
+          setError(
+            `La foto pesa ${(shrunk.size / 1024 / 1024).toFixed(1)} MB después de optimizarla y Vercel limita los uploads a 4 MB. Probá con una foto en menor resolución.`,
+          );
+          return;
+        }
         const fd = new FormData();
-        fd.set("file", file);
+        fd.set("file", shrunk);
         fd.set("rotation", String(deg));
         const res = await uploadTrainerPhoto(trainerKey, fd);
         if (res.ok) {
           setPath(res.path);
           if (res.publicUrl) {
-            // Cache-bust so the new (rotated) photo replaces the old preview.
             setUrl(`${res.publicUrl}?t=${Date.now()}`);
           }
         } else {
@@ -56,13 +63,6 @@ export function TrainerPhotoUploader({
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 4 * 1024 * 1024) {
-      setError(
-        `La foto pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Vercel limita los uploads a 4 MB. Tip: en Photos / Vista Previa, exportá la foto en menor resolución (ej. "Tamaño: Mediano"). Si vino del clipboard manager, cierralo y subila directo desde Finder.`,
-      );
-      if (fileRef.current) fileRef.current.value = "";
-      return;
-    }
     lastFileRef.current = file;
     setRotation(0);
     doUpload(file, 0);

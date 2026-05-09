@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Upload, Trash2, Loader2, QrCode } from "lucide-react";
 import { uploadBankQr, removeBankQr } from "./actions";
+import { shrinkForUpload } from "@/lib/clientImageResize";
 
 type BankKey = "bank_bancolombia" | "bank_nequi" | "bank_daviplata";
 
@@ -28,8 +29,19 @@ export function BankQrUploader({
 
     startTransition(async () => {
       try {
+        const shrunk = await shrinkForUpload(file, {
+          baseName: bankKey,
+          maxSize: 1200,
+          quality: 0.9,
+        });
+        if (shrunk.size > 4 * 1024 * 1024) {
+          setError(
+            `La imagen pesa ${(shrunk.size / 1024 / 1024).toFixed(1)} MB después de optimizar. Vercel limita a 4 MB. Probá con menor resolución.`,
+          );
+          return;
+        }
         const fd = new FormData();
-        fd.set("file", file);
+        fd.set("file", shrunk);
         const res = await uploadBankQr(bankKey, fd);
         if (res.ok) {
           setPath(res.path);

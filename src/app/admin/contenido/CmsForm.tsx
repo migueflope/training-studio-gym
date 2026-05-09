@@ -42,6 +42,8 @@ export function CmsForm({
     price_session: number;
     price_assessment: number;
     contact_email: string;
+    whatsapp_number: string;
+    whatsapp_display: string;
     bank_bancolombia: BankWithUrl;
     bank_nequi: BankWithUrl;
     bank_daviplata: BankWithUrl;
@@ -156,6 +158,40 @@ export function CmsForm({
             className={inputCls}
           />
         </Field>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              WhatsApp (solo dígitos, con código país)
+            </label>
+            <input
+              name="whatsapp_number"
+              defaultValue={initial.whatsapp_number}
+              required
+              pattern="\d{8,15}"
+              inputMode="numeric"
+              placeholder="573122765732"
+              className={`${inputCls} font-mono`}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Sin + ni espacios. Ej: 57 (Colombia) + número.
+            </p>
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider mb-1.5 block">
+              WhatsApp (cómo se muestra)
+            </label>
+            <input
+              name="whatsapp_display"
+              defaultValue={initial.whatsapp_display}
+              required
+              placeholder="+57 312 276 5732"
+              className={inputCls}
+            />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Lo que ven los usuarios en footer y página de contacto.
+            </p>
+          </div>
+        </div>
       </Section>
 
       <Section

@@ -13,8 +13,9 @@ export default async function AdminBotIaPage() {
       <div>
         <h1 className="text-3xl font-display font-bold mb-2">Configurar Bot</h1>
         <p className="text-muted-foreground">
-          Edita la personalidad del chatbot del sitio y a qué WhatsApp se
-          redirige a los usuarios.
+          Edita la personalidad del chatbot del sitio. Para cambiar el WhatsApp
+          al que se redirige a los usuarios, ve a CMS Web → Información de
+          Contacto.
         </p>
       </div>
 
@@ -65,11 +66,7 @@ export default async function AdminBotIaPage() {
         </div>
       </div>
 
-      <BotConfigForm
-        systemPrompt={cms.chatbot_system_prompt}
-        whatsappNumber={cms.whatsapp_number}
-        whatsappDisplay={cms.whatsapp_display}
-      />
+      <BotConfigForm systemPrompt={cms.chatbot_system_prompt} />
     </div>
   );
 }

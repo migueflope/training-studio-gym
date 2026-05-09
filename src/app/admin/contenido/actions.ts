@@ -1,8 +1,62 @@
 "use server";
 
+import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
 import type { BankConfig, TrainerConfig } from "@/lib/cms";
+
+function looksLikeHeic(file: File, buffer: Buffer): boolean {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".heic") || name.endsWith(".heif")) return true;
+  const type = file.type.toLowerCase();
+  if (type === "image/heic" || type === "image/heif") return true;
+  // ISO BMFF magic: bytes 4..8 are "ftyp", brand at 8..12 is one of:
+  // heic, heix, hevc, hevx, mif1, msf1
+  if (buffer.length < 12) return false;
+  const ftyp = buffer.subarray(4, 8).toString("ascii");
+  if (ftyp !== "ftyp") return false;
+  const brand = buffer.subarray(8, 12).toString("ascii");
+  return ["heic", "heix", "hevc", "hevx", "mif1", "msf1"].includes(brand);
+}
+
+async function processImageToJpeg(
+  file: File,
+  opts: { maxSize: number; rotation?: number; quality?: number },
+): Promise<{ buffer: Buffer; contentType: "image/jpeg" }> {
+  const arrayBuffer = await file.arrayBuffer();
+  let workingBuffer = Buffer.from(arrayBuffer);
+
+  // Sharp's prebuilt libheif on Vercel ships without libde265, so HEIC
+  // (HEVC-compressed HEIF) fails to decode. Run those through heic-convert
+  // first to get a JPEG buffer that sharp can then resize/rotate.
+  if (looksLikeHeic(file, workingBuffer)) {
+    // heic-convert types want an ArrayBufferLike; cast keeps Buffer compatible.
+    const heicConvert = (await import("heic-convert")).default;
+    const jpegArr = await heicConvert({
+      buffer: workingBuffer as unknown as ArrayBuffer,
+      format: "JPEG",
+      quality: 0.9,
+    });
+    workingBuffer = Buffer.from(jpegArr);
+  }
+
+  // First pass: auto-rotate from EXIF (this also strips the orientation tag)
+  let pipeline = sharp(workingBuffer, { failOn: "none" }).rotate();
+  // Apply manual rotation as a second pass (sharp's rotate(angle) replaces
+  // the EXIF auto-rotate, so we have to chain via an intermediate buffer).
+  if (opts.rotation && opts.rotation % 360 !== 0) {
+    const intermediate = await pipeline.toBuffer();
+    pipeline = sharp(intermediate).rotate(opts.rotation);
+  }
+  const buffer = await pipeline
+    .resize(opts.maxSize, opts.maxSize, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({ quality: opts.quality ?? 85, mozjpeg: true })
+    .toBuffer();
+  return { buffer, contentType: "image/jpeg" };
+}
 
 type Result<T = void> =
   | (T extends void ? { ok: true } : { ok: true; data: T })
@@ -17,6 +71,7 @@ const TEXT_KEYS = [
   "hours_saturday",
   "hours_sunday",
   "contact_email",
+  "whatsapp_display",
 ] as const;
 
 const NUMBER_KEYS = ["price_monthly", "price_session", "price_assessment"] as const;
@@ -37,6 +92,15 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
     if (!v) return { ok: false, error: `El campo "${k}" no puede estar vacío.` };
     updates.push({ key: k, value: v });
   }
+
+  const whatsappNumber = String(formData.get("whatsapp_number") ?? "").trim();
+  if (!/^\d{8,15}$/.test(whatsappNumber)) {
+    return {
+      ok: false,
+      error: "WhatsApp inválido (solo dígitos, con código país, ej. 573122765732).",
+    };
+  }
+  updates.push({ key: "whatsapp_number", value: whatsappNumber });
 
   for (const k of NUMBER_KEYS) {
     const raw = String(formData.get(k) ?? "").replace(/[^\d]/g, "");
@@ -98,27 +162,48 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
 export async function uploadBankQr(
   bankKey: BankKey,
   formData: FormData,
-): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; path: string; publicUrl: string | null }
+  | { ok: false; error: string }
+> {
   const { supabase } = await assertAdmin();
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (!file.type.startsWith("image/")) {
-    return { ok: false, error: "El archivo debe ser una imagen." };
-  }
   if (file.size > 4 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 4MB)." };
+    return { ok: false, error: "Imagen muy pesada (máx 4MB por límite de Vercel)." };
+  }
+  const rotation = Number(formData.get("rotation") ?? 0);
+
+  let processed;
+  try {
+    processed = await processImageToJpeg(file, {
+      maxSize: 1200,
+      rotation: Number.isFinite(rotation) ? rotation : 0,
+      quality: 90,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `No se pudo procesar la imagen (${detail}).`,
+    };
   }
 
-  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const path = `${bankKey}-${Date.now()}.${ext}`;
-
+  const path = `${bankKey}-${Date.now()}.jpg`;
   const { error: upErr } = await supabase.storage
     .from("payment-qrs")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .upload(path, processed.buffer, {
+      upsert: true,
+      contentType: processed.contentType,
+    });
   if (upErr) return { ok: false, error: upErr.message };
+  const { data: publicData } = supabase.storage
+    .from("payment-qrs")
+    .getPublicUrl(path);
+  const publicUrl = publicData?.publicUrl ?? null;
 
   // Update the bank record so the new QR is live immediately. We need to
   // preserve the rest of the bank fields, so read first.
@@ -144,7 +229,7 @@ export async function uploadBankQr(
 
   revalidatePath("/admin/contenido");
   revalidatePath("/", "layout");
-  return { ok: true, path };
+  return { ok: true, path, publicUrl };
 }
 
 export async function removeBankQr(
@@ -185,27 +270,47 @@ export async function removeBankQr(
 export async function uploadTrainerPhoto(
   trainerKey: TrainerKey,
   formData: FormData,
-): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; path: string; publicUrl: string | null }
+  | { ok: false; error: string }
+> {
   const { supabase } = await assertAdmin();
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (!file.type.startsWith("image/")) {
-    return { ok: false, error: "El archivo debe ser una imagen." };
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: "Imagen muy pesada (máx 4MB por límite de Vercel)." };
   }
-  if (file.size > 6 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 6MB)." };
+  const rotation = Number(formData.get("rotation") ?? 0);
+
+  let processed;
+  try {
+    processed = await processImageToJpeg(file, {
+      maxSize: 1600,
+      rotation: Number.isFinite(rotation) ? rotation : 0,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `No se pudo procesar la imagen (${detail}). Si es HEIC del iPhone, prueba activando "Más compatible" en Ajustes → Cámara → Formatos.`,
+    };
   }
 
-  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const path = `${trainerKey}-${Date.now()}.${ext}`;
-
+  const path = `${trainerKey}-${Date.now()}.jpg`;
   const { error: upErr } = await supabase.storage
     .from("trainer-photos")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .upload(path, processed.buffer, {
+      upsert: true,
+      contentType: processed.contentType,
+    });
   if (upErr) return { ok: false, error: upErr.message };
+  const { data: publicData } = supabase.storage
+    .from("trainer-photos")
+    .getPublicUrl(path);
+  const publicUrl = publicData?.publicUrl ?? null;
 
   const { data: row } = await supabase
     .from("content")
@@ -227,7 +332,7 @@ export async function uploadTrainerPhoto(
 
   revalidatePath("/admin/contenido");
   revalidatePath("/", "layout");
-  return { ok: true, path };
+  return { ok: true, path, publicUrl };
 }
 
 export async function removeTrainerPhoto(

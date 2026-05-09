@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import Image from "next/image";
 import { Upload, Trash2, Loader2, QrCode } from "lucide-react";
 import { uploadBankQr, removeBankQr } from "./actions";
+import { shrinkForUpload } from "@/lib/clientImageResize";
 
 type BankKey = "bank_bancolombia" | "bank_nequi" | "bank_daviplata";
 
@@ -27,21 +27,40 @@ export function BankQrUploader({
     if (!file) return;
     setError(null);
 
-    const fd = new FormData();
-    fd.set("file", file);
-
     startTransition(async () => {
-      const res = await uploadBankQr(bankKey, fd);
-      if (res.ok) {
-        setPath(res.path);
-        // Generate a temporary preview URL until the page revalidates.
-        const reader = new FileReader();
-        reader.onload = () => setUrl(reader.result as string);
-        reader.readAsDataURL(file);
-      } else {
-        setError(res.error);
+      try {
+        const shrunk = await shrinkForUpload(file, {
+          baseName: bankKey,
+          maxSize: 1200,
+          quality: 0.9,
+        });
+        if (shrunk.size > 4 * 1024 * 1024) {
+          setError(
+            `La imagen pesa ${(shrunk.size / 1024 / 1024).toFixed(1)} MB después de optimizar. Vercel limita a 4 MB. Probá con menor resolución.`,
+          );
+          return;
+        }
+        const fd = new FormData();
+        fd.set("file", shrunk);
+        const res = await uploadBankQr(bankKey, fd);
+        if (res.ok) {
+          setPath(res.path);
+          if (res.publicUrl) {
+            setUrl(`${res.publicUrl}?t=${Date.now()}`);
+          }
+        } else {
+          setError(res.error);
+        }
+      } catch (err) {
+        console.error("[BankQrUploader]", err);
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : `No se pudo procesar la imagen (${String(err)}). Mira la consola del navegador para más detalle.`,
+        );
+      } finally {
+        if (fileRef.current) fileRef.current.value = "";
       }
-      if (fileRef.current) fileRef.current.value = "";
     });
   }
 

@@ -18,10 +18,30 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const SITE_URL = "https://trainingstudio.com.co";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Training Studio Gym | Cartagena",
-  description: "Entrena la mente. Transforma el cuerpo. Gimnasio premium en Cartagena con entrenamiento personalizado y rutinas inteligentes asistidas por IA.",
-  keywords: "gimnasio en Cartagena, gym Mamonal, entrenamiento personalizado Cartagena, Training Studio Gym",
+  description:
+    "Entrena la mente. Transforma el cuerpo. Gimnasio premium en Cartagena con entrenamiento personalizado y rutinas inteligentes asistidas por IA.",
+  keywords:
+    "gimnasio en Cartagena, gym Mamonal, entrenamiento personalizado Cartagena, Training Studio Gym",
+  openGraph: {
+    type: "website",
+    locale: "es_CO",
+    url: SITE_URL,
+    siteName: "Training Studio Gym",
+    title: "Training Studio Gym | Cartagena",
+    description:
+      "Entrena la mente. Transforma el cuerpo. Gimnasio premium en Cartagena con entrenamiento personalizado y rutinas inteligentes asistidas por IA.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Training Studio Gym | Cartagena",
+    description:
+      "Entrena la mente. Transforma el cuerpo. Gimnasio premium en Cartagena.",
+  },
 };
 
 export default function RootLayout({

@@ -165,6 +165,8 @@ export default async function AdminContenidoPage() {
           price_session: cms.price_session,
           price_assessment: cms.price_assessment,
           contact_email: cms.contact_email,
+          whatsapp_number: cms.whatsapp_number,
+          whatsapp_display: cms.whatsapp_display,
           bank_bancolombia: bancolombia,
           bank_nequi: nequi,
           bank_daviplata: daviplata,

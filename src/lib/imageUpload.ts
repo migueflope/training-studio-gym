@@ -73,6 +73,8 @@ export interface PrepareUploadOptions {
   quality?: number;
   /** Nombre base para el archivo resultante. Default "upload". */
   baseName?: string;
+  /** Rotación adicional en grados (múltiplos de 90). Default 0. */
+  rotation?: number;
 }
 
 /**
@@ -86,7 +88,13 @@ export async function prepareImageForUpload(
   input: File,
   opts: PrepareUploadOptions = {},
 ): Promise<File> {
-  const { maxSize = 1600, quality = 0.85, baseName = "upload" } = opts;
+  const {
+    maxSize = 1600,
+    quality = 0.85,
+    baseName = "upload",
+    rotation = 0,
+  } = opts;
+  const rot = ((Math.round(rotation / 90) * 90) % 360 + 360) % 360;
 
   let workingBlob: Blob = input;
   if (isHeic(input)) {
@@ -105,13 +113,22 @@ export async function prepareImageForUpload(
   const scale = longest > maxSize ? maxSize / longest : 1;
   const targetW = Math.max(1, Math.round(decoded.width * scale));
   const targetH = Math.max(1, Math.round(decoded.height * scale));
+  const swapAxes = rot === 90 || rot === 270;
 
   const canvas = document.createElement("canvas");
-  canvas.width = targetW;
-  canvas.height = targetH;
+  canvas.width = swapAxes ? targetH : targetW;
+  canvas.height = swapAxes ? targetW : targetH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Tu navegador no soporta canvas");
-  ctx.drawImage(decoded.bitmap as CanvasImageSource, 0, 0, targetW, targetH);
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  if (rot !== 0) ctx.rotate((rot * Math.PI) / 180);
+  ctx.drawImage(
+    decoded.bitmap as CanvasImageSource,
+    -targetW / 2,
+    -targetH / 2,
+    targetW,
+    targetH,
+  );
   if ("close" in decoded.bitmap) {
     (decoded.bitmap as ImageBitmap).close();
   }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Upload, Trash2, Loader2, UserCircle2 } from "lucide-react";
+import { Upload, Trash2, Loader2, UserCircle2, RotateCw } from "lucide-react";
 import { uploadTrainerPhoto, removeTrainerPhoto } from "./actions";
 import { prepareImageForUpload } from "@/lib/imageUpload";
 
@@ -23,16 +23,16 @@ export function TrainerPhotoUploader({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const lastFileRef = useRef<File | null>(null);
+  const [rotation, setRotation] = useState(0);
 
-  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  function doUpload(file: File, deg: number) {
     setError(null);
-
     startTransition(async () => {
       try {
         const prepared = await prepareImageForUpload(file, {
           baseName: trainerKey,
+          rotation: deg,
         });
         const fd = new FormData();
         fd.set("file", prepared);
@@ -52,14 +52,35 @@ export function TrainerPhotoUploader({
             ? err.message
             : `No se pudo procesar la imagen (${String(err)}). Mira la consola del navegador para más detalle.`,
         );
-      } finally {
-        if (fileRef.current) fileRef.current.value = "";
       }
     });
   }
 
+  function onPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    lastFileRef.current = file;
+    setRotation(0);
+    doUpload(file, 0);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  function onRotate() {
+    if (!lastFileRef.current) {
+      setError(
+        "Para rotar, primero subí una nueva foto (no se puede rotar la actual sin volver a subirla).",
+      );
+      return;
+    }
+    const next = (rotation + 90) % 360;
+    setRotation(next);
+    doUpload(lastFileRef.current, next);
+  }
+
   function onRemove() {
     setError(null);
+    lastFileRef.current = null;
+    setRotation(0);
     startTransition(async () => {
       const res = await removeTrainerPhoto(trainerKey);
       if (res.ok) {
@@ -120,6 +141,18 @@ export function TrainerPhotoUploader({
               )}
               {url ? "Reemplazar" : "Subir foto"}
             </button>
+            {url && lastFileRef.current && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={onRotate}
+                className="inline-flex items-center gap-2 bg-secondary border border-border px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-secondary/80 disabled:opacity-60"
+                title="Rotar 90° en sentido horario"
+              >
+                <RotateCw className="w-3.5 h-3.5" />
+                Rotar
+              </button>
+            )}
             {url && (
               <button
                 type="button"
@@ -133,7 +166,7 @@ export function TrainerPhotoUploader({
             )}
           </div>
           <p className="text-[11px] text-muted-foreground leading-snug">
-            Si no subes una foto, el sitio usa la imagen por defecto. Recomendado: cuadrada, JPG o PNG hasta 6MB.
+            Si no subes una foto, el sitio usa la imagen por defecto. Recomendado: cuadrada, JPG o PNG hasta 6MB. Si sale rotada, usá el botón "Rotar".
           </p>
           {error && <p className="text-xs text-destructive">{error}</p>}
         </div>

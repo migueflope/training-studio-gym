@@ -21,20 +21,33 @@ async function heicToJpegBlob(file: File, quality: number): Promise<Blob> {
   return Array.isArray(out) ? out[0] : out;
 }
 
-function loadImage(blob: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(img);
-    };
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("No se pudo leer la imagen"));
-    };
-    img.src = url;
-  });
+async function decodeImage(
+  blob: Blob,
+): Promise<{ width: number; height: number; bitmap: ImageBitmap | HTMLImageElement }> {
+  // createImageBitmap respects EXIF orientation when imageOrientation is set
+  // to "from-image" — that fixes iPhone HEIC photos that arrive rotated.
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(blob, {
+        imageOrientation: "from-image",
+      });
+      return { width: bitmap.width, height: bitmap.height, bitmap };
+    } catch {
+      // fall through to <img> path if the format isn't supported
+    }
+  }
+  const url = URL.createObjectURL(blob);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error("Formato de imagen no soportado"));
+      el.src = url;
+    });
+    return { width: img.naturalWidth, height: img.naturalHeight, bitmap: img };
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 function canvasToJpegBlob(
@@ -77,21 +90,31 @@ export async function prepareImageForUpload(
 
   let workingBlob: Blob = input;
   if (isHeic(input)) {
-    workingBlob = await heicToJpegBlob(input, quality);
+    try {
+      workingBlob = await heicToJpegBlob(input, quality);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      throw new Error(
+        `No se pudo convertir HEIC a JPG (${detail}). Tip: en el iPhone, ve a Ajustes → Cámara → Formatos → "Más compatible" para que las fotos se guarden directo en JPG.`,
+      );
+    }
   }
 
-  const img = await loadImage(workingBlob);
-  const longest = Math.max(img.naturalWidth, img.naturalHeight);
+  const decoded = await decodeImage(workingBlob);
+  const longest = Math.max(decoded.width, decoded.height);
   const scale = longest > maxSize ? maxSize / longest : 1;
-  const targetW = Math.round(img.naturalWidth * scale);
-  const targetH = Math.round(img.naturalHeight * scale);
+  const targetW = Math.max(1, Math.round(decoded.width * scale));
+  const targetH = Math.max(1, Math.round(decoded.height * scale));
 
   const canvas = document.createElement("canvas");
   canvas.width = targetW;
   canvas.height = targetH;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Tu navegador no soporta canvas");
-  ctx.drawImage(img, 0, 0, targetW, targetH);
+  ctx.drawImage(decoded.bitmap as CanvasImageSource, 0, 0, targetW, targetH);
+  if ("close" in decoded.bitmap) {
+    (decoded.bitmap as ImageBitmap).close();
+  }
 
   const jpegBlob = await canvasToJpegBlob(canvas, quality);
   return new File([jpegBlob], `${baseName}.jpg`, { type: "image/jpeg" });

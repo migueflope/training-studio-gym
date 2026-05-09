@@ -46,10 +46,11 @@ export function BankQrUploader({
           setError(res.error);
         }
       } catch (err) {
+        console.error("[BankQrUploader]", err);
         setError(
-          err instanceof Error
+          err instanceof Error && err.message
             ? err.message
-            : "No se pudo procesar la imagen.",
+            : `No se pudo procesar la imagen (${String(err)}). Mira la consola del navegador para más detalle.`,
         );
       } finally {
         if (fileRef.current) fileRef.current.value = "";

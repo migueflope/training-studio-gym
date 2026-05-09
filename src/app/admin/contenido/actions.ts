@@ -5,14 +5,43 @@ import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
 import type { BankConfig, TrainerConfig } from "@/lib/cms";
 
+function looksLikeHeic(file: File, buffer: Buffer): boolean {
+  const name = file.name.toLowerCase();
+  if (name.endsWith(".heic") || name.endsWith(".heif")) return true;
+  const type = file.type.toLowerCase();
+  if (type === "image/heic" || type === "image/heif") return true;
+  // ISO BMFF magic: bytes 4..8 are "ftyp", brand at 8..12 is one of:
+  // heic, heix, hevc, hevx, mif1, msf1
+  if (buffer.length < 12) return false;
+  const ftyp = buffer.subarray(4, 8).toString("ascii");
+  if (ftyp !== "ftyp") return false;
+  const brand = buffer.subarray(8, 12).toString("ascii");
+  return ["heic", "heix", "hevc", "hevx", "mif1", "msf1"].includes(brand);
+}
+
 async function processImageToJpeg(
   file: File,
   opts: { maxSize: number; rotation?: number; quality?: number },
 ): Promise<{ buffer: Buffer; contentType: "image/jpeg" }> {
   const arrayBuffer = await file.arrayBuffer();
-  const inputBuffer = Buffer.from(arrayBuffer);
+  let workingBuffer = Buffer.from(arrayBuffer);
+
+  // Sharp's prebuilt libheif on Vercel ships without libde265, so HEIC
+  // (HEVC-compressed HEIF) fails to decode. Run those through heic-convert
+  // first to get a JPEG buffer that sharp can then resize/rotate.
+  if (looksLikeHeic(file, workingBuffer)) {
+    // heic-convert types want an ArrayBufferLike; cast keeps Buffer compatible.
+    const heicConvert = (await import("heic-convert")).default;
+    const jpegArr = await heicConvert({
+      buffer: workingBuffer as unknown as ArrayBuffer,
+      format: "JPEG",
+      quality: 0.9,
+    });
+    workingBuffer = Buffer.from(jpegArr);
+  }
+
   // First pass: auto-rotate from EXIF (this also strips the orientation tag)
-  let pipeline = sharp(inputBuffer, { failOn: "none" }).rotate();
+  let pipeline = sharp(workingBuffer, { failOn: "none" }).rotate();
   // Apply manual rotation as a second pass (sharp's rotate(angle) replaces
   // the EXIF auto-rotate, so we have to chain via an intermediate buffer).
   if (opts.rotation && opts.rotation % 360 !== 0) {
@@ -143,8 +172,8 @@ export async function uploadBankQr(
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (file.size > 12 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 12MB)." };
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: "Imagen muy pesada (máx 4MB por límite de Vercel)." };
   }
   const rotation = Number(formData.get("rotation") ?? 0);
 
@@ -251,8 +280,8 @@ export async function uploadTrainerPhoto(
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (file.size > 12 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 12MB)." };
+  if (file.size > 4 * 1024 * 1024) {
+    return { ok: false, error: "Imagen muy pesada (máx 4MB por límite de Vercel)." };
   }
   const rotation = Number(formData.get("rotation") ?? 0);
 

@@ -56,6 +56,13 @@ export function TrainerPhotoUploader({
   function onPick(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setError(
+        `La foto pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Vercel limita los uploads a 4 MB. Tip: en Photos / Vista Previa, exportá la foto en menor resolución (ej. "Tamaño: Mediano"). Si vino del clipboard manager, cierralo y subila directo desde Finder.`,
+      );
+      if (fileRef.current) fileRef.current.value = "";
+      return;
+    }
     lastFileRef.current = file;
     setRotation(0);
     doUpload(file, 0);

@@ -1,8 +1,33 @@
 "use server";
 
+import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
 import type { BankConfig, TrainerConfig } from "@/lib/cms";
+
+async function processImageToJpeg(
+  file: File,
+  opts: { maxSize: number; rotation?: number; quality?: number },
+): Promise<{ buffer: Buffer; contentType: "image/jpeg" }> {
+  const arrayBuffer = await file.arrayBuffer();
+  const inputBuffer = Buffer.from(arrayBuffer);
+  // First pass: auto-rotate from EXIF (this also strips the orientation tag)
+  let pipeline = sharp(inputBuffer, { failOn: "none" }).rotate();
+  // Apply manual rotation as a second pass (sharp's rotate(angle) replaces
+  // the EXIF auto-rotate, so we have to chain via an intermediate buffer).
+  if (opts.rotation && opts.rotation % 360 !== 0) {
+    const intermediate = await pipeline.toBuffer();
+    pipeline = sharp(intermediate).rotate(opts.rotation);
+  }
+  const buffer = await pipeline
+    .resize(opts.maxSize, opts.maxSize, {
+      fit: "inside",
+      withoutEnlargement: true,
+    })
+    .jpeg({ quality: opts.quality ?? 85, mozjpeg: true })
+    .toBuffer();
+  return { buffer, contentType: "image/jpeg" };
+}
 
 type Result<T = void> =
   | (T extends void ? { ok: true } : { ok: true; data: T })
@@ -108,27 +133,48 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
 export async function uploadBankQr(
   bankKey: BankKey,
   formData: FormData,
-): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; path: string; publicUrl: string | null }
+  | { ok: false; error: string }
+> {
   const { supabase } = await assertAdmin();
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (!file.type.startsWith("image/")) {
-    return { ok: false, error: "El archivo debe ser una imagen." };
+  if (file.size > 12 * 1024 * 1024) {
+    return { ok: false, error: "Imagen muy pesada (máx 12MB)." };
   }
-  if (file.size > 4 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 4MB)." };
+  const rotation = Number(formData.get("rotation") ?? 0);
+
+  let processed;
+  try {
+    processed = await processImageToJpeg(file, {
+      maxSize: 1200,
+      rotation: Number.isFinite(rotation) ? rotation : 0,
+      quality: 90,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `No se pudo procesar la imagen (${detail}).`,
+    };
   }
 
-  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const path = `${bankKey}-${Date.now()}.${ext}`;
-
+  const path = `${bankKey}-${Date.now()}.jpg`;
   const { error: upErr } = await supabase.storage
     .from("payment-qrs")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .upload(path, processed.buffer, {
+      upsert: true,
+      contentType: processed.contentType,
+    });
   if (upErr) return { ok: false, error: upErr.message };
+  const { data: publicData } = supabase.storage
+    .from("payment-qrs")
+    .getPublicUrl(path);
+  const publicUrl = publicData?.publicUrl ?? null;
 
   // Update the bank record so the new QR is live immediately. We need to
   // preserve the rest of the bank fields, so read first.
@@ -154,7 +200,7 @@ export async function uploadBankQr(
 
   revalidatePath("/admin/contenido");
   revalidatePath("/", "layout");
-  return { ok: true, path };
+  return { ok: true, path, publicUrl };
 }
 
 export async function removeBankQr(
@@ -195,27 +241,47 @@ export async function removeBankQr(
 export async function uploadTrainerPhoto(
   trainerKey: TrainerKey,
   formData: FormData,
-): Promise<{ ok: true; path: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; path: string; publicUrl: string | null }
+  | { ok: false; error: string }
+> {
   const { supabase } = await assertAdmin();
 
   const file = formData.get("file");
   if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "Selecciona una imagen." };
   }
-  if (!file.type.startsWith("image/")) {
-    return { ok: false, error: "El archivo debe ser una imagen." };
+  if (file.size > 12 * 1024 * 1024) {
+    return { ok: false, error: "Imagen muy pesada (máx 12MB)." };
   }
-  if (file.size > 6 * 1024 * 1024) {
-    return { ok: false, error: "Imagen muy pesada (máx 6MB)." };
+  const rotation = Number(formData.get("rotation") ?? 0);
+
+  let processed;
+  try {
+    processed = await processImageToJpeg(file, {
+      maxSize: 1600,
+      rotation: Number.isFinite(rotation) ? rotation : 0,
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    return {
+      ok: false,
+      error: `No se pudo procesar la imagen (${detail}). Si es HEIC del iPhone, prueba activando "Más compatible" en Ajustes → Cámara → Formatos.`,
+    };
   }
 
-  const ext = (file.name.split(".").pop() ?? "png").toLowerCase();
-  const path = `${trainerKey}-${Date.now()}.${ext}`;
-
+  const path = `${trainerKey}-${Date.now()}.jpg`;
   const { error: upErr } = await supabase.storage
     .from("trainer-photos")
-    .upload(path, file, { upsert: true, contentType: file.type });
+    .upload(path, processed.buffer, {
+      upsert: true,
+      contentType: processed.contentType,
+    });
   if (upErr) return { ok: false, error: upErr.message };
+  const { data: publicData } = supabase.storage
+    .from("trainer-photos")
+    .getPublicUrl(path);
+  const publicUrl = publicData?.publicUrl ?? null;
 
   const { data: row } = await supabase
     .from("content")
@@ -237,7 +303,7 @@ export async function uploadTrainerPhoto(
 
   revalidatePath("/admin/contenido");
   revalidatePath("/", "layout");
-  return { ok: true, path };
+  return { ok: true, path, publicUrl };
 }
 
 export async function removeTrainerPhoto(

@@ -3,7 +3,6 @@
 import { useRef, useState, useTransition } from "react";
 import { Upload, Trash2, Loader2, QrCode } from "lucide-react";
 import { uploadBankQr, removeBankQr } from "./actions";
-import { prepareImageForUpload } from "@/lib/imageUpload";
 
 type BankKey = "bank_bancolombia" | "bank_nequi" | "bank_daviplata";
 
@@ -29,19 +28,14 @@ export function BankQrUploader({
 
     startTransition(async () => {
       try {
-        const prepared = await prepareImageForUpload(file, {
-          baseName: bankKey,
-          maxSize: 1200,
-          quality: 0.9,
-        });
         const fd = new FormData();
-        fd.set("file", prepared);
+        fd.set("file", file);
         const res = await uploadBankQr(bankKey, fd);
         if (res.ok) {
           setPath(res.path);
-          const reader = new FileReader();
-          reader.onload = () => setUrl(reader.result as string);
-          reader.readAsDataURL(prepared);
+          if (res.publicUrl) {
+            setUrl(`${res.publicUrl}?t=${Date.now()}`);
+          }
         } else {
           setError(res.error);
         }

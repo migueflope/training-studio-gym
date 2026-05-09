@@ -3,7 +3,6 @@
 import { useRef, useState, useTransition } from "react";
 import { Upload, Trash2, Loader2, UserCircle2, RotateCw } from "lucide-react";
 import { uploadTrainerPhoto, removeTrainerPhoto } from "./actions";
-import { prepareImageForUpload } from "@/lib/imageUpload";
 
 type TrainerKey = "trainer_1" | "trainer_2";
 
@@ -30,18 +29,16 @@ export function TrainerPhotoUploader({
     setError(null);
     startTransition(async () => {
       try {
-        const prepared = await prepareImageForUpload(file, {
-          baseName: trainerKey,
-          rotation: deg,
-        });
         const fd = new FormData();
-        fd.set("file", prepared);
+        fd.set("file", file);
+        fd.set("rotation", String(deg));
         const res = await uploadTrainerPhoto(trainerKey, fd);
         if (res.ok) {
           setPath(res.path);
-          const reader = new FileReader();
-          reader.onload = () => setUrl(reader.result as string);
-          reader.readAsDataURL(prepared);
+          if (res.publicUrl) {
+            // Cache-bust so the new (rotated) photo replaces the old preview.
+            setUrl(`${res.publicUrl}?t=${Date.now()}`);
+          }
         } else {
           setError(res.error);
         }

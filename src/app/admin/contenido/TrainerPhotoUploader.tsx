@@ -3,6 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Upload, Trash2, Loader2, UserCircle2 } from "lucide-react";
 import { uploadTrainerPhoto, removeTrainerPhoto } from "./actions";
+import { prepareImageForUpload } from "@/lib/imageUpload";
 
 type TrainerKey = "trainer_1" | "trainer_2";
 
@@ -28,20 +29,31 @@ export function TrainerPhotoUploader({
     if (!file) return;
     setError(null);
 
-    const fd = new FormData();
-    fd.set("file", file);
-
     startTransition(async () => {
-      const res = await uploadTrainerPhoto(trainerKey, fd);
-      if (res.ok) {
-        setPath(res.path);
-        const reader = new FileReader();
-        reader.onload = () => setUrl(reader.result as string);
-        reader.readAsDataURL(file);
-      } else {
-        setError(res.error);
+      try {
+        const prepared = await prepareImageForUpload(file, {
+          baseName: trainerKey,
+        });
+        const fd = new FormData();
+        fd.set("file", prepared);
+        const res = await uploadTrainerPhoto(trainerKey, fd);
+        if (res.ok) {
+          setPath(res.path);
+          const reader = new FileReader();
+          reader.onload = () => setUrl(reader.result as string);
+          reader.readAsDataURL(prepared);
+        } else {
+          setError(res.error);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo procesar la imagen.",
+        );
+      } finally {
+        if (fileRef.current) fileRef.current.value = "";
       }
-      if (fileRef.current) fileRef.current.value = "";
     });
   }
 

@@ -17,6 +17,7 @@ const TEXT_KEYS = [
   "hours_saturday",
   "hours_sunday",
   "contact_email",
+  "whatsapp_display",
 ] as const;
 
 const NUMBER_KEYS = ["price_monthly", "price_session", "price_assessment"] as const;
@@ -37,6 +38,15 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
     if (!v) return { ok: false, error: `El campo "${k}" no puede estar vacío.` };
     updates.push({ key: k, value: v });
   }
+
+  const whatsappNumber = String(formData.get("whatsapp_number") ?? "").trim();
+  if (!/^\d{8,15}$/.test(whatsappNumber)) {
+    return {
+      ok: false,
+      error: "WhatsApp inválido (solo dígitos, con código país, ej. 573122765732).",
+    };
+  }
+  updates.push({ key: "whatsapp_number", value: whatsappNumber });
 
   for (const k of NUMBER_KEYS) {
     const raw = String(formData.get(k) ?? "").replace(/[^\d]/g, "");

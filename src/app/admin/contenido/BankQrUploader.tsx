@@ -1,9 +1,9 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import Image from "next/image";
 import { Upload, Trash2, Loader2, QrCode } from "lucide-react";
 import { uploadBankQr, removeBankQr } from "./actions";
+import { prepareImageForUpload } from "@/lib/imageUpload";
 
 type BankKey = "bank_bancolombia" | "bank_nequi" | "bank_daviplata";
 
@@ -27,21 +27,33 @@ export function BankQrUploader({
     if (!file) return;
     setError(null);
 
-    const fd = new FormData();
-    fd.set("file", file);
-
     startTransition(async () => {
-      const res = await uploadBankQr(bankKey, fd);
-      if (res.ok) {
-        setPath(res.path);
-        // Generate a temporary preview URL until the page revalidates.
-        const reader = new FileReader();
-        reader.onload = () => setUrl(reader.result as string);
-        reader.readAsDataURL(file);
-      } else {
-        setError(res.error);
+      try {
+        const prepared = await prepareImageForUpload(file, {
+          baseName: bankKey,
+          maxSize: 1200,
+          quality: 0.9,
+        });
+        const fd = new FormData();
+        fd.set("file", prepared);
+        const res = await uploadBankQr(bankKey, fd);
+        if (res.ok) {
+          setPath(res.path);
+          const reader = new FileReader();
+          reader.onload = () => setUrl(reader.result as string);
+          reader.readAsDataURL(prepared);
+        } else {
+          setError(res.error);
+        }
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo procesar la imagen.",
+        );
+      } finally {
+        if (fileRef.current) fileRef.current.value = "";
       }
-      if (fileRef.current) fileRef.current.value = "";
     });
   }
 

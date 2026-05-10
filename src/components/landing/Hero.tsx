@@ -86,16 +86,18 @@ export function Hero({
           loop
           muted={isMuted}
           playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-80"
+          className="absolute inset-0 w-full h-full object-cover opacity-30 md:opacity-80"
         />
         {/* Futuristic Overlay / Glow for Video */}
         <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/40 to-background z-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-background/70 to-background z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-background/85 to-background md:via-background/70 z-10" />
+        {/* Mobile spotlight: subtle gold-dark radial behind the text block for legibility without breaking the futuristic feel */}
+        <div className="md:hidden absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_45%,_rgba(0,0,0,0.55)_0%,_rgba(0,0,0,0.25)_55%,_transparent_100%)] z-10" />
       </div>
 
       {/* ======================= FOREGROUND CONTENT ======================= */}
-      <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center mt-16 pointer-events-none">
+      <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center -mt-16 md:mt-0 pointer-events-none">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -115,18 +117,17 @@ export function Hero({
             </motion.div>
           </motion.div>
 
-          <motion.h1 
+          <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl font-display font-bold tracking-tight text-white uppercase drop-shadow-[0_0_30px_rgba(0,0,0,0.8)]"
+            className="text-5xl md:text-7xl font-display font-bold tracking-tight text-foreground uppercase"
           >
-            Entrena la <span className="text-gradient-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">mente</span>.<br />
-            Transforma el <span className="text-gradient-gold drop-shadow-[0_0_15px_rgba(212,175,55,0.5)]">cuerpo</span>.
+            Entrena la <span className="text-gradient-gold">mente</span>.<br />
+            Transforma el <span className="text-gradient-gold">cuerpo</span>.
           </motion.h1>
 
-          <motion.p 
+          <motion.p
             variants={itemVariants}
-            /* Cleaned up the background box you disliked! Now it relies on a strong drop-shadow for readability over the video */
-            className="text-xl md:text-2xl text-gray-200 font-body max-w-2xl mx-auto leading-relaxed drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)] font-light"
+            className="text-xl md:text-2xl text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed"
           >
             {subtitle}
           </motion.p>
@@ -156,23 +157,35 @@ export function Hero({
       {/* ======================= AUDIO CONTROL ======================= */}
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 1.5 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          boxShadow: [
+            "0 0 0px rgba(212,175,55,0.0)",
+            "0 0 18px rgba(212,175,55,0.45)",
+            "0 0 0px rgba(212,175,55,0.0)",
+          ],
+        }}
+        transition={{
+          delay: 1.5,
+          boxShadow: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
+        }}
         onClick={(e) => {
           e.stopPropagation();
           setIsMuted(!isMuted);
         }}
-        className="absolute bottom-12 right-6 md:right-12 z-30 flex items-center gap-2 px-5 py-3 bg-black/60 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-all hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] group pointer-events-auto"
+        aria-label={isMuted ? "Activar sonido" : "Silenciar"}
+        className="absolute bottom-24 right-4 md:bottom-12 md:right-12 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
       >
         {isMuted ? (
           <>
             <VolumeX className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">Activar sonido</span>
+            <span className="hidden md:inline text-sm font-medium">Activar sonido</span>
           </>
         ) : (
           <>
             <Volume2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium">Silenciar</span>
+            <span className="hidden md:inline text-sm font-medium">Silenciar</span>
           </>
         )}
       </motion.button>

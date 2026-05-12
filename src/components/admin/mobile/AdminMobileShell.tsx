@@ -324,7 +324,7 @@ export function AdminMobileShell({
 
               <div className="px-5 py-4 border-t border-border space-y-1">
                 <Link
-                  href="/"
+                  href="/?landing=1"
                   onClick={() => setDrawerOpen(false)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-colors"
                 >

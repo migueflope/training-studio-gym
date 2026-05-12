@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { Dumbbell, LayoutDashboard, CreditCard, TrendingUp, Users, Settings, LogOut, Shield, Lock } from "lucide-react";
+import { ArrowLeft, Dumbbell, LayoutDashboard, CreditCard, TrendingUp, Users, Settings, LogOut, Shield, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type MenuItem = {
@@ -40,7 +40,7 @@ export function Sidebar({ isAdmin }: SidebarProps) {
   return (
     <aside className="w-64 bg-card border-r border-border h-screen sticky top-0 hidden md:flex flex-col">
       <div className="p-5 border-b border-border">
-        <Link href="/" className="flex items-center gap-2.5 group">
+        <Link href="/?landing=1" className="flex items-center gap-2.5 group">
           <Image
             src="/assets/logo-transparent.png"
             alt="Training Studio Gym"
@@ -103,7 +103,14 @@ export function Sidebar({ isAdmin }: SidebarProps) {
         )}
       </nav>
 
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-1">
+        <Link
+          href="/?landing=1"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all w-full"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Volver al sitio
+        </Link>
         <button
           onClick={handleSignOut}
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all w-full text-left"

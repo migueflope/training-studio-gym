@@ -28,9 +28,14 @@ const TRAINER_DEFAULTS: Array<
   },
 ];
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ landing?: string }>;
+}) {
+  const { landing } = await searchParams;
   const profile = await getUserProfile();
-  if (profile && !isAdminRole(profile.role)) {
+  if (!landing && profile && !isAdminRole(profile.role)) {
     const membership = await getActiveMembership(profile.id);
     if (membership) redirect("/dashboard");
   }

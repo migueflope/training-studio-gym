@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Lock, X, ArrowRight, UserPlus, Sparkles, MessageCircle } from "lucide-react";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 export type LockedAccessMode = "unauthenticated" | "no-membership";
 
@@ -13,24 +14,26 @@ interface LockedAccessDialogProps {
   onClose: () => void;
 }
 
-const COPY: Record<LockedAccessMode, {
+type CopyItem = {
   title: string;
   body: string;
-  primaryHref: string;
+  primaryAction: { type: "link"; href: string } | { type: "auth"; mode: "login" | "signup" };
   primaryLabel: string;
   primaryIcon: React.ReactNode;
-  secondaryHref: string;
+  secondaryAction: { type: "link"; href: string } | { type: "auth"; mode: "login" | "signup" };
   secondaryLabel: string;
   secondaryIcon: React.ReactNode;
-}> = {
+};
+
+const COPY: Record<LockedAccessMode, CopyItem> = {
   unauthenticated: {
     title: "Acceso exclusivo para socios",
     body:
       "Tu panel personal está reservado para miembros del club. Iniciá sesión para ver tus rutinas, progreso y reservas.",
-    primaryHref: "/login",
+    primaryAction: { type: "auth", mode: "login" },
     primaryLabel: "Iniciar Sesión",
     primaryIcon: <ArrowRight className="w-4 h-4" />,
-    secondaryHref: "/login?mode=signup",
+    secondaryAction: { type: "auth", mode: "signup" },
     secondaryLabel: "Crear cuenta",
     secondaryIcon: <UserPlus className="w-4 h-4" />,
   },
@@ -38,16 +41,17 @@ const COPY: Record<LockedAccessMode, {
     title: "Necesitás un plan activo",
     body:
       "Tu panel se desbloquea apenas tengas una membresía vigente. Elegí el plan que mejor te queda y empezá a entrenar con nosotros.",
-    primaryHref: "/planes",
+    primaryAction: { type: "link", href: "/planes" },
     primaryLabel: "Ver planes",
     primaryIcon: <Sparkles className="w-4 h-4" />,
-    secondaryHref: "/contacto",
+    secondaryAction: { type: "link", href: "/contacto" },
     secondaryLabel: "Hablar con un asesor",
     secondaryIcon: <MessageCircle className="w-4 h-4" />,
   },
 };
 
 export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogProps) {
+  const { openAuth } = useAuthModal();
   useEffect(() => {
     if (!open) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -103,27 +107,70 @@ export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogPr
               </p>
 
               <div className="flex flex-col w-full gap-2.5">
-                <Link
-                  href={COPY[mode].primaryHref}
-                  onClick={onClose}
-                  className="flex items-center justify-center gap-2 px-5 py-3 text-[15px] font-bold bg-primary text-primary-foreground rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_28px_rgba(212,175,55,0.65)] hover:-translate-y-0.5 transition-all"
-                >
-                  {COPY[mode].primaryIcon}
-                  {COPY[mode].primaryLabel}
-                </Link>
-                <Link
-                  href={COPY[mode].secondaryHref}
-                  onClick={onClose}
-                  className="flex items-center justify-center gap-2 px-5 py-3 text-[15px] font-medium text-foreground border border-border rounded-full hover:border-primary/40 hover:bg-primary/5 transition-colors"
-                >
-                  {COPY[mode].secondaryIcon}
-                  {COPY[mode].secondaryLabel}
-                </Link>
+                <ActionButton
+                  action={COPY[mode].primaryAction}
+                  variant="primary"
+                  label={COPY[mode].primaryLabel}
+                  icon={COPY[mode].primaryIcon}
+                  onClose={onClose}
+                  openAuth={openAuth}
+                />
+                <ActionButton
+                  action={COPY[mode].secondaryAction}
+                  variant="secondary"
+                  label={COPY[mode].secondaryLabel}
+                  icon={COPY[mode].secondaryIcon}
+                  onClose={onClose}
+                  openAuth={openAuth}
+                />
               </div>
             </div>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+function ActionButton({
+  action,
+  variant,
+  label,
+  icon,
+  onClose,
+  openAuth,
+}: {
+  action: CopyItem["primaryAction"];
+  variant: "primary" | "secondary";
+  label: string;
+  icon: React.ReactNode;
+  onClose: () => void;
+  openAuth: (mode: "login" | "signup") => void;
+}) {
+  const className =
+    variant === "primary"
+      ? "flex items-center justify-center gap-2 px-5 py-3 text-[15px] font-bold bg-primary text-primary-foreground rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_28px_rgba(212,175,55,0.65)] hover:-translate-y-0.5 transition-all"
+      : "flex items-center justify-center gap-2 px-5 py-3 text-[15px] font-medium text-foreground border border-border rounded-full hover:border-primary/40 hover:bg-primary/5 transition-colors";
+
+  if (action.type === "auth") {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          onClose();
+          openAuth(action.mode);
+        }}
+        className={className}
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  }
+  return (
+    <Link href={action.href} onClick={onClose} className={className}>
+      {icon}
+      {label}
+    </Link>
   );
 }

@@ -3,6 +3,7 @@ import Image from "next/image";
 import { MapPin, Mail, Clock } from "lucide-react";
 import { InstagramIcon, FacebookIcon, WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { getCmsContent } from "@/lib/cms";
+import { FooterAuthLink } from "./FooterAuthLink";
 
 export async function Footer() {
   const cms = await getCmsContent();
@@ -47,7 +48,7 @@ export async function Footer() {
               <li><Link href="/entrenadores" className="hover:text-primary transition-colors">Nuestros Entrenadores</Link></li>
               <li><Link href="/rutinas" className="hover:text-primary transition-colors">Biblioteca de Rutinas</Link></li>
               <li><Link href="/contacto" className="hover:text-primary transition-colors">Contacto</Link></li>
-              <li><Link href="/login" className="hover:text-primary transition-colors">Portal de Miembros</Link></li>
+              <li><FooterAuthLink label="Portal de Miembros" /></li>
             </ul>
           </div>
 

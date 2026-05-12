@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { Hero } from "@/components/landing/Hero";
 import { Pillars } from "@/components/landing/Pillars";
 import { Pricing } from "@/components/landing/Pricing";
@@ -5,6 +6,8 @@ import { Trainers, type TrainerCardData } from "@/components/landing/Trainers";
 import { Location } from "@/components/landing/Location";
 import { ParticleField } from "@/components/ui/ParticleField";
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
+import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
+import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +29,12 @@ const TRAINER_DEFAULTS: Array<
 ];
 
 export default async function Home() {
+  const profile = await getUserProfile();
+  if (profile && !isAdminRole(profile.role)) {
+    const membership = await getActiveMembership(profile.id);
+    if (membership) redirect("/dashboard");
+  }
+
   const cms = await getCmsContent();
 
   const trainers: TrainerCardData[] = await Promise.all(

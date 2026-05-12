@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { WizardUploadPanel } from "./WizardUploadPanel";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 const BANK_LOGOS: Record<string, string> = {
   bancolombia: "/assets/banks/bancolombia.svg",
@@ -60,6 +61,7 @@ function PlanesContent({
   whatsappNumber: string;
 }) {
   const searchParams = useSearchParams();
+  const { openAuth } = useAuthModal();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
@@ -354,11 +356,11 @@ function PlanesContent({
               <p className="text-muted-foreground mb-8">
                 Estamos verificando tu comprobante. En breve recibirás un correo de confirmación y podrás acceder a tu panel.
               </p>
-              <button 
-                onClick={() => window.location.href = "/login"}
+              <button
+                onClick={() => openAuth("login")}
                 className="w-full py-4 bg-primary text-primary-foreground font-bold rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all"
               >
-                Ir a Iniciar Sesión
+                Iniciar Sesión
               </button>
             </motion.div>
           )}

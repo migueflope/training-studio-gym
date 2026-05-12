@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Dumbbell, ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 
 export default function AuthLayout({
   children,
@@ -11,16 +12,24 @@ export default function AuthLayout({
       {/* Background elements */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-primary/20 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/20 blur-[120px] rounded-full pointer-events-none" />
-      
+
       <div className="w-full max-w-md relative z-10">
         <div className="mb-8 flex flex-col items-center justify-center">
-          <Link href="/" className="flex items-center gap-2 mb-8 group transition-transform hover:scale-105">
-            <div className="relative flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/50 text-primary-foreground shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-              <Dumbbell className="w-7 h-7" />
-            </div>
-            <span className="font-display font-bold text-2xl tracking-tight">
+          <Link
+            href="/"
+            className="flex items-center gap-2 mb-8 group transition-transform hover:scale-105"
+          >
+            <Image
+              src="/assets/logo-transparent.png"
+              alt="Training Studio Gym"
+              width={928}
+              height={1105}
+              className="h-14 w-auto object-contain drop-shadow-[0_0_14px_rgba(212,175,55,0.4)]"
+              priority
+            />
+            <span className="font-display font-bold text-xl tracking-tight">
               TRAINING STUDIO
-              <span className="text-primary ml-1 block text-center -mt-2">GYM</span>
+              <span className="text-primary ml-1 block text-center -mt-1">GYM</span>
             </span>
           </Link>
         </div>

@@ -16,6 +16,7 @@ import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { createClient } from "@/lib/supabase/client";
 import { submitPayment } from "@/app/dashboard/membresia/payment-actions";
 import { whatsappUrlFor } from "@/lib/whatsapp";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 interface WizardUploadPanelProps {
   /** Wizard plan id like "mensualidad", "12-clases", "sesion"… */
@@ -87,6 +88,7 @@ export function WizardUploadPanel({
   whatsappNumber,
 }: WizardUploadPanelProps) {
   const realPlan = wizardPlanId ? WIZARD_TO_DB[wizardPlanId] ?? null : null;
+  const { openAuth } = useAuthModal();
 
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [userName, setUserName] = useState<string>("");
@@ -148,7 +150,7 @@ export function WizardUploadPanel({
   }
 
   if (!userId) {
-    const next = encodeURIComponent(`/planes?plan=${wizardPlanId}&step=3`);
+    const next = `/planes?plan=${wizardPlanId}&step=3`;
     return (
       <div className="space-y-4">
         <Header priceLabel={priceLabel} />
@@ -158,14 +160,15 @@ export function WizardUploadPanel({
             Necesitamos asociar el comprobante a tu cuenta para que el equipo
             pueda verificar tu pago y activarte la membresía.
           </p>
-          <Link
-            href={`/login?next=${next}`}
+          <button
+            type="button"
+            onClick={() => openAuth("signup", { next })}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors"
           >
             <LogIn className="w-4 h-4" />
             Iniciar sesión / Crear cuenta
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </button>
         </div>
       </div>
     );

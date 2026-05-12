@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { createClient } from "@/lib/supabase/client";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
 export function MobileDrawer({ open, onClose, profile }: Props) {
   const router = useRouter();
   const isAdmin = !!profile && isAdminRole(profile.role);
+  const { openAuth } = useAuthModal();
 
   // Lock body scroll while open
   useEffect(() => {
@@ -213,14 +215,17 @@ export function MobileDrawer({ open, onClose, profile }: Props) {
                   Cerrar Sesión
                 </button>
               ) : (
-                <Link
-                  href="/login"
-                  onClick={onClose}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    openAuth("login");
+                  }}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-bold border border-border rounded-xl"
                 >
                   <LogIn className="w-4 h-4" />
                   Iniciar Sesión
-                </Link>
+                </button>
               )}
             </div>
           </motion.aside>

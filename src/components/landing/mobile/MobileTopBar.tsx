@@ -3,12 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Bell } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { UserProfile } from "@/lib/auth/roles";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
+import type { Notification } from "@/lib/notifications";
 import { MobileDrawer } from "./MobileDrawer";
 
 interface Props {
   profile: UserProfile | null;
+  hasActiveMembership?: boolean;
+  notifItems?: Notification[];
+  notifUnread?: number;
 }
 
 // Swipe-right anywhere (not just edge) but with strict thresholds so
@@ -21,10 +27,16 @@ const OPEN_VELOCITY_PX_MS = 0.4; // …or be a fast flick
 const HORIZONTAL_RATIO = 2; // dx must be at least this many times dy
 const MAX_DURATION_MS = 600; // ignore very slow drags (probably text selection)
 
-export function MobileTopBar({ profile }: Props) {
+export function MobileTopBar({
+  profile,
+  hasActiveMembership = false,
+  notifItems = [],
+  notifUnread = 0,
+}: Props) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const { openAuth } = useAuthModal();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -119,24 +131,23 @@ export function MobileTopBar({ profile }: Props) {
             </span>
           </Link>
 
-          {/* Right slot: notif bell (logged in) or login link (guest) */}
-          <div className="flex items-center justify-end min-w-[40px]">
-            {profile ? (
-              <Link
-                href="/dashboard"
-                aria-label="Notificaciones"
-                className="relative p-2 -mr-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Bell className="w-5 h-5" />
-              </Link>
-            ) : (
-              <Link
-                href="/login"
+          {/* Right slot: notif bell popover (active member), or login link (guest / no membership) */}
+          <div className="flex items-center justify-end min-w-[40px] -mr-2">
+            {profile && hasActiveMembership ? (
+              <NotificationBell
+                userId={profile.id}
+                initialItems={notifItems}
+                initialUnread={notifUnread}
+              />
+            ) : !profile ? (
+              <button
+                type="button"
+                onClick={() => openAuth("login")}
                 className="px-3 py-1.5 text-xs font-bold text-primary"
               >
                 Entrar
-              </Link>
-            )}
+              </button>
+            ) : null}
           </div>
         </div>
       </header>

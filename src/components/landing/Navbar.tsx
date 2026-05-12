@@ -8,13 +8,18 @@ import { Shield, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { AvatarMenu } from "@/components/auth/AvatarMenu";
 import { LockedAccessDialog } from "@/components/landing/LockedAccessDialog";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
+import type { Notification } from "@/lib/notifications";
 import { MobileTopBar } from "./mobile/MobileTopBar";
 import { MobileBottomNav } from "./mobile/MobileBottomNav";
 
 interface NavbarProps {
   profile: UserProfile | null;
   hasActiveMembership?: boolean;
+  notifItems?: Notification[];
+  notifUnread?: number;
 }
 
 interface NavLink {
@@ -24,11 +29,17 @@ interface NavLink {
   matchPrefix?: boolean;
 }
 
-export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
+export function Navbar({
+  profile,
+  hasActiveMembership = false,
+  notifItems = [],
+  notifUnread = 0,
+}: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
   const [lockedDialogOpen, setLockedDialogOpen] = useState(false);
   const pathname = usePathname();
+  const { openAuth } = useAuthModal();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,7 +75,12 @@ export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
   return (
     <>
       {/* Mobile-only navigation: top bar + drawer + bottom tab bar */}
-      <MobileTopBar profile={profile} />
+      <MobileTopBar
+        profile={profile}
+        hasActiveMembership={hasActiveMembership}
+        notifItems={notifItems}
+        notifUnread={notifUnread}
+      />
       <MobileBottomNav profile={profile} hasActiveMembership={hasActiveMembership} />
 
       {/* Desktop navigation (≥ md) */}
@@ -170,6 +186,13 @@ export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
                 Panel de Admin
               </Link>
             )}
+            {profile && hasActiveMembership && (
+              <NotificationBell
+                userId={profile.id}
+                initialItems={notifItems}
+                initialUnread={notifUnread}
+              />
+            )}
             {profile ? (
               <AvatarMenu
                 fullName={profile.fullName}
@@ -178,12 +201,13 @@ export function Navbar({ profile, hasActiveMembership = false }: NavbarProps) {
                 email={profile.email}
               />
             ) : (
-              <Link
-                href="/login"
+              <button
+                type="button"
+                onClick={() => openAuth("login")}
                 className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
               >
                 Iniciar Sesión
-              </Link>
+              </button>
             )}
             <Link
               href="/contacto"

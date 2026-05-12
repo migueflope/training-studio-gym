@@ -204,7 +204,7 @@ export function DashboardMobileShell({
             <Menu className="w-6 h-6" />
           </button>
 
-          <Link href="/" aria-label="Training Studio Gym" className="flex items-center gap-2 min-w-0">
+          <Link href="/?landing=1" aria-label="Training Studio Gym" className="flex items-center gap-2 min-w-0">
             <Image
               src="/assets/logo-transparent.png"
               alt=""
@@ -359,7 +359,7 @@ export function DashboardMobileShell({
 
               <div className="px-5 py-4 border-t border-border space-y-1">
                 <Link
-                  href="/"
+                  href="/?landing=1"
                   onClick={() => setDrawerOpen(false)}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-colors"
                 >

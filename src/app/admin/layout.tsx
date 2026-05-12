@@ -42,7 +42,7 @@ export default async function AdminLayout({
       {/* Admin Sidebar — desktop only */}
       <aside className="w-64 bg-card border-r border-border h-screen sticky top-0 hidden md:flex flex-col">
         <div className="p-5 border-b border-border bg-primary/10">
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/?landing=1" className="flex items-center gap-2.5 group">
             <Image
               src="/assets/logo-transparent.png"
               alt="Training Studio Gym"
@@ -60,7 +60,7 @@ export default async function AdminLayout({
         <AdminNav pendingBadge={pendingBadge} />
 
         <div className="p-4 border-t border-border">
-          <Link href="/" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full text-left">
+          <Link href="/?landing=1" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full text-left">
             <LogOut className="w-5 h-5" /> Salir del Admin
           </Link>
         </div>

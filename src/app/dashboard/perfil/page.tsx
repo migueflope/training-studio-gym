@@ -4,6 +4,7 @@ import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 import { ProfileSection } from "./ProfileSection";
 import { AvatarSection } from "./AvatarSection";
 import { EmailSection } from "./EmailSection";
+import { PasswordSection } from "./PasswordSection";
 import { MembershipCard } from "./MembershipCard";
 import { SignOutButton } from "./SignOutButton";
 
@@ -45,6 +46,8 @@ export default async function ProfilePage() {
       />
 
       <EmailSection currentEmail={profile.email} />
+
+      <PasswordSection email={profile.email} />
 
       <MembershipCard membership={membership} isAdmin={isAdmin} />
 

@@ -2,7 +2,11 @@ import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
-import { getMyNotifications, type Notification } from "@/lib/notifications";
+import {
+  ensureExpiringNotification,
+  getMyNotifications,
+  type Notification,
+} from "@/lib/notifications";
 
 export default async function PublicLayout({
   children,
@@ -18,6 +22,7 @@ export default async function PublicLayout({
   let notifItems: Notification[] = [];
   let notifUnread = 0;
   if (profile && hasActiveMembership) {
+    await ensureExpiringNotification(profile.id);
     const res = await getMyNotifications(30);
     notifItems = res.items;
     notifUnread = res.unreadCount;

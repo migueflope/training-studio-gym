@@ -7,7 +7,6 @@ import Link from "next/link";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
   AlertCircle,
-  Lock,
   Loader2,
   Mail,
   MailCheck,
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 import { useAuthModal } from "./AuthModalProvider";
 
 const backdropVariants: Variants = {
@@ -223,13 +223,11 @@ function LoginForm({ onSuccess, next }: { onSuccess: () => void; next: string })
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <InputWithIcon
-            Icon={Lock}
-            type="password"
-            required
+          <PasswordField
             value={password}
             onChange={setPassword}
-            placeholder="••••••••"
+            required
+            autoComplete="current-password"
           />
         </div>
         <SubmitButton loading={isLoading} label="Iniciar Sesión" />
@@ -243,6 +241,7 @@ function SignupForm() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -251,6 +250,10 @@ function SignupForm() {
     async (e: React.FormEvent) => {
       e.preventDefault();
       setError(null);
+      if (password !== passwordConfirm) {
+        setError("Las contraseñas no coinciden.");
+        return;
+      }
       setIsLoading(true);
       const supabase = createClient();
       const { error: signUpError } = await supabase.auth.signUp({
@@ -268,7 +271,7 @@ function SignupForm() {
       }
       setEmailSent(true);
     },
-    [email, password, fullName, phone],
+    [email, password, passwordConfirm, fullName, phone],
   );
 
   if (emailSent) {
@@ -326,16 +329,30 @@ function SignupForm() {
           placeholder="300 123 4567"
         />
         <FieldEmail value={email} onChange={setEmail} />
-        <Field
-          label="Contraseña"
-          Icon={Lock}
-          type="password"
-          required
-          minLength={6}
-          value={password}
-          onChange={setPassword}
-          placeholder="••••••••"
-        />
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-muted-foreground pl-1">
+            Contraseña
+          </label>
+          <PasswordField
+            value={password}
+            onChange={setPassword}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-muted-foreground pl-1">
+            Confirmar contraseña
+          </label>
+          <PasswordField
+            value={passwordConfirm}
+            onChange={setPasswordConfirm}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </div>
         <div className="flex items-start gap-2 pt-1">
           <input
             type="checkbox"

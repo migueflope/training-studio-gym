@@ -3,15 +3,17 @@
 import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, Loader2, Phone, MailCheck, AlertCircle } from "lucide-react";
+import { User, Mail, Loader2, Phone, MailCheck, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
@@ -19,6 +21,10 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (password !== passwordConfirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
     setIsLoading(true);
 
     const supabase = createClient();
@@ -150,18 +156,24 @@ export default function RegisterPage() {
 
         <div className="space-y-1">
           <label className="text-sm font-medium text-muted-foreground pl-1">Contraseña</label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-              placeholder="••••••••"
-            />
-          </div>
+          <PasswordField
+            value={password}
+            onChange={setPassword}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium text-muted-foreground pl-1">Confirmar contraseña</label>
+          <PasswordField
+            value={passwordConfirm}
+            onChange={setPasswordConfirm}
+            required
+            minLength={6}
+            autoComplete="new-password"
+          />
         </div>
 
         <div className="flex items-start gap-2 pt-2 pb-2">

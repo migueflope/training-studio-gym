@@ -140,15 +140,26 @@ export function NotificationBell({
   }, [userId, instanceId]);
 
   const handleMarkAllRead = useCallback(async () => {
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnread(0);
+    // Sticky: membership_expiring stays unread until the user renews.
+    setItems((prev) =>
+      prev.map((n) =>
+        n.type === "membership_expiring" ? n : { ...n, read: true },
+      ),
+    );
+    setUnread((u) => {
+      const stickyUnread = items.filter(
+        (n) => n.type === "membership_expiring" && !n.read,
+      ).length;
+      return stickyUnread;
+    });
     await markAllNotificationsRead();
     router.refresh();
-  }, [router]);
+  }, [router, items]);
 
   const handleItemClick = useCallback(
     async (n: Notification) => {
-      if (!n.read) {
+      // membership_expiring is sticky: don't mark read, just navigate.
+      if (!n.read && n.type !== "membership_expiring") {
         setItems((prev) =>
           prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)),
         );
@@ -160,6 +171,16 @@ export function NotificationBell({
     },
     [router],
   );
+
+  // Sort: sticky (membership_expiring) first, then by createdAt desc.
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const aSticky = a.type === "membership_expiring" ? 1 : 0;
+      const bSticky = b.type === "membership_expiring" ? 1 : 0;
+      if (aSticky !== bSticky) return bSticky - aSticky;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+  }, [items]);
 
   const hasUnread = unread > 0;
   const visibleUnread = useMemo(() => Math.min(99, unread), [unread]);
@@ -207,45 +228,53 @@ export function NotificationBell({
               </div>
             ) : (
               <ul className="divide-y divide-border">
-                {items.map((n) => {
+                {sortedItems.map((n) => {
                   const meta = TYPE_META[n.type] ?? TYPE_META.system;
                   const Icon = meta.Icon;
-                  const Wrapper = n.link
-                    ? ({ children }: { children: React.ReactNode }) => (
-                        <button
-                          type="button"
-                          onClick={() => handleItemClick(n)}
-                          className="w-full text-left"
-                        >
-                          {children}
-                        </button>
-                      )
-                    : ({ children }: { children: React.ReactNode }) => (
-                        <button
-                          type="button"
-                          onClick={() => handleItemClick(n)}
-                          className="w-full text-left"
-                        >
-                          {children}
-                        </button>
-                      );
+                  const isSticky = n.type === "membership_expiring";
                   return (
                     <li
                       key={n.id}
                       className={`px-4 py-3 transition-colors hover:bg-secondary/50 ${
-                        n.read ? "" : "bg-primary/5"
+                        isSticky
+                          ? "bg-destructive/10 border-l-2 border-destructive"
+                          : n.read
+                            ? ""
+                            : "bg-primary/5"
                       }`}
                     >
-                      <Wrapper>
+                      <button
+                        type="button"
+                        onClick={() => handleItemClick(n)}
+                        className="w-full text-left"
+                      >
                         <div className="flex items-start gap-3">
-                          <div className={`p-1.5 rounded-lg bg-secondary shrink-0 ${meta.tone}`}>
+                          <div
+                            className={`p-1.5 rounded-lg shrink-0 ${
+                              isSticky
+                                ? "bg-destructive/20 text-destructive"
+                                : `bg-secondary ${meta.tone}`
+                            }`}
+                          >
                             <Icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2 mb-0.5">
-                              <p className="text-sm font-bold truncate">{n.title}</p>
-                              {!n.read && (
-                                <span className="shrink-0 w-2 h-2 rounded-full bg-primary" />
+                              <p
+                                className={`text-sm font-bold truncate ${
+                                  isSticky ? "text-destructive" : ""
+                                }`}
+                              >
+                                {n.title}
+                              </p>
+                              {isSticky ? (
+                                <span className="shrink-0 text-[9px] font-bold tracking-wider uppercase bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/30">
+                                  Urgente
+                                </span>
+                              ) : (
+                                !n.read && (
+                                  <span className="shrink-0 w-2 h-2 rounded-full bg-primary" />
+                                )
                               )}
                             </div>
                             {n.body && (
@@ -258,7 +287,7 @@ export function NotificationBell({
                             </p>
                           </div>
                         </div>
-                      </Wrapper>
+                      </button>
                     </li>
                   );
                 })}

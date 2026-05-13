@@ -13,11 +13,15 @@ export async function markAllNotificationsRead(): Promise<Result> {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "No autenticado" };
 
+  // membership_expiring is sticky — it stays unread until the user renews
+  // (and the cron stops generating it). Excluding it keeps the bell badge
+  // visible as a persistent reminder.
   const { error } = await supabase
     .from("notifications")
     .update({ read: true })
     .eq("user_id", user.id)
-    .eq("read", false);
+    .eq("read", false)
+    .neq("type", "membership_expiring");
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };
@@ -30,11 +34,13 @@ export async function markNotificationRead(id: string): Promise<Result> {
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "No autenticado" };
 
+  // Sticky guard: don't allow marking membership_expiring as read.
   const { error } = await supabase
     .from("notifications")
     .update({ read: true })
     .eq("id", id)
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .neq("type", "membership_expiring");
 
   if (error) return { ok: false, error: error.message };
   return { ok: true };

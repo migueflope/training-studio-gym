@@ -4,9 +4,10 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
+import { Mail, Loader2, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { GoogleButton } from "@/components/auth/GoogleButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 function LoginForm() {
   const router = useRouter();
@@ -94,17 +95,12 @@ function LoginForm() {
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
-              placeholder="••••••••"
-            />
-          </div>
+          <PasswordField
+            value={password}
+            onChange={setPassword}
+            required
+            autoComplete="current-password"
+          />
         </div>
 
         <button

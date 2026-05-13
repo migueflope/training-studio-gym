@@ -20,17 +20,15 @@ export async function GET(request: Request) {
     return d.toISOString().slice(0, 10);
   };
 
-  // We notify on day 3 and day 1 (and day 0 = vence hoy).
-  const targets: { offset: number; label: string }[] = [
-    { offset: 3, label: "en 3 días" },
-    { offset: 1, label: "mañana" },
-    { offset: 0, label: "hoy" },
-  ];
+  // We notify every day in the final 7-day window so the bell shows a
+  // sticky reminder until the member renews. Offsets 7..1 = "X days left",
+  // offset 0 = "vence hoy".
+  const targets: number[] = [7, 6, 5, 4, 3, 2, 1, 0];
 
   const stats: Record<string, number> = {};
   const errors: string[] = [];
 
-  for (const { offset, label } of targets) {
+  for (const offset of targets) {
     const targetDate = ymd(offset);
     const { data: memberships, error } = await supabase
       .from("memberships")
@@ -65,7 +63,7 @@ export async function GET(request: Request) {
           ? "Tu membresía vence hoy"
           : offset === 1
             ? "Tu membresía vence mañana"
-            : `Tu membresía vence ${label}`;
+            : `Tu membresía vence en ${offset} días`;
 
       const body = `Renová ${planName ? `tu plan "${planName}"` : "tu plan"} para no perder el acceso al club ni tu rutina personalizada.`;
 

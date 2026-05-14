@@ -186,13 +186,11 @@ export function Navbar({
                 Panel de Admin
               </Link>
             )}
-            {profile && hasActiveMembership && (
-              <NotificationBell
-                userId={profile.id}
-                initialItems={notifItems}
-                initialUnread={notifUnread}
-              />
-            )}
+            <NotificationBell
+              userId={profile?.id ?? null}
+              initialItems={notifItems}
+              initialUnread={notifUnread}
+            />
             {profile ? (
               <AvatarMenu
                 fullName={profile.fullName}

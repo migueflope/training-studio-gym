@@ -1,5 +1,6 @@
 import { Navbar } from "@/components/landing/Navbar";
 import { Footer } from "@/components/landing/Footer";
+import { CheckoutResumeToast } from "@/components/landing/CheckoutResumeToast";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 import {
@@ -40,6 +41,7 @@ export default async function PublicLayout({
         {children}
       </main>
       <Footer />
+      <CheckoutResumeToast />
     </div>
   );
 }

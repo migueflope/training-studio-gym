@@ -13,6 +13,7 @@ import {
   Megaphone,
   MessageSquare,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -20,12 +21,21 @@ import {
   markNotificationRead,
 } from "@/app/notifications/actions";
 import type { Notification, NotificationType } from "@/lib/notifications";
+import { readCheckout } from "@/lib/checkout/storage";
 
 interface NotificationBellProps {
-  userId: string;
+  userId: string | null;
   initialItems: Notification[];
   initialUnread: number;
 }
+
+const CHECKOUT_NOTIF_ID = "__checkout-resume__";
+const PLAN_NAMES: Record<string, string> = {
+  mensualidad: "Mensualidad del Gym",
+  "12-clases": "Paquete 12 Clases",
+  "15-clases": "Paquete 15 Clases",
+  "20-clases": "Paquete 20 Clases",
+};
 
 const TYPE_META: Record<
   NotificationType,
@@ -66,7 +76,28 @@ export function NotificationBell({
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>(initialItems);
   const [unread, setUnread] = useState(initialUnread);
+  const [checkoutPlanLabel, setCheckoutPlanLabel] = useState<string | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Detect pending checkout from localStorage; surface it as a virtual,
+  // client-only "Continuá tu pago" notification.
+  useEffect(() => {
+    const sync = () => {
+      const saved = readCheckout();
+      if (saved && saved.step >= 2 && saved.step <= 3) {
+        setCheckoutPlanLabel(PLAN_NAMES[saved.plan] ?? "tu plan");
+      } else {
+        setCheckoutPlanLabel(null);
+      }
+    };
+    sync();
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -83,6 +114,7 @@ export function NotificationBell({
   // step on each other's Supabase subscription.
   const instanceId = useId();
   useEffect(() => {
+    if (!userId) return;
     const supabase = createClient();
     const channel = supabase
       .channel(`notifications:${userId}:${instanceId}`)
@@ -158,6 +190,12 @@ export function NotificationBell({
 
   const handleItemClick = useCallback(
     async (n: Notification) => {
+      // Virtual checkout entry: navigate without touching the server.
+      if (n.id === CHECKOUT_NOTIF_ID) {
+        setOpen(false);
+        if (n.link) router.push(n.link);
+        return;
+      }
       // membership_expiring is sticky: don't mark read, just navigate.
       if (!n.read && n.type !== "membership_expiring") {
         setItems((prev) =>
@@ -172,25 +210,53 @@ export function NotificationBell({
     [router],
   );
 
-  // Sort: sticky (membership_expiring) first, then by createdAt desc.
+  // Sort: checkout-resume + sticky (membership_expiring) first, then by
+  // createdAt desc. Inject a virtual client-only entry for the pending
+  // checkout if there is one in localStorage.
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      const aSticky = a.type === "membership_expiring" ? 1 : 0;
-      const bSticky = b.type === "membership_expiring" ? 1 : 0;
-      if (aSticky !== bSticky) return bSticky - aSticky;
+    const all: Notification[] = [...items];
+    if (checkoutPlanLabel) {
+      all.unshift({
+        id: CHECKOUT_NOTIF_ID,
+        type: "system",
+        title: "Continuá tu pago",
+        body: `Tu progreso de ${checkoutPlanLabel} está guardado. Tocá para seguir.`,
+        link: "/planes",
+        read: false,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    return all.sort((a, b) => {
+      const score = (n: Notification) =>
+        n.id === CHECKOUT_NOTIF_ID
+          ? 2
+          : n.type === "membership_expiring"
+            ? 1
+            : 0;
+      const sa = score(a);
+      const sb = score(b);
+      if (sa !== sb) return sb - sa;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
-  }, [items]);
+  }, [items, checkoutPlanLabel]);
 
-  const hasUnread = unread > 0;
-  const visibleUnread = useMemo(() => Math.min(99, unread), [unread]);
+  const effectiveUnread = unread + (checkoutPlanLabel ? 1 : 0);
+  const hasUnread = effectiveUnread > 0;
+  const visibleUnread = useMemo(
+    () => Math.min(99, effectiveUnread),
+    [effectiveUnread],
+  );
+
+  // Hide entirely if there's nothing to show: no account-bound notifications
+  // AND no pending checkout. Prevents an empty bell from appearing for guests.
+  if (!userId && !checkoutPlanLabel) return null;
 
   return (
     <div ref={wrapperRef} className="relative">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={`Notificaciones${hasUnread ? ` (${unread} sin leer)` : ""}`}
+        aria-label={`Notificaciones${hasUnread ? ` (${effectiveUnread} sin leer)` : ""}`}
         className="relative p-2 text-muted-foreground hover:text-foreground transition-colors"
       >
         <Bell className="w-5 h-5" />
@@ -219,7 +285,7 @@ export function NotificationBell({
           </div>
 
           <div className="max-h-[420px] overflow-y-auto">
-            {items.length === 0 ? (
+            {sortedItems.length === 0 ? (
               <div className="px-6 py-10 text-center">
                 <Bell className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
@@ -229,18 +295,21 @@ export function NotificationBell({
             ) : (
               <ul className="divide-y divide-border">
                 {sortedItems.map((n) => {
+                  const isCheckout = n.id === CHECKOUT_NOTIF_ID;
                   const meta = TYPE_META[n.type] ?? TYPE_META.system;
-                  const Icon = meta.Icon;
+                  const Icon = isCheckout ? RotateCcw : meta.Icon;
                   const isSticky = n.type === "membership_expiring";
                   return (
                     <li
                       key={n.id}
                       className={`px-4 py-3 transition-colors hover:bg-secondary/50 ${
-                        isSticky
-                          ? "bg-destructive/10 border-l-2 border-destructive"
-                          : n.read
-                            ? ""
-                            : "bg-primary/5"
+                        isCheckout
+                          ? "bg-primary/10 border-l-2 border-primary"
+                          : isSticky
+                            ? "bg-destructive/10 border-l-2 border-destructive"
+                            : n.read
+                              ? ""
+                              : "bg-primary/5"
                       }`}
                     >
                       <button
@@ -251,9 +320,11 @@ export function NotificationBell({
                         <div className="flex items-start gap-3">
                           <div
                             className={`p-1.5 rounded-lg shrink-0 ${
-                              isSticky
-                                ? "bg-destructive/20 text-destructive"
-                                : `bg-secondary ${meta.tone}`
+                              isCheckout
+                                ? "bg-primary/20 text-primary"
+                                : isSticky
+                                  ? "bg-destructive/20 text-destructive"
+                                  : `bg-secondary ${meta.tone}`
                             }`}
                           >
                             <Icon className="w-4 h-4" />
@@ -262,12 +333,20 @@ export function NotificationBell({
                             <div className="flex items-center justify-between gap-2 mb-0.5">
                               <p
                                 className={`text-sm font-bold truncate ${
-                                  isSticky ? "text-destructive" : ""
+                                  isCheckout
+                                    ? "text-primary"
+                                    : isSticky
+                                      ? "text-destructive"
+                                      : ""
                                 }`}
                               >
                                 {n.title}
                               </p>
-                              {isSticky ? (
+                              {isCheckout ? (
+                                <span className="shrink-0 text-[9px] font-bold tracking-wider uppercase bg-primary/20 text-primary px-1.5 py-0.5 rounded-full border border-primary/30">
+                                  Pendiente
+                                </span>
+                              ) : isSticky ? (
                                 <span className="shrink-0 text-[9px] font-bold tracking-wider uppercase bg-destructive/20 text-destructive px-1.5 py-0.5 rounded-full border border-destructive/30">
                                   Urgente
                                 </span>

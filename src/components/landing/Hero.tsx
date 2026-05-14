@@ -135,11 +135,7 @@ export function Hero({
 
           <motion.h1
             variants={itemVariants}
-            style={{
-              paintOrder: "stroke fill",
-              WebkitTextStroke: "2px #000",
-            }}
-            className="text-[2.25rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-bold tracking-tight text-foreground uppercase"
+            className="text-[2.25rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-black tracking-tight text-foreground uppercase"
           >
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.

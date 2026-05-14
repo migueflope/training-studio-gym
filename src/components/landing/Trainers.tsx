@@ -60,12 +60,12 @@ export function Trainers({
               transition={{ duration: 0.6 }}
               className="group relative overflow-hidden rounded-2xl bg-secondary/30 border border-border flex flex-col md:flex-row"
             >
-              <div className="md:w-2/5 h-64 md:h-auto relative overflow-hidden">
+              <div className="md:w-2/5 aspect-[3/5] md:aspect-auto md:h-auto relative overflow-hidden">
                 <div className="absolute inset-0 bg-background/20 z-10" />
                 <img
                   src={trainer.image}
                   alt={trainer.name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
                 />
                 {/* Fallback pattern if image is missing */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-secondary to-primary/20 opacity-50 mix-blend-overlay" />

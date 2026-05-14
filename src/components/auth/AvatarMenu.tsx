@@ -3,20 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, User, LogOut, ChevronDown } from "lucide-react";
+import { LayoutDashboard, User, LogOut, ChevronDown, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
+import { LockedAccessDialog } from "@/components/landing/LockedAccessDialog";
 
 interface AvatarMenuProps {
   fullName: string;
   initials: string;
   avatarUrl: string | null;
   email: string;
+  canAccessDashboard?: boolean;
 }
 
-export function AvatarMenu({ fullName, initials, avatarUrl, email }: AvatarMenuProps) {
+export function AvatarMenu({
+  fullName,
+  initials,
+  avatarUrl,
+  email,
+  canAccessDashboard = true,
+}: AvatarMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [lockedOpen, setLockedOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close on outside click
@@ -90,15 +99,31 @@ export function AvatarMenu({ fullName, initials, avatarUrl, email }: AvatarMenuP
               <p className="text-xs text-muted-foreground truncate">{email}</p>
             </div>
             <div className="py-1">
-              <Link
-                href="/dashboard"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary/60 transition-colors"
-                role="menuitem"
-              >
-                <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
-                Mi Panel
-              </Link>
+              {canAccessDashboard ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary/60 transition-colors"
+                  role="menuitem"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+                  Mi Panel
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    setLockedOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-secondary/60 transition-colors text-left"
+                  role="menuitem"
+                >
+                  <LayoutDashboard className="w-4 h-4 text-muted-foreground" />
+                  <span className="flex-1">Mi Panel</span>
+                  <Lock className="w-3.5 h-3.5 text-muted-foreground opacity-70" />
+                </button>
+              )}
               <Link
                 href="/dashboard/perfil"
                 onClick={() => setOpen(false)}
@@ -123,6 +148,12 @@ export function AvatarMenu({ fullName, initials, avatarUrl, email }: AvatarMenuP
           </motion.div>
         )}
       </AnimatePresence>
+
+      <LockedAccessDialog
+        open={lockedOpen}
+        mode="no-membership"
+        onClose={() => setLockedOpen(false)}
+      />
     </div>
   );
 }

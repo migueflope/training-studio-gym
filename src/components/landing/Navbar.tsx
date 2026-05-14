@@ -199,6 +199,7 @@ export function Navbar({
                 initials={profile.initials}
                 avatarUrl={profile.avatarUrl}
                 email={profile.email}
+                canAccessDashboard={canAccessDashboard}
               />
             ) : (
               <button

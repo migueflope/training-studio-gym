@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, type PanInfo } from "framer-motion";
@@ -14,22 +14,32 @@ import {
   Shield,
   LogOut,
   LogIn,
+  Lock,
   Sparkles,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { createClient } from "@/lib/supabase/client";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
+import { LockedAccessDialog } from "@/components/landing/LockedAccessDialog";
 import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 
 interface Props {
   open: boolean;
   onClose: () => void;
   profile: UserProfile | null;
+  hasActiveMembership?: boolean;
 }
 
-export function MobileDrawer({ open, onClose, profile }: Props) {
+export function MobileDrawer({
+  open,
+  onClose,
+  profile,
+  hasActiveMembership = false,
+}: Props) {
   const router = useRouter();
   const isAdmin = !!profile && isAdminRole(profile.role);
+  const canAccessDashboard = isAdmin || hasActiveMembership;
+  const [lockedOpen, setLockedOpen] = useState(false);
   const { openAuth } = useAuthModal();
 
   // Lock body scroll while open
@@ -66,7 +76,13 @@ export function MobileDrawer({ open, onClose, profile }: Props) {
   };
 
   return (
-    <AnimatePresence>
+    <>
+      <LockedAccessDialog
+        open={lockedOpen}
+        mode={profile ? "no-membership" : "unauthenticated"}
+        onClose={() => setLockedOpen(false)}
+      />
+      <AnimatePresence>
       {open && (
         <>
           {/* Backdrop */}
@@ -156,13 +172,30 @@ export function MobileDrawer({ open, onClose, profile }: Props) {
               <DrawerLink href="/entrenadores" icon={<Users className="w-5 h-5" />} onClose={onClose}>
                 Entrenadores
               </DrawerLink>
-              <DrawerLink
-                href="/dashboard"
-                icon={<LayoutDashboard className="w-5 h-5" />}
-                onClose={onClose}
-              >
-                Mi Panel
-              </DrawerLink>
+              {canAccessDashboard ? (
+                <DrawerLink
+                  href="/dashboard"
+                  icon={<LayoutDashboard className="w-5 h-5" />}
+                  onClose={onClose}
+                >
+                  Mi Panel
+                </DrawerLink>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    setLockedOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium text-foreground hover:bg-secondary transition-colors text-left"
+                >
+                  <span className="text-muted-foreground">
+                    <LayoutDashboard className="w-5 h-5" />
+                  </span>
+                  <span className="flex-1">Mi Panel</span>
+                  <Lock className="w-4 h-4 text-muted-foreground opacity-70" />
+                </button>
+              )}
               {profile && (
                 <DrawerLink
                   href="/dashboard/perfil"
@@ -232,6 +265,7 @@ export function MobileDrawer({ open, onClose, profile }: Props) {
         </>
       )}
     </AnimatePresence>
+    </>
   );
 }
 

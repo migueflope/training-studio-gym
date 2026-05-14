@@ -103,9 +103,10 @@ export function GymShowcase() {
                   src={video.url}
                   autoPlay
                   loop
-                  muted
+                  muted={true}
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover filter brightness-75 group-hover:brightness-100 transition-all duration-700"
+                  suppressHydrationWarning={true}
+                  className="absolute inset-0 w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700"
                 />
 
                 <div className="absolute bottom-0 left-0 p-6 z-30 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">

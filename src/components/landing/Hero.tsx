@@ -4,6 +4,7 @@ import { motion, Variants } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useHeroOpacity } from "./HeroOpacityContext";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -41,6 +42,16 @@ export function Hero({
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
+  const { mobile: opacityMobile, desktop: opacityDesktop } = useHeroOpacity();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // Unmute on first interaction anywhere in the Hero
   const handleHeroClick = () => {
@@ -86,8 +97,11 @@ export function Hero({
           loop
           muted={isMuted}
           playsInline
-          style={{ objectPosition: "center" }}
-          className="absolute inset-0 w-full h-full object-cover opacity-65 md:opacity-80"
+          style={{
+            objectPosition: "center",
+            opacity: (isMobile ? opacityMobile : opacityDesktop) / 100,
+          }}
+          className="absolute inset-0 w-full h-full object-cover"
         />
         {/* Futuristic Overlay / Glow for Video */}
         <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10" />

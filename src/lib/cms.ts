@@ -34,6 +34,10 @@ export type CmsContent = {
   whatsapp_number: string;
   whatsapp_display: string;
   chatbot_system_prompt: string;
+  /** 0-100, applied to the hero background video on mobile (<768px) */
+  hero_video_opacity_mobile: number;
+  /** 0-100, applied to the hero background video on desktop (≥768px) */
+  hero_video_opacity_desktop: number;
   bank_bancolombia: BankConfig;
   bank_nequi: BankConfig;
   bank_daviplata: BankConfig;
@@ -58,6 +62,8 @@ export const CMS_DEFAULTS: CmsContent = {
   whatsapp_number: "573122765732",
   whatsapp_display: "+57 312 276 5732",
   chatbot_system_prompt: "",
+  hero_video_opacity_mobile: 65,
+  hero_video_opacity_desktop: 80,
   bank_bancolombia: {
     name: "Bancolombia",
     holder: "Training Studio S.A.S.",

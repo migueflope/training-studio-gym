@@ -5,6 +5,8 @@ import { Pricing } from "@/components/landing/Pricing";
 import { Trainers, type TrainerCardData } from "@/components/landing/Trainers";
 import { Location } from "@/components/landing/Location";
 import { ParticleField } from "@/components/ui/ParticleField";
+import { HeroOpacityProvider } from "@/components/landing/HeroOpacityContext";
+import { HeroOpacityEditor } from "@/components/landing/HeroOpacityEditor";
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
@@ -40,6 +42,8 @@ export default async function Home({
     if (membership) redirect("/dashboard");
   }
 
+  const isAdmin = !!profile && isAdminRole(profile.role);
+
   const cms = await getCmsContent();
 
   const trainers: TrainerCardData[] = await Promise.all(
@@ -58,13 +62,19 @@ export default async function Home({
   );
 
   return (
-    <div className="flex flex-col w-full">
-      <ParticleField />
-      <Hero badge={cms.hero_title} subtitle={cms.hero_subtitle} />
-      <Pillars description={cms.about_text} />
-      <Pricing />
-      <Trainers trainers={trainers} />
-      <Location />
-    </div>
+    <HeroOpacityProvider
+      initialMobile={cms.hero_video_opacity_mobile}
+      initialDesktop={cms.hero_video_opacity_desktop}
+    >
+      <div className="flex flex-col w-full">
+        <ParticleField />
+        <Hero badge={cms.hero_title} subtitle={cms.hero_subtitle} />
+        <Pillars description={cms.about_text} />
+        <Pricing />
+        <Trainers trainers={trainers} />
+        <Location />
+      </div>
+      {isAdmin && <HeroOpacityEditor />}
+    </HeroOpacityProvider>
   );
 }

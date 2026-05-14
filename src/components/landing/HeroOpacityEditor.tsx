@@ -51,16 +51,16 @@ export function HeroOpacityEditor() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Editar opacidad del hero"
-        className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-black/85 backdrop-blur-md border border-primary/40 text-primary text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] transition-shadow"
+        className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-black/85 backdrop-blur-md border border-primary/40 text-primary text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] transition-shadow"
       >
         <Settings2 className="w-4 h-4" />
-        Opacidad del Hero
+        <span className="hidden md:inline">Opacidad del Hero</span>
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-24 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[320px] bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.4)] overflow-hidden">
+    <div className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 w-[calc(100vw-1.5rem)] sm:w-[320px] bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.4)] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5">
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-primary" />

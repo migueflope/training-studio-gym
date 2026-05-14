@@ -98,17 +98,18 @@ export function Hero({
           muted={isMuted}
           playsInline
           style={{
-            objectPosition: "center",
+            objectPosition: "center 35%",
             opacity: (isMobile ? opacityMobile : opacityDesktop) / 100,
           }}
           className="absolute inset-0 w-full h-full object-cover"
         />
-        {/* Futuristic Overlay / Glow for Video */}
-        <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/40 to-background z-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-background/85 to-background md:via-background/70 z-10" />
-        {/* Mobile spotlight: subtle gold-dark radial behind the text block for legibility without breaking the futuristic feel */}
-        <div className="md:hidden absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_45%,_rgba(0,0,0,0.55)_0%,_rgba(0,0,0,0.25)_55%,_transparent_100%)] z-10" />
+        {/* Futuristic Overlay / Glow for Video — toned down so the video
+            can actually shine when the admin sets a high opacity. */}
+        <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background/85 z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-transparent via-background/30 to-background/85 z-10" />
+        {/* Mobile spotlight: subtle dark radial behind the text block for legibility without ahogando el video */}
+        <div className="md:hidden absolute inset-0 bg-[radial-gradient(ellipse_60%_45%_at_50%_45%,_rgba(0,0,0,0.4)_0%,_rgba(0,0,0,0.15)_55%,_transparent_100%)] z-10" />
       </div>
 
       {/* ======================= FOREGROUND CONTENT ======================= */}
@@ -190,7 +191,7 @@ export function Hero({
           setIsMuted(!isMuted);
         }}
         aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-        className="absolute bottom-24 right-4 md:bottom-12 md:right-12 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
+        className="absolute top-20 right-4 md:top-24 md:right-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
       >
         {isMuted ? (
           <>

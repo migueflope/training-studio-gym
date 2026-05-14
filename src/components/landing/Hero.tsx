@@ -191,7 +191,7 @@ export function Hero({
           setIsMuted(!isMuted);
         }}
         aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-        className="absolute top-20 right-4 md:top-24 md:right-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
+        className="absolute bottom-20 left-4 md:bottom-4 md:left-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
       >
         {isMuted ? (
           <>

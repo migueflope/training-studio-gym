@@ -113,7 +113,7 @@ export function Hero({
       </div>
 
       {/* ======================= FOREGROUND CONTENT ======================= */}
-      <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center -mt-8 md:mt-0 pointer-events-none">
+      <div className="container relative z-20 px-2 md:px-6 flex flex-col items-center text-center -mt-16 md:mt-0 pointer-events-none">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -135,7 +135,8 @@ export function Hero({
 
           <motion.h1
             variants={itemVariants}
-            className="text-[1.95rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-black tracking-tight text-foreground uppercase"
+            style={{ letterSpacing: "-0.045em" }}
+            className="text-[2.6rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-black text-foreground uppercase"
           >
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.

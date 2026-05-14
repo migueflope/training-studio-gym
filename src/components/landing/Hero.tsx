@@ -135,11 +135,7 @@ export function Hero({
 
           <motion.h1
             variants={itemVariants}
-            style={{
-              paintOrder: "stroke fill",
-              WebkitTextStroke: "2px #000",
-            }}
-            className="text-[2.25rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-bold tracking-tight text-foreground uppercase"
+            className="text-[1.95rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-black tracking-tight text-foreground uppercase"
           >
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.
@@ -149,7 +145,13 @@ export function Hero({
             variants={itemVariants}
             className="flex justify-center"
           >
-            <p className="text-base md:text-2xl text-foreground font-body max-w-2xl leading-relaxed px-5 py-3 md:px-7 md:py-4 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]">
+            <p
+              style={{
+                backdropFilter: "blur(40px) saturate(140%)",
+                WebkitBackdropFilter: "blur(40px) saturate(140%)",
+              }}
+              className="text-balance text-sm md:text-base text-foreground/95 font-body max-w-[17rem] md:max-w-sm leading-snug px-3 py-1.5 md:px-4 md:py-2 rounded-2xl bg-black/45 border border-white/10 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]"
+            >
               {subtitle}
             </p>
           </motion.div>

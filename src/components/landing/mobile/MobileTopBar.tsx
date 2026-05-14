@@ -156,6 +156,7 @@ export function MobileTopBar({
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         profile={profile}
+        hasActiveMembership={hasActiveMembership}
       />
     </>
   );

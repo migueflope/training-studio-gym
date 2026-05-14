@@ -3,7 +3,18 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, X, ArrowRight, UserPlus, Sparkles, MessageCircle } from "lucide-react";
+import {
+  Lock,
+  X,
+  ArrowRight,
+  UserPlus,
+  Sparkles,
+  MessageCircle,
+  TrendingUp,
+  Target,
+  CalendarCheck,
+  Dumbbell,
+} from "lucide-react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 
 export type LockedAccessMode = "unauthenticated" | "no-membership";
@@ -38,9 +49,9 @@ const COPY: Record<LockedAccessMode, CopyItem> = {
     secondaryIcon: <UserPlus className="w-4 h-4" />,
   },
   "no-membership": {
-    title: "Desbloqueá tu panel",
+    title: "Desbloqueá Mi Panel",
     body:
-      "Tu panel y todas las funciones del club se activan con un plan vigente. Elegí el tuyo y empezá hoy.",
+      "Activá un plan y llevá tu entrenamiento al siguiente nivel.",
     primaryAction: { type: "link", href: "/planes" },
     primaryLabel: "Ver planes",
     primaryIcon: <Sparkles className="w-4 h-4" />,
@@ -49,6 +60,20 @@ const COPY: Record<LockedAccessMode, CopyItem> = {
     secondaryIcon: <MessageCircle className="w-4 h-4" />,
   },
 };
+
+const PANEL_FEATURES = [
+  { Icon: TrendingUp, label: "Tu progreso" },
+  { Icon: Target, label: "Metas personales" },
+  { Icon: CalendarCheck, label: "Asistencias al gym" },
+  { Icon: Dumbbell, label: "Rutinas con IA" },
+];
+
+const ACTIVATING_PLANS = [
+  "Mensualidad",
+  "Paquete 12 clases",
+  "Paquete 15 clases",
+  "Paquete 20 clases",
+];
 
 export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogProps) {
   const { openAuth } = useAuthModal();
@@ -64,6 +89,8 @@ export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogPr
       window.removeEventListener("keydown", handleKey);
     };
   }, [open, onClose]);
+
+  const showFeatures = mode === "no-membership";
 
   return (
     <AnimatePresence>
@@ -84,11 +111,23 @@ export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogPr
             exit={{ opacity: 0, y: 10, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md rounded-3xl border border-primary/30 bg-background/95 backdrop-blur-xl p-8 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.3)]"
+            className="relative w-full max-w-md rounded-3xl border border-primary/30 bg-background/95 backdrop-blur-xl p-7 sm:p-8 shadow-[0_20px_80px_-20px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.3)] overflow-hidden"
           >
+            {/* Futuristic scanline */}
+            {showFeatures && (
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
+                <motion.div
+                  initial={{ x: "-100%" }}
+                  animate={{ x: "200%" }}
+                  transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}
+                  className="h-px w-1/2 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_12px_rgba(212,175,55,0.9)]"
+                />
+              </div>
+            )}
+
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors z-10"
               aria-label="Cerrar"
             >
               <X className="w-5 h-5" />
@@ -99,12 +138,56 @@ export function LockedAccessDialog({ open, mode, onClose }: LockedAccessDialogPr
                 <Lock className="w-7 h-7 text-primary" />
               </div>
 
-              <h2 className="text-2xl font-display font-bold mb-3">
+              <h2 className="text-2xl font-display font-bold mb-2.5">
                 {COPY[mode].title}
               </h2>
-              <p className="text-muted-foreground text-[15px] leading-relaxed mb-7 max-w-sm">
+              <p className="text-muted-foreground text-[15px] leading-relaxed mb-6 max-w-sm">
                 {COPY[mode].body}
               </p>
+
+              {showFeatures && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 w-full mb-5">
+                    {PANEL_FEATURES.map((f, i) => (
+                      <motion.div
+                        key={f.label}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: 0.1 + i * 0.06 }}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-primary/15 bg-primary/[0.04] text-left"
+                      >
+                        <div className="flex items-center justify-center w-7 h-7 rounded-lg bg-primary/15 text-primary shrink-0">
+                          <f.Icon className="w-4 h-4" />
+                        </div>
+                        <span className="text-[13px] font-medium leading-tight">
+                          {f.label}
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                    className="w-full mb-6"
+                  >
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-2">
+                      Planes que lo activan
+                    </p>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {ACTIVATING_PLANS.map((p) => (
+                        <span
+                          key={p}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full border border-primary/30 bg-primary/5 text-primary"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  </motion.div>
+                </>
+              )}
 
               <div className="flex flex-col w-full gap-2.5">
                 <ActionButton

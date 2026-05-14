@@ -113,12 +113,12 @@ export function Hero({
       </div>
 
       {/* ======================= FOREGROUND CONTENT ======================= */}
-      <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center -mt-16 md:mt-0 pointer-events-none">
+      <div className="container relative z-20 px-4 md:px-6 flex flex-col items-center text-center -mt-8 md:mt-0 pointer-events-none">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="max-w-4xl mx-auto space-y-8 pointer-events-auto"
+          className="max-w-4xl mx-auto space-y-5 md:space-y-8 pointer-events-auto"
         >
           <motion.div 
             variants={itemVariants}
@@ -127,15 +127,15 @@ export function Hero({
             <motion.div
               animate={{ y: [0, -5, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="px-5 py-2 rounded-full border border-primary/40 bg-black/40 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.3)]"
+              className="px-4 py-1.5 md:px-5 md:py-2 rounded-full border border-primary/40 bg-black/40 backdrop-blur-md shadow-[0_0_15px_rgba(212,175,55,0.3)]"
             >
-              <span className="text-primary font-medium text-sm tracking-widest uppercase drop-shadow-md">{badge}</span>
+              <span className="text-primary font-medium text-xs md:text-sm tracking-widest uppercase drop-shadow-md">{badge}</span>
             </motion.div>
           </motion.div>
 
           <motion.h1
             variants={itemVariants}
-            className="text-5xl md:text-7xl font-display font-bold tracking-tight text-foreground uppercase"
+            className="text-[2.25rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-bold tracking-tight text-foreground uppercase"
           >
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.
@@ -143,14 +143,14 @@ export function Hero({
 
           <motion.p
             variants={itemVariants}
-            className="text-xl md:text-2xl text-muted-foreground font-body max-w-2xl mx-auto leading-relaxed"
+            className="text-base md:text-2xl text-foreground/85 font-body max-w-2xl mx-auto leading-relaxed"
           >
             {subtitle}
           </motion.p>
 
           <motion.div 
             variants={itemVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8"
+            className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-6 pt-2 md:pt-8"
           >
             <Link
               href="/planes"

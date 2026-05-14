@@ -135,7 +135,7 @@ export function Hero({
 
           <motion.h1
             variants={itemVariants}
-            className="text-[1.95rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-black tracking-tight text-foreground uppercase"
+            className="text-[2.1rem] leading-[1.05] md:text-7xl md:leading-tight font-display font-extrabold tracking-tighter text-foreground uppercase"
           >
             Entrena la <span className="text-gradient-gold">mente</span>.<br />
             Transforma el <span className="text-gradient-gold">cuerpo</span>.

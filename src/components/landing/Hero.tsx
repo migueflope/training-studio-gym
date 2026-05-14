@@ -86,7 +86,8 @@ export function Hero({
           loop
           muted={isMuted}
           playsInline
-          className="absolute inset-0 w-full h-full object-cover opacity-50 md:opacity-80"
+          style={{ objectPosition: "center" }}
+          className="absolute inset-0 w-full h-full object-cover opacity-65 md:opacity-80"
         />
         {/* Futuristic Overlay / Glow for Video */}
         <div className="absolute inset-0 bg-primary/20 mix-blend-overlay z-10" />

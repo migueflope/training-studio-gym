@@ -22,24 +22,31 @@ interface Particle {
 export function ParticleField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [mounted, setMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
     setMounted(true);
+    return () => mq.removeEventListener("change", update);
   }, []);
 
   useEffect(() => {
-    if (!mounted || !canvasRef.current) return;
+    if (!mounted || isMobile || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const isMobile = window.innerWidth < 768;
-    const PARTICLE_COUNT = isMobile ? 800 : 2500;
-    const SPHERE_RADIUS_FACTOR = isMobile ? 0.4 : 0.45;
+    // Desktop-only effect (the component bails out before getting here on
+    // mobile via the `isMobile` state guard above).
+    const PARTICLE_COUNT = 2500;
+    const SPHERE_RADIUS_FACTOR = 0.45;
 
     // Repulsion / spring tuning — matches the antigravity.google feel
-    const REPEL_RADIUS = isMobile ? 130 : 200;
+    const REPEL_RADIUS = 200;
     const REPEL_STRENGTH = 2200;
     const SPRING = 0.045;
     const DAMPING = 0.86;
@@ -107,10 +114,8 @@ export function ParticleField() {
       scrollOpacity = 1 - fadeProgress * (1 - MIN_OPACITY);
     };
 
-    if (!isMobile) {
-      window.addEventListener("mousemove", handleMouseMove);
-      document.documentElement.addEventListener("mouseleave", handleMouseLeave);
-    }
+    window.addEventListener("mousemove", handleMouseMove);
+    document.documentElement.addEventListener("mouseleave", handleMouseLeave);
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
@@ -277,9 +282,12 @@ export function ParticleField() {
       window.removeEventListener("resize", resize);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [mounted]);
+  }, [mounted, isMobile]);
 
-  if (!mounted) return null;
+  // The hero already carries the brand vibe on mobile via the background
+  // video; the gold particle sphere ends up feeling busy on small screens,
+  // so we skip rendering it entirely there.
+  if (!mounted || isMobile) return null;
 
   return (
     <canvas

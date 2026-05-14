@@ -2,12 +2,13 @@
 
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, QrCode, Copy, ArrowLeft } from "lucide-react";
+import { Check, QrCode, Copy, ArrowLeft, RotateCcw, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { WizardUploadPanel } from "./WizardUploadPanel";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
+import { readCheckout, writeCheckout, clearCheckout } from "@/lib/checkout/storage";
 
 const BANK_LOGOS: Record<string, string> = {
   bancolombia: "/assets/banks/bancolombia.svg",
@@ -64,19 +65,77 @@ function PlanesContent({
   const { openAuth } = useAuthModal();
   const [step, setStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-
-  useEffect(() => {
-    const planParam = searchParams.get('plan');
-    const stepParam = searchParams.get('step');
-    if (planParam && stepParam) {
-      setSelectedPlan(planParam);
-      setStep(parseInt(stepParam));
-    }
-  }, [searchParams]);
-
   const [contactData, setContactData] = useState({ name: "", whatsapp: "", email: "" });
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(paymentMethods[0]);
+  const [transactionRef, setTransactionRef] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [restored, setRestored] = useState(false);
+
+  // Mount-only: restore from URL params and/or localStorage.
+  // URL plan/step always wins for plan+step. Contact/method/txRef are
+  // restored from storage only if the stored plan matches.
+  useEffect(() => {
+    const planParam = searchParams.get("plan");
+    const stepParam = searchParams.get("step");
+    const saved = readCheckout();
+
+    let restoredAny = false;
+
+    if (planParam && stepParam) {
+      setSelectedPlan(planParam);
+      setStep(parseInt(stepParam, 10));
+      if (saved && saved.plan === planParam) {
+        setContactData(saved.contact);
+        const m = paymentMethods.find((pm) => pm.id === saved.methodId);
+        if (m) setSelectedMethod(m);
+        setTransactionRef(saved.txRef);
+        if (saved.step >= 2) restoredAny = true;
+      } else if (saved) {
+        clearCheckout();
+      }
+    } else if (saved && saved.step >= 2 && saved.step <= 3) {
+      setSelectedPlan(saved.plan);
+      setStep(saved.step);
+      setContactData(saved.contact);
+      const m = paymentMethods.find((pm) => pm.id === saved.methodId);
+      if (m) setSelectedMethod(m);
+      setTransactionRef(saved.txRef);
+      restoredAny = true;
+    }
+
+    if (restoredAny) setRestored(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist progress whenever the user advances or edits anything in step 2/3.
+  useEffect(() => {
+    if (!selectedPlan || step < 2 || step > 3) return;
+    writeCheckout({
+      plan: selectedPlan,
+      step,
+      contact: contactData,
+      methodId: selectedMethod.id,
+      txRef: transactionRef,
+    });
+  }, [selectedPlan, step, contactData, selectedMethod, transactionRef]);
+
+  // Clean up once the user reaches success.
+  useEffect(() => {
+    if (step === 4) clearCheckout();
+  }, [step]);
+
+  const resetCheckout = () => {
+    clearCheckout();
+    setRestored(false);
+    setStep(1);
+    setSelectedPlan(null);
+    setContactData({ name: "", whatsapp: "", email: "" });
+    setSelectedMethod(paymentMethods[0]);
+    setTransactionRef("");
+  };
+
+  const restoredPlanName =
+    allPlans.find((p) => p.id === selectedPlan)?.name ?? "tu plan";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedMethod.account);
@@ -91,6 +150,45 @@ function PlanesContent({
       <div className="absolute bottom-[20%] right-[10%] w-[30%] h-[30%] bg-accent/10 blur-[150px] rounded-full pointer-events-none" />
 
       <div className="container mx-auto px-4 relative z-10 max-w-4xl">
+        {restored && (step === 2 || step === 3) && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="relative mb-8 rounded-2xl border border-primary/30 bg-primary/[0.06] backdrop-blur-sm px-4 py-3.5 sm:px-5 sm:py-4 overflow-hidden flex items-center gap-3 sm:gap-4"
+          >
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px overflow-hidden">
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: "200%" }}
+                transition={{ duration: 2.6, repeat: Infinity, ease: "linear" }}
+                className="h-px w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_10px_rgba(212,175,55,0.85)]"
+              />
+            </div>
+            <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/15 border border-primary/30 shrink-0 shadow-[0_0_18px_-4px_rgba(212,175,55,0.5)]">
+              <RotateCcw className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0 text-left">
+              <p className="font-bold text-sm sm:text-[15px] leading-tight">
+                Continuá tu pago
+              </p>
+              <p className="text-xs sm:text-[13px] text-muted-foreground mt-0.5 leading-snug">
+                Recuperamos tu progreso de <span className="text-foreground font-medium">{restoredPlanName}</span>. Seguí desde donde lo dejaste.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resetCheckout}
+              aria-label="Empezar de cero"
+              className="shrink-0 inline-flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-muted-foreground hover:text-foreground px-2.5 sm:px-3 py-1.5 rounded-full border border-border hover:border-primary/40 transition-colors"
+            >
+              <X className="w-3 h-3" />
+              <span className="hidden sm:inline">Empezar de cero</span>
+              <span className="sm:hidden">Reiniciar</span>
+            </button>
+          </motion.div>
+        )}
+
         <div className="mb-12 text-center">
           <h1 className="text-4xl md:text-6xl font-display font-bold mb-4">
             Selecciona tu <span className="text-primary">Plan</span>
@@ -334,6 +432,8 @@ function PlanesContent({
                       priceLabel={
                         allPlans.find((p) => p.id === selectedPlan)?.price ?? "—"
                       }
+                      transactionRef={transactionRef}
+                      onTransactionRefChange={setTransactionRef}
                     />
                   </div>
                 </div>

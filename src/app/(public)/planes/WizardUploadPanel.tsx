@@ -11,6 +11,7 @@ import {
   Phone,
   ShieldAlert,
   ArrowRight,
+  Save,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { createClient } from "@/lib/supabase/client";
@@ -27,6 +28,9 @@ interface WizardUploadPanelProps {
   priceLabel: string;
   /** WhatsApp number from CMS, used for the "coordinate at the club" panel. */
   whatsappNumber: string;
+  /** Controlled by parent so it can be persisted across reloads. */
+  transactionRef: string;
+  onTransactionRefChange: (next: string) => void;
 }
 
 interface RealPlan {
@@ -86,6 +90,8 @@ export function WizardUploadPanel({
   method,
   priceLabel,
   whatsappNumber,
+  transactionRef,
+  onTransactionRefChange,
 }: WizardUploadPanelProps) {
   const realPlan = wizardPlanId ? WIZARD_TO_DB[wizardPlanId] ?? null : null;
   const { openAuth } = useAuthModal();
@@ -93,7 +99,6 @@ export function WizardUploadPanel({
   const [userId, setUserId] = useState<string | null | undefined>(undefined);
   const [userName, setUserName] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
-  const [transactionRef, setTransactionRef] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -321,7 +326,7 @@ export function WizardUploadPanel({
         <input
           type="text"
           value={transactionRef}
-          onChange={(e) => setTransactionRef(e.target.value)}
+          onChange={(e) => onTransactionRefChange(e.target.value)}
           placeholder="Ayuda a verificar más rápido"
           className="mt-1 w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-primary outline-none text-sm font-mono"
         />
@@ -356,6 +361,14 @@ export function WizardUploadPanel({
         El equipo verifica el pago antes de activar la membresía. En general no
         tarda más de unas horas.
       </p>
+
+      <div className="flex items-center gap-2 rounded-lg border border-primary/15 bg-primary/[0.04] px-3 py-2 text-[11px] text-muted-foreground">
+        <Save className="w-3.5 h-3.5 text-primary shrink-0" />
+        <span>
+          Si se te cierra la app, tus datos quedan guardados en este teléfono.
+          Volvé cuando puedas y seguí desde acá.
+        </span>
+      </div>
     </form>
   );
 }

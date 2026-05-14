@@ -145,7 +145,7 @@ export function Hero({
             variants={itemVariants}
             className="flex justify-center"
           >
-            <p className="text-base md:text-2xl text-foreground font-body max-w-2xl leading-relaxed px-5 py-3 md:px-7 md:py-4 rounded-3xl bg-black/40 backdrop-blur-md border border-white/10 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]">
+            <p className="text-balance text-base md:text-xl text-foreground font-body max-w-[17rem] md:max-w-md leading-snug px-4 py-2 md:px-5 md:py-2.5 rounded-2xl bg-black/45 backdrop-blur-2xl border border-white/10 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.5)]">
               {subtitle}
             </p>
           </motion.div>

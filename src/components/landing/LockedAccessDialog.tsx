@@ -38,9 +38,9 @@ const COPY: Record<LockedAccessMode, CopyItem> = {
     secondaryIcon: <UserPlus className="w-4 h-4" />,
   },
   "no-membership": {
-    title: "Necesitás un plan activo",
+    title: "Desbloqueá tu panel",
     body:
-      "Tu panel se desbloquea apenas tengas una membresía vigente. Elegí el plan que mejor te queda y empezá a entrenar con nosotros.",
+      "Tu panel y todas las funciones del club se activan con un plan vigente. Elegí el tuyo y empezá hoy.",
     primaryAction: { type: "link", href: "/planes" },
     primaryLabel: "Ver planes",
     primaryIcon: <Sparkles className="w-4 h-4" />,

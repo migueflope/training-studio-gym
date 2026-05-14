@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { whatsappUrlFor } from "@/lib/whatsapp";
+import { VideoModal } from "@/components/ui/VideoModal";
 
 const goalOptions = [
   "Ganar masa muscular",
@@ -49,6 +50,9 @@ export default function ContactoClient({
   const [name, setName] = useState("");
   const [goal, setGoal] = useState(goalOptions[0]);
   const [schedule, setSchedule] = useState(scheduleOptions[0]);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const directMessage =
     "¡Hola! Quiero agendar mi valoración física en Training Studio Gym 💪";
@@ -66,68 +70,118 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
     window.open(whatsappUrlFor(whatsappNumber, message), "_blank", "noopener,noreferrer");
   };
 
+  const handleMouseEnter = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {
+        if (videoRef.current) videoRef.current.muted = true;
+      });
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+    }
+  };
+
   return (
     <>
       {/* Hero */}
       <section className="relative pt-32 pb-16 overflow-hidden">
-        <div className="container mx-auto px-4 md:px-6 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-3xl mx-auto text-center"
-          >
-            <div className="inline-block px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-md mb-6">
-              <span className="text-primary font-medium text-sm">
-                Estamos para ayudarte
-              </span>
-            </div>
-            <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight uppercase mb-6">
-              Hablemos, <span className="text-gradient-gold">mi llave</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
-              Agenda tu valoración física, resuelve dudas o cuéntanos tu meta.
-              Te respondemos por WhatsApp en minutos.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+        {/* Background Ambient Glow */}
+        <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-primary/10 blur-[100px] rounded-full pointer-events-none" />
 
-      {/* WhatsApp Direct CTA */}
-      <section className="pb-12">
-        <div className="container mx-auto px-4 md:px-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto"
-          >
-            <a
-              href={whatsappUrlFor(whatsappNumber, directMessage)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex flex-col sm:flex-row items-center justify-between gap-4 p-6 md:p-8 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/10 to-transparent border border-primary/40 hover:border-primary/60 transition-all hover:shadow-[0_0_40px_-10px_rgba(212,175,55,0.5)]"
+        <div className="container mx-auto px-4 md:px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Text Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-left lg:col-span-5 flex flex-col"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
-                  <WhatsAppIcon className="w-7 h-7" />
+              <div>
+                <div className="inline-block px-4 py-1.5 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-md mb-6 shadow-[0_0_15px_rgba(212,175,55,0.15)]">
+                  <span className="text-primary font-medium text-sm">
+                    Estamos para ayudarte
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Escríbenos directo
-                  </p>
-                  <p className="text-xl md:text-2xl font-display font-bold">
-                    {whatsappDisplay}
-                  </p>
-                </div>
+                <h1 className="text-4xl md:text-6xl font-display font-bold tracking-tight uppercase mb-6">
+                  Hablemos, <span className="text-gradient-gold">mi llave</span>
+                </h1>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-lg mb-8">
+                  Agenda tu valoración física, resuelve dudas o cuéntanos tu meta.
+                  Te respondemos por WhatsApp en minutos y te guiamos paso a paso.
+                </p>
               </div>
-              <span className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-[0_0_20px_rgba(212,175,55,0.4)] group-hover:shadow-[0_0_30px_rgba(212,175,55,0.7)] transition-all">
-                Hablar por WhatsApp{" "}
-                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-              </span>
-            </a>
-          </motion.div>
+              
+              {/* WhatsApp Direct CTA - Moved here for mobile layout */}
+              <a
+                href={whatsappUrlFor(whatsappNumber, directMessage)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative flex items-center justify-between gap-4 p-4 md:p-6 rounded-2xl bg-gradient-to-br from-primary/15 via-primary/10 to-transparent border border-primary/40 hover:border-primary/60 transition-all hover:shadow-[0_0_40px_-10px_rgba(212,175,55,0.5)] max-w-sm mx-auto lg:mx-0 w-full"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-primary shrink-0">
+                    <WhatsAppIcon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground mb-1">Escríbenos directo</p>
+                    <p className="text-lg md:text-xl font-display font-bold">{whatsappDisplay}</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-5 h-5 text-primary transition-transform group-hover:translate-x-1" />
+              </a>
+            </motion.div>
+
+            {/* Dynamic Video Section */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+              className="relative perspective-1000 w-full lg:col-span-7 flex justify-center lg:justify-start mt-8 lg:mt-0"
+            >
+              <motion.div 
+                whileHover={{ 
+                  scale: 1.02, 
+                  rotateY: -3,
+                  rotateX: 3,
+                  boxShadow: "0 0 60px rgba(212,175,55,0.4)"
+                }}
+                onClick={() => setSelectedVideo("https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/showcase/3%20(agendar%20valoracion).mp4")}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="relative rounded-[2rem] overflow-hidden border border-primary/40 shadow-[0_0_30px_rgba(212,175,55,0.2)] aspect-[4/5] sm:aspect-video w-full max-w-3xl bg-secondary/20 cursor-pointer group"
+              >
+                {/* Tech Scanline Effect */}
+                <div className="absolute inset-0 z-20 pointer-events-none">
+                  <div className="w-full h-[1px] bg-primary/50 absolute top-0 animate-scanline shadow-[0_0_10px_rgba(212,175,55,0.8)]" />
+                </div>
+                
+                {/* Glassmorphism Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-transparent mix-blend-overlay z-10 pointer-events-none" />
+                
+                <video
+                  ref={videoRef}
+                  src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/showcase/3%20(agendar%20valoracion).mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover filter brightness-90 group-hover:brightness-100 transition-all duration-500"
+                />
+                
+                <div className="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                  <span className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/10 flex items-center gap-2">
+                    Ver con sonido ↗
+                  </span>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
@@ -318,6 +372,12 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
           </div>
         </div>
       </section>
+
+      <VideoModal 
+        isOpen={!!selectedVideo} 
+        videoUrl={selectedVideo || ""} 
+        onClose={() => setSelectedVideo(null)} 
+      />
     </>
   );
 }

@@ -3,6 +3,7 @@ import { Hero } from "@/components/landing/Hero";
 import { Pillars } from "@/components/landing/Pillars";
 import { Pricing } from "@/components/landing/Pricing";
 import { Trainers, type TrainerCardData } from "@/components/landing/Trainers";
+import { GymShowcase } from "@/components/landing/GymShowcase";
 import { Location } from "@/components/landing/Location";
 import { ParticleField } from "@/components/ui/ParticleField";
 import { HeroOpacityProvider } from "@/components/landing/HeroOpacityContext";
@@ -72,6 +73,7 @@ export default async function Home({
         <Pillars description={cms.about_text} />
         <Pricing />
         <Trainers trainers={trainers} />
+        <GymShowcase />
         <Location />
       </div>
       {isAdmin && <HeroOpacityEditor />}

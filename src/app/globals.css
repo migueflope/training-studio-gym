@@ -87,3 +87,18 @@
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(212, 175, 55, 0.08);
 }
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); opacity: 0; }
+  5% { opacity: 1; }
+  95% { opacity: 1; }
+  100% { transform: translateY(1000%); opacity: 0; }
+}
+
+.animate-scanline {
+  animation: scanline 4s linear infinite;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}

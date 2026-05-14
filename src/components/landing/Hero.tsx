@@ -101,7 +101,7 @@ export function Hero({
             objectPosition: "center 35%",
             opacity: (isMobile ? opacityMobile : opacityDesktop) / 100,
           }}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover opacity-50 md:opacity-80"
         />
         {/* Futuristic Overlay / Glow for Video — toned down so the video
             can actually shine when the admin sets a high opacity. */}

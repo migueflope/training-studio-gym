@@ -169,9 +169,10 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
                   src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/showcase/3%20(agendar%20valoracion).mp4"
                   autoPlay
                   loop
-                  muted
+                  muted={true}
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover filter brightness-90 group-hover:brightness-100 transition-all duration-500"
+                  suppressHydrationWarning={true}
+                  className="absolute inset-0 w-full h-full object-cover brightness-90 group-hover:brightness-100 transition-all duration-500"
                 />
                 
                 <div className="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">

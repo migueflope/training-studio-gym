@@ -159,6 +159,37 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
   return { ok: true };
 }
 
+/**
+ * Persist the hero video opacity sliders driven by the in-page admin
+ * editor. Both values are integers 0-100; we clamp + round defensively.
+ */
+export async function saveHeroVideoOpacity(input: {
+  mobile: number;
+  desktop: number;
+}): Promise<Result> {
+  const { supabase } = await assertAdmin();
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(n)));
+  const mobile = clamp(Number(input.mobile));
+  const desktop = clamp(Number(input.desktop));
+  if (!Number.isFinite(mobile) || !Number.isFinite(desktop)) {
+    return { ok: false, error: "Valor de opacidad inválido." };
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase.from("content").upsert(
+    [
+      { key: "hero_video_opacity_mobile", value: mobile as never, updated_at: now },
+      { key: "hero_video_opacity_desktop", value: desktop as never, updated_at: now },
+    ],
+    { onConflict: "key" },
+  );
+  if (error) return { ok: false, error: error.message };
+
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
 export async function uploadBankQr(
   bankKey: BankKey,
   formData: FormData,

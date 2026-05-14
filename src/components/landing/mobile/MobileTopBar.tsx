@@ -131,15 +131,15 @@ export function MobileTopBar({
             </span>
           </Link>
 
-          {/* Right slot: notif bell popover (active member), or login link (guest / no membership) */}
-          <div className="flex items-center justify-end min-w-[40px] -mr-2">
-            {profile && hasActiveMembership ? (
-              <NotificationBell
-                userId={profile.id}
-                initialItems={notifItems}
-                initialUnread={notifUnread}
-              />
-            ) : !profile ? (
+          {/* Right slot: notif bell + (guests only) login link. The bell renders
+              itself only when there are notifications or a pending checkout. */}
+          <div className="flex items-center justify-end gap-1 min-w-[40px] -mr-2">
+            <NotificationBell
+              userId={profile?.id ?? null}
+              initialItems={notifItems}
+              initialUnread={notifUnread}
+            />
+            {!profile && (
               <button
                 type="button"
                 onClick={() => openAuth("login")}
@@ -147,7 +147,7 @@ export function MobileTopBar({
               >
                 Entrar
               </button>
-            ) : null}
+            )}
           </div>
         </div>
       </header>

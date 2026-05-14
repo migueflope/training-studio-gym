@@ -352,11 +352,12 @@ function Section({
           }`}
         />
       </button>
-      {open && (
-        <div className="px-6 pb-6 space-y-4 border-t border-border pt-5">
-          {children}
-        </div>
-      )}
+      <div
+        hidden={!open}
+        className="px-6 pb-6 space-y-4 border-t border-border pt-5"
+      >
+        {children}
+      </div>
     </div>
   );
 }

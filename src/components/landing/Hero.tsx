@@ -202,12 +202,15 @@ export function Hero({
       </div>
 
       {/* ======================= AUDIO CONTROL ======================= */}
-      {showAudioButton && (
+      {showAudioButton && (() => {
+        const { transform: _audioTransform, ...audioStyle } = audioDraggable.style;
+        const targetScale = audioDraggable.appearance?.scale ?? 1;
+        return (
       <motion.button
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{
           opacity: 1,
-          scale: 1,
+          scale: targetScale,
           boxShadow: [
             "0 0 0px rgba(212,175,55,0.0)",
             "0 0 18px rgba(212,175,55,0.45)",
@@ -216,6 +219,7 @@ export function Hero({
         }}
         transition={{
           delay: 1.5,
+          scale: { duration: 0 },
           boxShadow: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
         }}
         ref={audioDraggable.ref}
@@ -224,7 +228,7 @@ export function Hero({
           setIsMuted(!isMuted);
         }}
         aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-        style={audioDraggable.style}
+        style={audioStyle}
         {...(audioDraggable.dragHandlers ?? {})}
         className="fixed bottom-20 left-4 md:bottom-4 md:left-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
       >
@@ -240,7 +244,8 @@ export function Hero({
           </>
         )}
       </motion.button>
-      )}
+        );
+      })()}
 
       {/* Scroll indicator */}
       <motion.div 

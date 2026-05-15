@@ -77,8 +77,8 @@ export function EditPositionsToggle() {
         )}
       </div>
 
-      {editMode && device === "desktop" && (
-        <div className="pointer-events-auto w-72 rounded-xl bg-black/85 backdrop-blur-md border border-primary/30 shadow-[0_0_18px_rgba(212,175,55,0.25)] p-3 space-y-2">
+      {editMode && (
+        <div className="pointer-events-auto w-[calc(100vw-1.5rem)] max-w-xs sm:w-72 rounded-xl bg-black/85 backdrop-blur-md border border-primary/30 shadow-[0_0_18px_rgba(212,175,55,0.25)] p-3 space-y-2">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">
             Tamaño de los botones
           </p>

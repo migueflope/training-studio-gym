@@ -3,16 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   useDraggableButton,
-  useDraggableButtons,
   type DraggableButtonKey,
 } from "./DraggableButtonsContext";
 
-/**
- * Inline slider row for one draggable button. Designed to live inside the
- * EditPositionsToggle's control panel, so all visible sliders stack neatly
- * in one place. Renders nothing on mobile (pinch on the button itself does
- * the same job) and nothing outside edit mode.
- */
 export function DraggableScaleSliderRow({
   buttonKey,
   label,
@@ -22,14 +15,13 @@ export function DraggableScaleSliderRow({
 }) {
   const { editing, appearance, setScale, commit, scaleMin, scaleMax } =
     useDraggableButton(buttonKey);
-  const { device } = useDraggableButtons();
   const [localScale, setLocalScale] = useState(appearance?.scale ?? 1);
 
   useEffect(() => {
     setLocalScale(appearance?.scale ?? 1);
   }, [appearance?.scale]);
 
-  if (!editing || device !== "desktop") return null;
+  if (!editing) return null;
 
   return (
     <div className="flex items-center gap-2 text-[11px]">

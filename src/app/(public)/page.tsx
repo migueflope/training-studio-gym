@@ -45,7 +45,6 @@ export default async function Home({
     hasActiveMembership = !!membership;
     if (!landing && membership) redirect("/dashboard");
   }
-  const canAccessDashboard = isAdmin || hasActiveMembership;
 
   const cms = await getCmsContent();
 
@@ -74,7 +73,8 @@ export default async function Home({
         <Hero
           badge={cms.hero_title}
           subtitle={cms.hero_subtitle}
-          canAccessDashboard={canAccessDashboard}
+          isAdmin={isAdmin}
+          hasActiveMembership={hasActiveMembership}
         />
         <Pillars description={cms.about_text} />
         <Pricing planPricing={cms.plan_pricing} />

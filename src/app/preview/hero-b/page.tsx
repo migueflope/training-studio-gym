@@ -47,7 +47,7 @@ export default async function HeroBPreview() {
       <ParticleField />
       <HeroVideo badge={cms.hero_title} subtitle={cms.hero_subtitle} />
       <Pillars description={cms.about_text} />
-      <Pricing />
+      <Pricing planPricing={cms.plan_pricing} />
       <Trainers trainers={trainers} />
       <Location />
     </div>

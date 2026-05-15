@@ -31,6 +31,7 @@ export default async function PlanesPage() {
     <PlanesClient
       paymentMethods={paymentMethods}
       whatsappNumber={cms.whatsapp_number}
+      planPricing={cms.plan_pricing}
     />
   );
 }

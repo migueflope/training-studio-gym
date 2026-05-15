@@ -19,6 +19,44 @@ export type TrainerConfig = {
   enabled: boolean;
 };
 
+/**
+ * Pixel offset from the top-left of the viewport for a floating button.
+ * `null` means "use the component's default CSS position" — that's the
+ * initial value before an admin has dragged the button.
+ */
+export type ButtonCoords = { left: number; top: number } | null;
+
+/** Per-device positions for a single floating button. */
+export type ButtonPosition = {
+  desktop: ButtonCoords;
+  mobile: ButtonCoords;
+};
+
+/** Positions for all admin-movable floating buttons. */
+export type UiButtonPositions = {
+  chatbot: ButtonPosition;
+  audio: ButtonPosition;
+  opacity: ButtonPosition;
+};
+
+export type PlanSlug =
+  | "mensualidad"
+  | "sesion"
+  | "valoracion"
+  | "package_12"
+  | "package_15"
+  | "package_20";
+
+/** Per-plan original price (COP) and discount percentage (0-100). */
+export type PlanPricingEntry = {
+  /** Original list price in COP. */
+  price: number;
+  /** 0-100. Final shown price = price * (1 - discount_percentage/100). */
+  discount_percentage: number;
+};
+
+export type PlanPricingConfig = Record<PlanSlug, PlanPricingEntry>;
+
 export type CmsContent = {
   hero_title: string;
   hero_subtitle: string;
@@ -43,6 +81,8 @@ export type CmsContent = {
   bank_daviplata: BankConfig;
   trainer_1: TrainerConfig;
   trainer_2: TrainerConfig;
+  ui_button_positions: UiButtonPositions;
+  plan_pricing: PlanPricingConfig;
 };
 
 export const CMS_DEFAULTS: CmsContent = {
@@ -94,6 +134,19 @@ export const CMS_DEFAULTS: CmsContent = {
     name: "Juan Carlos Bork",
     photo_path: null,
     enabled: true,
+  },
+  ui_button_positions: {
+    chatbot: { desktop: null, mobile: null },
+    audio: { desktop: null, mobile: null },
+    opacity: { desktop: null, mobile: null },
+  },
+  plan_pricing: {
+    mensualidad: { price: 90000, discount_percentage: 33 },
+    sesion: { price: 10000, discount_percentage: 50 },
+    valoracion: { price: 30000, discount_percentage: 50 },
+    package_12: { price: 240000, discount_percentage: 38 },
+    package_15: { price: 320000, discount_percentage: 38 },
+    package_20: { price: 400000, discount_percentage: 38 },
   },
 };
 

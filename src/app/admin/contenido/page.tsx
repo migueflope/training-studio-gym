@@ -172,6 +172,7 @@ export default async function AdminContenidoPage() {
           bank_daviplata: daviplata,
           trainer_1: trainer1,
           trainer_2: trainer2,
+          plan_pricing: cms.plan_pricing,
         }}
       />
 

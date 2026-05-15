@@ -71,7 +71,7 @@ export default async function Home({
         <ParticleField />
         <Hero badge={cms.hero_title} subtitle={cms.hero_subtitle} />
         <Pillars description={cms.about_text} />
-        <Pricing />
+        <Pricing planPricing={cms.plan_pricing} />
         <Trainers trainers={trainers} />
         <GymShowcase />
         <Location />

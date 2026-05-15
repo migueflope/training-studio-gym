@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { useDraggableButton } from "./DraggableButtonsContext";
 
 type Message = {
   id: string;
@@ -11,6 +12,7 @@ type Message = {
 };
 
 export function Chatbot() {
+  const draggable = useDraggableButton("chatbot");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: "1", role: "model", text: "¡Hola! Soy el asistente virtual de Training Studio Gym 💪 ¿En qué te puedo ayudar hoy?" }
@@ -169,6 +171,8 @@ export function Chatbot() {
 
       <button
         onClick={() => setIsOpen(!isOpen)}
+        style={draggable.style}
+        {...(draggable.dragHandlers ?? {})}
         className="fixed bottom-20 md:bottom-4 right-4 md:right-6 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center z-50 hover:scale-110 transition-transform hover:shadow-[0_0_30px_rgba(212,175,55,0.6)]"
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}

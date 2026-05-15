@@ -3,63 +3,43 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Check } from "lucide-react";
+import type { PlanPricingConfig } from "@/lib/cms";
 
-const mainServices = [
+const MAIN_SERVICES = [
   {
-    id: "mensualidad",
+    id: "mensualidad" as const,
     name: "Mensualidad del Gym",
-    originalPrice: "$90.000",
-    price: "$60.000",
-    discount: "-33% OFF",
-    features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"]
+    features: [
+      "Acceso ilimitado a las instalaciones",
+      "Uso de todas las máquinas",
+      "Horarios flexibles",
+    ],
   },
   {
-    id: "sesion",
+    id: "sesion" as const,
     name: "Sesión de Entrenamiento",
-    originalPrice: "$10.000",
-    price: "$5.000",
-    discount: "-50% OFF",
-    features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"]
+    features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"],
   },
   {
-    id: "valoracion",
+    id: "valoracion" as const,
     name: "Valoración Física",
-    originalPrice: "$30.000",
-    price: "$15.000",
-    discount: "-50% OFF",
-    features: ["Análisis de composición corporal", "Medidas y peso", "Definición de objetivos"]
-  }
+    features: [
+      "Análisis de composición corporal",
+      "Medidas y peso",
+      "Definición de objetivos",
+    ],
+  },
 ];
 
-const customPackages = [
-  {
-    name: "Paquete 12 Clases",
-    subtitle: "3 días a la semana",
-    originalPrice: "$240.000",
-    price: "$150.000",
-    discount: "AHORRA $90.000",
-    features: ["12 sesiones personalizadas", "Rutina adaptada por IA", "Valoración incluida", "Soporte de entrenadores"]
-  },
-  {
-    name: "Paquete 15 Clases",
-    subtitle: "4 días a la semana",
-    originalPrice: "$320.000",
-    price: "$200.000",
-    discount: "AHORRA $120.000",
-    isPopular: true,
-    features: ["15 sesiones personalizadas", "Rutina premium adaptada", "Valoración física mensual", "Prioridad en reservas"]
-  },
-  {
-    name: "Paquete 20 Clases",
-    subtitle: "5 días a la semana",
-    originalPrice: "$400.000",
-    price: "$250.000",
-    discount: "AHORRA $150.000",
-    features: ["20 sesiones personalizadas", "Resultados acelerados", "Valoración física quincenal", "Acceso total a la app"]
-  }
-];
+function formatCop(n: number) {
+  return `$${n.toLocaleString("es-CO")}`;
+}
 
-export function Pricing() {
+function computeFinal(price: number, discount: number) {
+  return Math.max(0, Math.round(price * (1 - discount / 100)));
+}
+
+export function Pricing({ planPricing }: { planPricing: PlanPricingConfig }) {
   return (
     <section className="py-24 bg-background relative">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -73,47 +53,67 @@ export function Pricing() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {mainServices.map((service, index) => (
-              <motion.div 
-                key={index} 
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="glass-panel rounded-2xl p-8 border border-border flex flex-col justify-between text-center group hover:border-primary/50 transition-all h-full"
-              >
-                <div>
-                  {/* Etiqueta flotante superior */}
-                  <div className="absolute top-0 right-0 bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    Ahorro
-                  </div>
-                  <h3 className="text-xl font-bold font-display mb-6 text-foreground/90">{service.name}</h3>
-                  <div className="flex flex-col items-center gap-1 mb-8">
-                    <div className="flex items-center gap-2">
-                      <span className="text-muted-foreground line-through text-sm font-medium">{service.originalPrice}</span>
-                      <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">{service.discount}</span>
-                    </div>
-                    <span className="text-4xl font-bold text-primary tracking-tighter">{service.price}</span>
-                  </div>
-
-                  <ul className="space-y-4 mb-8 text-left">
-                    {service.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <Check className="w-5 h-5 text-primary shrink-0" />
-                        <span className="text-muted-foreground text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <Link
-                  href={`/planes?plan=${service.id}&step=2`}
-                  className="w-full py-4 rounded-lg font-bold text-center border border-primary/30 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto"
+            {MAIN_SERVICES.map((service, index) => {
+              const pricing = planPricing[service.id];
+              const price = pricing.price;
+              const discount = pricing.discount_percentage;
+              const final = computeFinal(price, discount);
+              const hasDiscount = discount > 0;
+              return (
+                <motion.div
+                  key={service.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="glass-panel rounded-2xl p-8 border border-border flex flex-col justify-between text-center group hover:border-primary/50 transition-all h-full"
                 >
-                  Seleccionar Plan
-                </Link>
-              </motion.div>
-            ))}
+                  <div>
+                    {hasDiscount && (
+                      <div className="absolute top-0 right-0 bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-bl-lg rounded-tr-2xl group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                        Ahorro
+                      </div>
+                    )}
+                    <h3 className="text-xl font-bold font-display mb-6 text-foreground/90">
+                      {service.name}
+                    </h3>
+                    <div className="flex flex-col items-center gap-1 mb-8">
+                      {hasDiscount && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground line-through text-sm font-medium">
+                            {formatCop(price)}
+                          </span>
+                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">
+                            -{discount}% OFF
+                          </span>
+                        </div>
+                      )}
+                      <span className="text-4xl font-bold text-primary tracking-tighter">
+                        {formatCop(final)}
+                      </span>
+                    </div>
+
+                    <ul className="space-y-4 mb-8 text-left">
+                      {service.features.map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-primary shrink-0" />
+                          <span className="text-muted-foreground text-sm">
+                            {feature}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <Link
+                    href={`/planes?plan=${service.id}&step=2`}
+                    className="w-full py-4 rounded-lg font-bold text-center border border-primary/30 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto"
+                  >
+                    Seleccionar Plan
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="mt-16 text-center">

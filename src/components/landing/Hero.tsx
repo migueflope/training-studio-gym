@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useHeroOpacity } from "./HeroOpacityContext";
+import { useDraggableButton } from "@/components/ui/DraggableButtonsContext";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -39,6 +40,7 @@ export function Hero({
   badge?: string;
   subtitle?: string;
 } = {}) {
+  const audioDraggable = useDraggableButton("audio");
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -200,7 +202,9 @@ export function Hero({
           setIsMuted(!isMuted);
         }}
         aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-        className="absolute bottom-20 left-4 md:bottom-4 md:left-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
+        style={audioDraggable.style}
+        {...(audioDraggable.dragHandlers ?? {})}
+        className="fixed bottom-20 left-4 md:bottom-4 md:left-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
       >
         {isMuted ? (
           <>

@@ -4,9 +4,12 @@ import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
 import {
-  CMS_DEFAULTS,
+  BUTTON_SECTIONS,
+  emptyButtonSettings,
   type BankConfig,
-  type ButtonCoords,
+  type ButtonAppearance,
+  type ButtonSection,
+  type ButtonSettings,
   type PlanPricingConfig,
   type PlanPricingEntry,
   type PlanSlug,
@@ -204,41 +207,98 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
 }
 
 type ButtonKey = keyof UiButtonPositions;
-const BUTTON_KEYS: readonly ButtonKey[] = ["chatbot", "audio", "opacity"] as const;
+const BUTTON_KEYS: readonly ButtonKey[] = [
+  "chatbot",
+  "audio",
+  "opacity",
+  "edit_toggle",
+] as const;
 
 function isButtonKey(v: unknown): v is ButtonKey {
   return typeof v === "string" && (BUTTON_KEYS as readonly string[]).includes(v);
 }
 
+function isSection(v: unknown): v is ButtonSection {
+  return typeof v === "string" && (BUTTON_SECTIONS as readonly string[]).includes(v);
+}
+
 /**
- * Persist the pixel position for one floating button (chatbot / hero audio /
- * hero opacity editor) for a given device class. Reads the current value to
- * preserve the slot the admin isn't editing.
+ * Re-run the same migration logic the read path uses, so a row written in
+ * the legacy { desktop, mobile } shape gets normalized to the new per-section
+ * shape on the next write — without losing the admin's prior placement.
+ */
+function normalizeIncoming(raw: unknown): ButtonSettings {
+  const out = emptyButtonSettings();
+  if (!raw || typeof raw !== "object") return out;
+  const r = raw as Record<string, unknown>;
+  const hasSectionKeys = BUTTON_SECTIONS.some((s) => s in r);
+  if (hasSectionKeys) {
+    for (const section of BUTTON_SECTIONS) {
+      const sectionRaw = (r[section] ?? {}) as Record<string, unknown>;
+      out[section] = {
+        desktop: parseAppearanceLoose(sectionRaw.desktop),
+        mobile: parseAppearanceLoose(sectionRaw.mobile),
+      };
+    }
+    return out;
+  }
+  const legacyDesktop = parseAppearanceLoose(r.desktop);
+  const legacyMobile = parseAppearanceLoose(r.mobile);
+  for (const section of BUTTON_SECTIONS) {
+    out[section] = { desktop: legacyDesktop, mobile: legacyMobile };
+  }
+  return out;
+}
+
+function parseAppearanceLoose(v: unknown): ButtonAppearance {
+  if (!v || typeof v !== "object") return null;
+  const o = v as Record<string, unknown>;
+  if (typeof o.leftPct !== "number" || typeof o.topPct !== "number") return null;
+  const scale = typeof o.scale === "number" ? o.scale : 1;
+  return {
+    leftPct: Math.max(0, Math.min(100, o.leftPct)),
+    topPct: Math.max(0, Math.min(100, o.topPct)),
+    scale: Math.max(0.4, Math.min(2, scale)),
+  };
+}
+
+/**
+ * Persist the appearance (position + scale) of one floating button for a
+ * given section + device class. Migrates legacy stored shape on the fly so
+ * pre-existing positions survive the schema change.
  */
 export async function saveButtonPosition(input: {
   key: ButtonKey;
+  section: ButtonSection;
   device: "desktop" | "mobile";
-  coords: ButtonCoords;
+  appearance: ButtonAppearance;
 }): Promise<Result> {
   const { supabase } = await assertAdmin();
 
   if (!isButtonKey(input.key)) return { ok: false, error: "Botón inválido." };
+  if (!isSection(input.section)) return { ok: false, error: "Sección inválida." };
   if (input.device !== "desktop" && input.device !== "mobile") {
     return { ok: false, error: "Dispositivo inválido." };
   }
 
-  let coords: ButtonCoords;
-  if (input.coords === null) {
-    coords = null;
+  let appearance: ButtonAppearance;
+  if (input.appearance === null) {
+    appearance = null;
   } else {
-    const leftPct = Number(input.coords.leftPct);
-    const topPct = Number(input.coords.topPct);
-    if (!Number.isFinite(leftPct) || !Number.isFinite(topPct)) {
-      return { ok: false, error: "Coordenadas inválidas." };
+    const leftPct = Number(input.appearance.leftPct);
+    const topPct = Number(input.appearance.topPct);
+    const scale = Number(input.appearance.scale ?? 1);
+    if (
+      !Number.isFinite(leftPct) ||
+      !Number.isFinite(topPct) ||
+      !Number.isFinite(scale)
+    ) {
+      return { ok: false, error: "Valores inválidos." };
     }
-    coords = {
+    appearance = {
       leftPct: Math.max(0, Math.min(100, leftPct)),
       topPct: Math.max(0, Math.min(100, topPct)),
+      scale: Math.max(0.4, Math.min(2, scale)),
     };
   }
 
@@ -247,16 +307,21 @@ export async function saveButtonPosition(input: {
     .select("value")
     .eq("key", "ui_button_positions")
     .maybeSingle();
-  const current =
-    (row?.value as Partial<UiButtonPositions> | null) ??
-    CMS_DEFAULTS.ui_button_positions;
+  const currentRaw = (row?.value ?? null) as Record<string, unknown> | null;
 
   const next: UiButtonPositions = {
-    chatbot: current.chatbot ?? CMS_DEFAULTS.ui_button_positions.chatbot,
-    audio: current.audio ?? CMS_DEFAULTS.ui_button_positions.audio,
-    opacity: current.opacity ?? CMS_DEFAULTS.ui_button_positions.opacity,
+    chatbot: normalizeIncoming(currentRaw?.chatbot),
+    audio: normalizeIncoming(currentRaw?.audio),
+    opacity: normalizeIncoming(currentRaw?.opacity),
+    edit_toggle: normalizeIncoming(currentRaw?.edit_toggle),
   };
-  next[input.key] = { ...next[input.key], [input.device]: coords };
+  next[input.key] = {
+    ...next[input.key],
+    [input.section]: {
+      ...next[input.key][input.section],
+      [input.device]: appearance,
+    },
+  };
 
   const { error } = await supabase.from("content").upsert(
     {

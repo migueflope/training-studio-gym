@@ -170,6 +170,7 @@ export function Chatbot() {
       </AnimatePresence>
 
       <button
+        ref={draggable.ref}
         onClick={() => setIsOpen(!isOpen)}
         style={draggable.style}
         {...(draggable.dragHandlers ?? {})}

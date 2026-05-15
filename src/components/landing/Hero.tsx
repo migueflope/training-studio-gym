@@ -218,6 +218,7 @@ export function Hero({
           delay: 1.5,
           boxShadow: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
         }}
+        ref={audioDraggable.ref}
         onClick={(e) => {
           e.stopPropagation();
           setIsMuted(!isMuted);

@@ -50,6 +50,7 @@ export function HeroOpacityEditor() {
   if (!open) {
     return (
       <button
+        ref={opacityDraggable.ref}
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Editar opacidad del hero"
@@ -65,6 +66,7 @@ export function HeroOpacityEditor() {
 
   return (
     <div
+      ref={opacityDraggable.ref}
       style={opacityDraggable.style}
       className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 w-[calc(100vw-1.5rem)] sm:w-[320px] bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.4)] overflow-hidden"
     >

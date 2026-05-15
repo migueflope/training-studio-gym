@@ -20,24 +20,39 @@ export type TrainerConfig = {
 };
 
 /**
- * Position of a floating button as a percentage of the viewport (0-100).
- * Stored as percent (not pixels) so the saved position is responsive
- * across different screen widths. `null` means "use the component's
- * default CSS position" — the initial value before an admin drags.
+ * Visual state of a floating button:
+ * - leftPct/topPct as % of viewport (responsive across sizes)
+ * - scale 0.6–1.6 (admin-resizable)
+ * `null` = use the component's CSS default (no admin override yet).
  */
+export type ButtonAppearance = {
+  leftPct: number;
+  topPct: number;
+  scale: number;
+} | null;
+
+/** Legacy shape, kept for backward-compat reads. */
 export type ButtonCoords = { leftPct: number; topPct: number } | null;
 
-/** Per-device positions for a single floating button. */
-export type ButtonPosition = {
-  desktop: ButtonCoords;
-  mobile: ButtonCoords;
+/** Per-device appearance for a single floating button in one section. */
+export type ButtonPerDevice = {
+  desktop: ButtonAppearance;
+  mobile: ButtonAppearance;
 };
+
+/** UI sections — each one persists its own position+scale per button. */
+export const BUTTON_SECTIONS = ["landing", "public", "dashboard", "admin"] as const;
+export type ButtonSection = (typeof BUTTON_SECTIONS)[number];
+
+/** A button's appearance across all sections + devices. */
+export type ButtonSettings = Record<ButtonSection, ButtonPerDevice>;
 
 /** Positions for all admin-movable floating buttons. */
 export type UiButtonPositions = {
-  chatbot: ButtonPosition;
-  audio: ButtonPosition;
-  opacity: ButtonPosition;
+  chatbot: ButtonSettings;
+  audio: ButtonSettings;
+  opacity: ButtonSettings;
+  edit_toggle: ButtonSettings;
 };
 
 export type PlanSlug =
@@ -137,9 +152,10 @@ export const CMS_DEFAULTS: CmsContent = {
     enabled: true,
   },
   ui_button_positions: {
-    chatbot: { desktop: null, mobile: null },
-    audio: { desktop: null, mobile: null },
-    opacity: { desktop: null, mobile: null },
+    chatbot: emptyButtonSettings(),
+    audio: emptyButtonSettings(),
+    opacity: emptyButtonSettings(),
+    edit_toggle: emptyButtonSettings(),
   },
   plan_pricing: {
     mensualidad: { price: 90000, discount_percentage: 33 },
@@ -151,27 +167,64 @@ export const CMS_DEFAULTS: CmsContent = {
   },
 };
 
-function isValidCoords(v: unknown): v is { leftPct: number; topPct: number } {
-  if (!v || typeof v !== "object") return false;
+export function emptyButtonSettings(): ButtonSettings {
+  return BUTTON_SECTIONS.reduce((acc, section) => {
+    acc[section] = { desktop: null, mobile: null };
+    return acc;
+  }, {} as ButtonSettings);
+}
+
+function parseAppearance(v: unknown): ButtonAppearance {
+  if (!v || typeof v !== "object") return null;
   const o = v as Record<string, unknown>;
-  return typeof o.leftPct === "number" && typeof o.topPct === "number";
+  if (typeof o.leftPct !== "number" || typeof o.topPct !== "number") return null;
+  const rawScale = typeof o.scale === "number" ? o.scale : 1;
+  // Clamp to keep buttons usable even if DB has garbage.
+  const scale = Math.max(0.4, Math.min(2, rawScale));
+  return {
+    leftPct: Math.max(0, Math.min(100, o.leftPct)),
+    topPct: Math.max(0, Math.min(100, o.topPct)),
+    scale,
+  };
+}
+
+function sanitizeButtonSettings(raw: unknown): ButtonSettings {
+  const out = emptyButtonSettings();
+  if (!raw || typeof raw !== "object") return out;
+  const r = raw as Record<string, unknown>;
+
+  // New shape: nested under section keys.
+  const hasSectionKeys = BUTTON_SECTIONS.some((s) => s in r);
+  if (hasSectionKeys) {
+    for (const section of BUTTON_SECTIONS) {
+      const sectionRaw = (r[section] ?? {}) as Record<string, unknown>;
+      out[section] = {
+        desktop: parseAppearance(sectionRaw.desktop),
+        mobile: parseAppearance(sectionRaw.mobile),
+      };
+    }
+    return out;
+  }
+
+  // Legacy shape: { desktop, mobile } directly. Replicate to all sections so
+  // an admin who already arranged things in the old global model keeps that
+  // arrangement everywhere as the new starting point.
+  const legacyDesktop = parseAppearance(r.desktop);
+  const legacyMobile = parseAppearance(r.mobile);
+  for (const section of BUTTON_SECTIONS) {
+    out[section] = { desktop: legacyDesktop, mobile: legacyMobile };
+  }
+  return out;
 }
 
 function sanitizeButtonPositions(v: unknown): UiButtonPositions {
-  const fallback = CMS_DEFAULTS.ui_button_positions;
-  if (!v || typeof v !== "object") return fallback;
+  if (!v || typeof v !== "object") return CMS_DEFAULTS.ui_button_positions;
   const o = v as Record<string, unknown>;
-  const fix = (key: keyof UiButtonPositions): ButtonPosition => {
-    const raw = (o[key] ?? {}) as Record<string, unknown>;
-    return {
-      desktop: isValidCoords(raw.desktop) ? raw.desktop : null,
-      mobile: isValidCoords(raw.mobile) ? raw.mobile : null,
-    };
-  };
   return {
-    chatbot: fix("chatbot"),
-    audio: fix("audio"),
-    opacity: fix("opacity"),
+    chatbot: sanitizeButtonSettings(o.chatbot),
+    audio: sanitizeButtonSettings(o.audio),
+    opacity: sanitizeButtonSettings(o.opacity),
+    edit_toggle: sanitizeButtonSettings(o.edit_toggle),
   };
 }
 

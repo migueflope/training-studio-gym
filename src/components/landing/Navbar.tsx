@@ -13,7 +13,6 @@ import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { isAdminRole, type UserProfile } from "@/lib/auth/roles";
 import type { Notification } from "@/lib/notifications";
 import { MobileTopBar } from "./mobile/MobileTopBar";
-import { MobileBottomNav } from "./mobile/MobileBottomNav";
 
 interface NavbarProps {
   profile: UserProfile | null;
@@ -74,14 +73,13 @@ export function Navbar({
 
   return (
     <>
-      {/* Mobile-only navigation: top bar + drawer + bottom tab bar */}
+      {/* Mobile-only navigation: top bar + drawer */}
       <MobileTopBar
         profile={profile}
         hasActiveMembership={hasActiveMembership}
         notifItems={notifItems}
         notifUnread={notifUnread}
       />
-      <MobileBottomNav profile={profile} hasActiveMembership={hasActiveMembership} />
 
       {/* Desktop navigation (≥ md) */}
       <header className="hidden md:block fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 md:px-6 pt-3 md:pt-4">

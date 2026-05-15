@@ -39,6 +39,8 @@ export function MobileBottomNav({ profile, hasActiveMembership }: Props) {
   const pathname = usePathname();
   const [lockedOpen, setLockedOpen] = useState(false);
 
+  if (pathname === "/") return null;
+
   const isAdmin = !!profile && isAdminRole(profile.role);
   const canAccessDashboard = isAdmin || hasActiveMembership;
 

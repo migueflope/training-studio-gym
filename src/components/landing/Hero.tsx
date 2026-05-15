@@ -39,9 +39,11 @@ const itemVariants: Variants = {
 export function Hero({
   badge = "Tu mejor versión empieza hoy",
   subtitle = "El primer estudio de entrenamiento en Cartagena donde la tecnología se une al músculo para darte resultados medibles.",
+  canAccessDashboard = false,
 }: {
   badge?: string;
   subtitle?: string;
+  canAccessDashboard?: boolean;
 } = {}) {
   const audioDraggable = useDraggableButton("audio");
   const { editMode } = useDraggableButtons();
@@ -182,10 +184,10 @@ export function Hero({
               Ver Planes <ArrowRight className="w-5 h-5 relative z-10" />
             </Link>
             <Link
-              href="/contacto"
+              href={canAccessDashboard ? "/dashboard" : "/contacto"}
               className="w-full sm:w-auto px-8 py-4 bg-black/60 backdrop-blur-md border-2 border-primary text-primary text-lg font-bold rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_rgba(212,175,55,0.3)]"
             >
-              Agendar Valoración
+              {canAccessDashboard ? "Ir a mi panel" : "Agendar Valoración"}
             </Link>
           </motion.div>
         </motion.div>

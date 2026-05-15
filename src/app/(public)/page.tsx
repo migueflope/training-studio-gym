@@ -38,12 +38,14 @@ export default async function Home({
 }) {
   const { landing } = await searchParams;
   const profile = await getUserProfile();
-  if (!landing && profile && !isAdminRole(profile.role)) {
-    const membership = await getActiveMembership(profile.id);
-    if (membership) redirect("/dashboard");
-  }
-
   const isAdmin = !!profile && isAdminRole(profile.role);
+  let hasActiveMembership = false;
+  if (profile && !isAdmin) {
+    const membership = await getActiveMembership(profile.id);
+    hasActiveMembership = !!membership;
+    if (!landing && membership) redirect("/dashboard");
+  }
+  const canAccessDashboard = isAdmin || hasActiveMembership;
 
   const cms = await getCmsContent();
 
@@ -69,7 +71,11 @@ export default async function Home({
     >
       <div className="flex flex-col w-full">
         <ParticleField />
-        <Hero badge={cms.hero_title} subtitle={cms.hero_subtitle} />
+        <Hero
+          badge={cms.hero_title}
+          subtitle={cms.hero_subtitle}
+          canAccessDashboard={canAccessDashboard}
+        />
         <Pillars description={cms.about_text} />
         <Pricing planPricing={cms.plan_pricing} />
         <Trainers trainers={trainers} />

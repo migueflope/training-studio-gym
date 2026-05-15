@@ -83,8 +83,6 @@ const TEXT_KEYS = [
   "whatsapp_display",
 ] as const;
 
-const NUMBER_KEYS = ["price_monthly", "price_session", "price_assessment"] as const;
-
 const BANK_KEYS = ["bank_bancolombia", "bank_nequi", "bank_daviplata"] as const;
 type BankKey = (typeof BANK_KEYS)[number];
 
@@ -119,15 +117,6 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
     };
   }
   updates.push({ key: "whatsapp_number", value: whatsappNumber });
-
-  for (const k of NUMBER_KEYS) {
-    const raw = String(formData.get(k) ?? "").replace(/[^\d]/g, "");
-    const n = Number(raw);
-    if (!Number.isFinite(n) || n < 0) {
-      return { ok: false, error: `Precio inválido en "${k}".` };
-    }
-    updates.push({ key: k, value: n });
-  }
 
   for (const k of BANK_KEYS) {
     const name = String(formData.get(`${k}__name`) ?? "").trim();
@@ -190,6 +179,13 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
   }
   updates.push({ key: "plan_pricing", value: planPricing as PlanPricingConfig });
 
+  // Mirror the basic-plan prices into the legacy `price_monthly/session/
+  // assessment` keys so anything that still reads them (chatbot context,
+  // older callers) stays in sync without a separate edit.
+  updates.push({ key: "price_monthly", value: planPricing.mensualidad!.price });
+  updates.push({ key: "price_session", value: planPricing.sesion!.price });
+  updates.push({ key: "price_assessment", value: planPricing.valoracion!.price });
+
   for (const u of updates) {
     const { error } = await supabase.from("content").upsert(
       {
@@ -235,12 +231,15 @@ export async function saveButtonPosition(input: {
   if (input.coords === null) {
     coords = null;
   } else {
-    const left = Number(input.coords.left);
-    const top = Number(input.coords.top);
-    if (!Number.isFinite(left) || !Number.isFinite(top)) {
+    const leftPct = Number(input.coords.leftPct);
+    const topPct = Number(input.coords.topPct);
+    if (!Number.isFinite(leftPct) || !Number.isFinite(topPct)) {
       return { ok: false, error: "Coordenadas inválidas." };
     }
-    coords = { left: Math.round(left), top: Math.round(top) };
+    coords = {
+      leftPct: Math.max(0, Math.min(100, leftPct)),
+      topPct: Math.max(0, Math.min(100, topPct)),
+    };
   }
 
   const { data: row } = await supabase

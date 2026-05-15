@@ -218,7 +218,8 @@ export function useDraggableButton(key: DraggableButtonKey): DraggableProps {
       if (!drag || drag.pointerId !== e.pointerId) return;
       const dx = e.clientX - drag.startX;
       const dy = e.clientY - drag.startY;
-      // Clamp so the button always stays fully on screen.
+      // Clamp so the button always stays fully on screen, then store as
+      // percent of viewport so the position is responsive on other sizes.
       const left = Math.max(
         0,
         Math.min(window.innerWidth - drag.width, drag.originLeft + dx),
@@ -227,7 +228,9 @@ export function useDraggableButton(key: DraggableButtonKey): DraggableProps {
         0,
         Math.min(window.innerHeight - drag.height, drag.originTop + dy),
       );
-      setPosition(key, { left, top });
+      const leftPct = (left / window.innerWidth) * 100;
+      const topPct = (top / window.innerHeight) * 100;
+      setPosition(key, { leftPct, topPct });
     },
     [key, setPosition],
   );
@@ -246,7 +249,12 @@ export function useDraggableButton(key: DraggableButtonKey): DraggableProps {
   );
 
   const baseStyle: React.CSSProperties = coords
-    ? { left: coords.left, top: coords.top, right: "auto", bottom: "auto" }
+    ? {
+        left: `${coords.leftPct}%`,
+        top: `${coords.topPct}%`,
+        right: "auto",
+        bottom: "auto",
+      }
     : {};
 
   if (!editMode) {

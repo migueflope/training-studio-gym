@@ -20,11 +20,12 @@ export type TrainerConfig = {
 };
 
 /**
- * Pixel offset from the top-left of the viewport for a floating button.
- * `null` means "use the component's default CSS position" — that's the
- * initial value before an admin has dragged the button.
+ * Position of a floating button as a percentage of the viewport (0-100).
+ * Stored as percent (not pixels) so the saved position is responsive
+ * across different screen widths. `null` means "use the component's
+ * default CSS position" — the initial value before an admin drags.
  */
-export type ButtonCoords = { left: number; top: number } | null;
+export type ButtonCoords = { leftPct: number; topPct: number } | null;
 
 /** Per-device positions for a single floating button. */
 export type ButtonPosition = {
@@ -150,6 +151,30 @@ export const CMS_DEFAULTS: CmsContent = {
   },
 };
 
+function isValidCoords(v: unknown): v is { leftPct: number; topPct: number } {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.leftPct === "number" && typeof o.topPct === "number";
+}
+
+function sanitizeButtonPositions(v: unknown): UiButtonPositions {
+  const fallback = CMS_DEFAULTS.ui_button_positions;
+  if (!v || typeof v !== "object") return fallback;
+  const o = v as Record<string, unknown>;
+  const fix = (key: keyof UiButtonPositions): ButtonPosition => {
+    const raw = (o[key] ?? {}) as Record<string, unknown>;
+    return {
+      desktop: isValidCoords(raw.desktop) ? raw.desktop : null,
+      mobile: isValidCoords(raw.mobile) ? raw.mobile : null,
+    };
+  };
+  return {
+    chatbot: fix("chatbot"),
+    audio: fix("audio"),
+    opacity: fix("opacity"),
+  };
+}
+
 /**
  * Read every CMS key in a single round-trip and return them merged with
  * defaults. Cached per-request so multiple components on the same page
@@ -164,8 +189,12 @@ export const getCmsContent = cache(async (): Promise<CmsContent> => {
     const merged: CmsContent = { ...CMS_DEFAULTS };
     for (const row of data) {
       if (row.key in CMS_DEFAULTS) {
-        // Trust DB shape; fall back per-key on any malformed value
-        (merged as Record<string, unknown>)[row.key] = row.value;
+        if (row.key === "ui_button_positions") {
+          merged.ui_button_positions = sanitizeButtonPositions(row.value);
+        } else {
+          // Trust DB shape; fall back per-key on any malformed value
+          (merged as Record<string, unknown>)[row.key] = row.value;
+        }
       }
     }
     return merged;

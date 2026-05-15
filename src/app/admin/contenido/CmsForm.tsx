@@ -8,7 +8,6 @@ import {
   Loader2,
   Sparkles,
   MapPin,
-  Wallet,
   Landmark,
   Users2,
   ChevronDown,
@@ -43,9 +42,6 @@ export function CmsForm({
     hours_weekdays: string;
     hours_saturday: string;
     hours_sunday: string;
-    price_monthly: number;
-    price_session: number;
-    price_assessment: number;
     contact_email: string;
     whatsapp_number: string;
     whatsapp_display: string;
@@ -201,83 +197,53 @@ export function CmsForm({
       </Section>
 
       <Section
-        icon={<Wallet className="w-5 h-5 text-primary" />}
-        title="Precios"
-        subtitle="Precios sueltos que aparecen en el landing y en el chatbot."
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field label="Mensualidad (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_monthly"
-              defaultValue={initial.price_monthly}
-              required
-              className={inputCls}
-            />
-          </Field>
-          <Field label="Sesión suelta (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_session"
-              defaultValue={initial.price_session}
-              required
-              className={inputCls}
-            />
-          </Field>
-          <Field label="Valoración física (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_assessment"
-              defaultValue={initial.price_assessment}
-              required
-              className={inputCls}
-            />
-          </Field>
-        </div>
-      </Section>
-
-      <Section
         icon={<Tag className="w-5 h-5 text-primary" />}
-        title="Planes y descuentos"
-        subtitle="Precio original y porcentaje de descuento por plan. El precio final que ven los usuarios se calcula automáticamente."
+        title="Planes y precios"
+        subtitle="Precio original y porcentaje de descuento por plan. El precio final que ven los usuarios en el landing y en /planes se calcula automáticamente."
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <PlanPricingCard
-            slug="mensualidad"
-            label="Mensualidad del Gym"
-            data={initial.plan_pricing.mensualidad}
-          />
-          <PlanPricingCard
-            slug="sesion"
-            label="Sesión de Entrenamiento"
-            data={initial.plan_pricing.sesion}
-          />
-          <PlanPricingCard
-            slug="valoracion"
-            label="Valoración Física"
-            data={initial.plan_pricing.valoracion}
-          />
-          <PlanPricingCard
-            slug="package_12"
-            label="Paquete 12 Clases"
-            data={initial.plan_pricing.package_12}
-          />
-          <PlanPricingCard
-            slug="package_15"
-            label="Paquete 15 Clases"
-            data={initial.plan_pricing.package_15}
-          />
-          <PlanPricingCard
-            slug="package_20"
-            label="Paquete 20 Clases"
-            data={initial.plan_pricing.package_20}
-          />
+        <div>
+          <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            Servicios básicos
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PlanPricingCard
+              slug="mensualidad"
+              label="Mensualidad del Gym"
+              data={initial.plan_pricing.mensualidad}
+            />
+            <PlanPricingCard
+              slug="sesion"
+              label="Sesión de Entrenamiento"
+              data={initial.plan_pricing.sesion}
+            />
+            <PlanPricingCard
+              slug="valoracion"
+              label="Valoración Física"
+              data={initial.plan_pricing.valoracion}
+            />
+          </div>
+        </div>
+        <div className="pt-2">
+          <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            Paquetes de entrenamiento personalizado
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PlanPricingCard
+              slug="package_12"
+              label="Paquete 12 Clases"
+              data={initial.plan_pricing.package_12}
+            />
+            <PlanPricingCard
+              slug="package_15"
+              label="Paquete 15 Clases"
+              data={initial.plan_pricing.package_15}
+            />
+            <PlanPricingCard
+              slug="package_20"
+              label="Paquete 20 Clases"
+              data={initial.plan_pricing.package_20}
+            />
+          </div>
         </div>
       </Section>
 

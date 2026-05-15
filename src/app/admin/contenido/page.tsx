@@ -161,9 +161,6 @@ export default async function AdminContenidoPage() {
           hours_weekdays: cms.hours_weekdays,
           hours_saturday: cms.hours_saturday,
           hours_sunday: cms.hours_sunday,
-          price_monthly: cms.price_monthly,
-          price_session: cms.price_session,
-          price_assessment: cms.price_assessment,
           contact_email: cms.contact_email,
           whatsapp_number: cms.whatsapp_number,
           whatsapp_display: cms.whatsapp_display,
@@ -172,6 +169,7 @@ export default async function AdminContenidoPage() {
           bank_daviplata: daviplata,
           trainer_1: trainer1,
           trainer_2: trainer2,
+          plan_pricing: cms.plan_pricing,
         }}
       />
 

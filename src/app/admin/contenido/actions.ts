@@ -3,7 +3,16 @@
 import sharp from "sharp";
 import { revalidatePath } from "next/cache";
 import { assertAdmin } from "@/lib/admin/assertAdmin";
-import type { BankConfig, TrainerConfig } from "@/lib/cms";
+import {
+  CMS_DEFAULTS,
+  type BankConfig,
+  type ButtonCoords,
+  type PlanPricingConfig,
+  type PlanPricingEntry,
+  type PlanSlug,
+  type TrainerConfig,
+  type UiButtonPositions,
+} from "@/lib/cms";
 
 function looksLikeHeic(file: File, buffer: Buffer): boolean {
   const name = file.name.toLowerCase();
@@ -74,13 +83,20 @@ const TEXT_KEYS = [
   "whatsapp_display",
 ] as const;
 
-const NUMBER_KEYS = ["price_monthly", "price_session", "price_assessment"] as const;
-
 const BANK_KEYS = ["bank_bancolombia", "bank_nequi", "bank_daviplata"] as const;
 type BankKey = (typeof BANK_KEYS)[number];
 
 const TRAINER_KEYS = ["trainer_1", "trainer_2"] as const;
 type TrainerKey = (typeof TRAINER_KEYS)[number];
+
+const PLAN_SLUGS: readonly PlanSlug[] = [
+  "mensualidad",
+  "sesion",
+  "valoracion",
+  "package_12",
+  "package_15",
+  "package_20",
+] as const;
 
 export async function saveCmsContent(formData: FormData): Promise<Result> {
   const { supabase } = await assertAdmin();
@@ -101,15 +117,6 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
     };
   }
   updates.push({ key: "whatsapp_number", value: whatsappNumber });
-
-  for (const k of NUMBER_KEYS) {
-    const raw = String(formData.get(k) ?? "").replace(/[^\d]/g, "");
-    const n = Number(raw);
-    if (!Number.isFinite(n) || n < 0) {
-      return { ok: false, error: `Precio inválido en "${k}".` };
-    }
-    updates.push({ key: k, value: n });
-  }
 
   for (const k of BANK_KEYS) {
     const name = String(formData.get(`${k}__name`) ?? "").trim();
@@ -142,6 +149,43 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
     updates.push({ key: k, value });
   }
 
+  // Per-plan original price + discount %. Final price shown to users is
+  // computed at render time as price * (1 - discount/100).
+  const planPricing: Partial<PlanPricingConfig> = {};
+  for (const slug of PLAN_SLUGS) {
+    const priceRaw = String(formData.get(`plan_${slug}__price`) ?? "").replace(
+      /[^\d]/g,
+      "",
+    );
+    const discountRaw = String(
+      formData.get(`plan_${slug}__discount_percentage`) ?? "",
+    ).replace(/[^\d.-]/g, "");
+    const price = Number(priceRaw);
+    const discount = Number(discountRaw);
+    if (!Number.isFinite(price) || price < 0) {
+      return { ok: false, error: `Precio inválido en plan ${slug}.` };
+    }
+    if (!Number.isFinite(discount) || discount < 0 || discount > 100) {
+      return {
+        ok: false,
+        error: `Descuento inválido en plan ${slug} (debe ser 0-100).`,
+      };
+    }
+    const entry: PlanPricingEntry = {
+      price: Math.round(price),
+      discount_percentage: Math.round(discount),
+    };
+    planPricing[slug] = entry;
+  }
+  updates.push({ key: "plan_pricing", value: planPricing as PlanPricingConfig });
+
+  // Mirror the basic-plan prices into the legacy `price_monthly/session/
+  // assessment` keys so anything that still reads them (chatbot context,
+  // older callers) stays in sync without a separate edit.
+  updates.push({ key: "price_monthly", value: planPricing.mensualidad!.price });
+  updates.push({ key: "price_session", value: planPricing.sesion!.price });
+  updates.push({ key: "price_assessment", value: planPricing.valoracion!.price });
+
   for (const u of updates) {
     const { error } = await supabase.from("content").upsert(
       {
@@ -155,6 +199,75 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
   }
 
   revalidatePath("/admin/contenido");
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+type ButtonKey = keyof UiButtonPositions;
+const BUTTON_KEYS: readonly ButtonKey[] = ["chatbot", "audio", "opacity"] as const;
+
+function isButtonKey(v: unknown): v is ButtonKey {
+  return typeof v === "string" && (BUTTON_KEYS as readonly string[]).includes(v);
+}
+
+/**
+ * Persist the pixel position for one floating button (chatbot / hero audio /
+ * hero opacity editor) for a given device class. Reads the current value to
+ * preserve the slot the admin isn't editing.
+ */
+export async function saveButtonPosition(input: {
+  key: ButtonKey;
+  device: "desktop" | "mobile";
+  coords: ButtonCoords;
+}): Promise<Result> {
+  const { supabase } = await assertAdmin();
+
+  if (!isButtonKey(input.key)) return { ok: false, error: "Botón inválido." };
+  if (input.device !== "desktop" && input.device !== "mobile") {
+    return { ok: false, error: "Dispositivo inválido." };
+  }
+
+  let coords: ButtonCoords;
+  if (input.coords === null) {
+    coords = null;
+  } else {
+    const leftPct = Number(input.coords.leftPct);
+    const topPct = Number(input.coords.topPct);
+    if (!Number.isFinite(leftPct) || !Number.isFinite(topPct)) {
+      return { ok: false, error: "Coordenadas inválidas." };
+    }
+    coords = {
+      leftPct: Math.max(0, Math.min(100, leftPct)),
+      topPct: Math.max(0, Math.min(100, topPct)),
+    };
+  }
+
+  const { data: row } = await supabase
+    .from("content")
+    .select("value")
+    .eq("key", "ui_button_positions")
+    .maybeSingle();
+  const current =
+    (row?.value as Partial<UiButtonPositions> | null) ??
+    CMS_DEFAULTS.ui_button_positions;
+
+  const next: UiButtonPositions = {
+    chatbot: current.chatbot ?? CMS_DEFAULTS.ui_button_positions.chatbot,
+    audio: current.audio ?? CMS_DEFAULTS.ui_button_positions.audio,
+    opacity: current.opacity ?? CMS_DEFAULTS.ui_button_positions.opacity,
+  };
+  next[input.key] = { ...next[input.key], [input.device]: coords };
+
+  const { error } = await supabase.from("content").upsert(
+    {
+      key: "ui_button_positions",
+      value: next as never,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "key" },
+  );
+  if (error) return { ok: false, error: error.message };
+
   revalidatePath("/", "layout");
   return { ok: true };
 }

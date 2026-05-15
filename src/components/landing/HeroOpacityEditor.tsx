@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Check, Loader2, Settings2, X } from "lucide-react";
 import { saveHeroVideoOpacity } from "@/app/admin/contenido/actions";
 import { useHeroOpacity } from "./HeroOpacityContext";
+import { useDraggableButton } from "@/components/ui/DraggableButtonsContext";
 
 /**
  * Admin-only floating panel to live-tune the hero video opacity in mobile
@@ -12,6 +13,7 @@ import { useHeroOpacity } from "./HeroOpacityContext";
  */
 export function HeroOpacityEditor() {
   const { mobile, desktop, setMobile, setDesktop } = useHeroOpacity();
+  const opacityDraggable = useDraggableButton("opacity");
   const [open, setOpen] = useState(false);
   const [savedFlag, setSavedFlag] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +53,8 @@ export function HeroOpacityEditor() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Editar opacidad del hero"
+        style={opacityDraggable.style}
+        {...(opacityDraggable.dragHandlers ?? {})}
         className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-black/85 backdrop-blur-md border border-primary/40 text-primary text-xs font-bold shadow-[0_0_20px_rgba(212,175,55,0.35)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] transition-shadow"
       >
         <Settings2 className="w-4 h-4" />
@@ -60,8 +64,19 @@ export function HeroOpacityEditor() {
   }
 
   return (
-    <div className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 w-[calc(100vw-1.5rem)] sm:w-[320px] bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.4)] overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5">
+    <div
+      style={opacityDraggable.style}
+      className="fixed top-1/2 -translate-y-1/2 right-3 md:right-5 z-50 w-[calc(100vw-1.5rem)] sm:w-[320px] bg-card/95 backdrop-blur-xl border border-primary/40 rounded-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_40px_-10px_rgba(212,175,55,0.4)] overflow-hidden"
+    >
+      <div
+        {...(opacityDraggable.dragHandlers ?? {})}
+        style={
+          opacityDraggable.dragHandlers
+            ? { cursor: "grab", touchAction: "none" }
+            : undefined
+        }
+        className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5"
+      >
         <div className="flex items-center gap-2">
           <Settings2 className="w-4 h-4 text-primary" />
           <span className="font-display font-bold text-sm">Opacidad del Hero</span>

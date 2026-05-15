@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import { WizardUploadPanel } from "./WizardUploadPanel";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import { readCheckout, writeCheckout, clearCheckout } from "@/lib/checkout/storage";
+import type { PlanPricingConfig, PlanSlug } from "@/lib/cms";
 
 const BANK_LOGOS: Record<string, string> = {
   bancolombia: "/assets/banks/bancolombia.svg",
@@ -16,19 +17,103 @@ const BANK_LOGOS: Record<string, string> = {
   daviplata: "/assets/banks/daviplata.svg",
 };
 
-const basicServices = [
-  { id: "mensualidad", name: "Mensualidad del Gym", price: "$60.000", originalPrice: "$90.000", isPopular: false, discount: "-33% OFF", features: ["Acceso ilimitado a las instalaciones", "Uso de todas las máquinas", "Horarios flexibles"] },
-  { id: "sesion", name: "Sesión de Entrenamiento", price: "$5.000", originalPrice: "$10.000", isPopular: false, discount: "-50% OFF", features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"] },
-  { id: "valoracion", name: "Valoración Física", price: "$15.000", originalPrice: "$30.000", isPopular: false, discount: "-50% OFF", features: ["Análisis de composición corporal", "Medidas y peso", "Definición de objetivos"] },
+type PlanCardMeta = {
+  id: string;
+  slug: PlanSlug;
+  name: string;
+  isPopular: boolean;
+  features: string[];
+};
+
+const BASIC_SERVICES: PlanCardMeta[] = [
+  {
+    id: "mensualidad",
+    slug: "mensualidad",
+    name: "Mensualidad del Gym",
+    isPopular: false,
+    features: [
+      "Acceso ilimitado a las instalaciones",
+      "Uso de todas las máquinas",
+      "Horarios flexibles",
+    ],
+  },
+  {
+    id: "sesion",
+    slug: "sesion",
+    name: "Sesión de Entrenamiento",
+    isPopular: false,
+    features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"],
+  },
+  {
+    id: "valoracion",
+    slug: "valoracion",
+    name: "Valoración Física",
+    isPopular: false,
+    features: [
+      "Análisis de composición corporal",
+      "Medidas y peso",
+      "Definición de objetivos",
+    ],
+  },
 ];
 
-const customPackages = [
-  { id: "12-clases", name: "Paquete 12 Clases", price: "$150.000", originalPrice: "$240.000", isPopular: false, discount: "-38% OFF", features: ["12 sesiones personalizadas", "Rutina adaptada por IA", "Valoración incluida", "Soporte de entrenadores"] },
-  { id: "15-clases", name: "Paquete 15 Clases", price: "$200.000", originalPrice: "$320.000", isPopular: true, discount: "-38% OFF", features: ["15 sesiones personalizadas", "Rutina premium adaptada", "Valoración física mensual", "Prioridad en reservas"] },
-  { id: "20-clases", name: "Paquete 20 Clases", price: "$250.000", originalPrice: "$400.000", isPopular: false, discount: "-38% OFF", features: ["20 sesiones personalizadas", "Resultados acelerados", "Valoración física quincenal", "Acceso total a la app"] },
+const CUSTOM_PACKAGES: PlanCardMeta[] = [
+  {
+    id: "12-clases",
+    slug: "package_12",
+    name: "Paquete 12 Clases",
+    isPopular: false,
+    features: [
+      "12 sesiones personalizadas",
+      "Rutina adaptada por IA",
+      "Valoración incluida",
+      "Soporte de entrenadores",
+    ],
+  },
+  {
+    id: "15-clases",
+    slug: "package_15",
+    name: "Paquete 15 Clases",
+    isPopular: true,
+    features: [
+      "15 sesiones personalizadas",
+      "Rutina premium adaptada",
+      "Valoración física mensual",
+      "Prioridad en reservas",
+    ],
+  },
+  {
+    id: "20-clases",
+    slug: "package_20",
+    name: "Paquete 20 Clases",
+    isPopular: false,
+    features: [
+      "20 sesiones personalizadas",
+      "Resultados acelerados",
+      "Valoración física quincenal",
+      "Acceso total a la app",
+    ],
+  },
 ];
 
-const allPlans = [...basicServices, ...customPackages];
+const ALL_PLAN_META: PlanCardMeta[] = [...BASIC_SERVICES, ...CUSTOM_PACKAGES];
+
+function formatCop(n: number) {
+  return `$${n.toLocaleString("es-CO")}`;
+}
+
+function priceForPlan(meta: PlanCardMeta, pricing: PlanPricingConfig) {
+  const entry = pricing[meta.slug];
+  const original = entry.price;
+  const discount = entry.discount_percentage;
+  const final = Math.max(0, Math.round(original * (1 - discount / 100)));
+  return {
+    originalLabel: formatCop(original),
+    finalLabel: formatCop(final),
+    discount,
+    hasDiscount: discount > 0,
+  };
+}
 
 export type PaymentMethod = {
   id: "bancolombia" | "nequi" | "daviplata";
@@ -40,15 +125,18 @@ export type PaymentMethod = {
 export default function PlanesClient({
   paymentMethods,
   whatsappNumber,
+  planPricing,
 }: {
   paymentMethods: PaymentMethod[];
   whatsappNumber: string;
+  planPricing: PlanPricingConfig;
 }) {
   return (
     <Suspense fallback={<div className="min-h-screen bg-background" />}>
       <PlanesContent
         paymentMethods={paymentMethods}
         whatsappNumber={whatsappNumber}
+        planPricing={planPricing}
       />
     </Suspense>
   );
@@ -57,9 +145,11 @@ export default function PlanesClient({
 function PlanesContent({
   paymentMethods,
   whatsappNumber,
+  planPricing,
 }: {
   paymentMethods: PaymentMethod[];
   whatsappNumber: string;
+  planPricing: PlanPricingConfig;
 }) {
   const searchParams = useSearchParams();
   const { openAuth } = useAuthModal();
@@ -134,8 +224,12 @@ function PlanesContent({
     setTransactionRef("");
   };
 
-  const restoredPlanName =
-    allPlans.find((p) => p.id === selectedPlan)?.name ?? "tu plan";
+  const selectedPlanMeta =
+    ALL_PLAN_META.find((p) => p.id === selectedPlan) ?? null;
+  const restoredPlanName = selectedPlanMeta?.name ?? "tu plan";
+  const selectedPlanFinalLabel = selectedPlanMeta
+    ? priceForPlan(selectedPlanMeta, planPricing).finalLabel
+    : "—";
 
   const handleCopy = () => {
     navigator.clipboard.writeText(selectedMethod.account);
@@ -215,35 +309,40 @@ function PlanesContent({
               <div>
                 <h2 className="text-2xl font-display font-bold text-center mb-8 uppercase tracking-wider text-primary">Servicios</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {basicServices.map((plan) => (
-                    <div
-                      key={plan.id}
-                      onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                      className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
-                    >
-                      <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
-                      <div className="flex flex-col items-start gap-1 mb-8">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground line-through text-sm font-medium">{plan.originalPrice}</span>
-                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.discount}</span>
+                  {BASIC_SERVICES.map((plan) => {
+                    const pricing = priceForPlan(plan, planPricing);
+                    return (
+                      <div
+                        key={plan.id}
+                        onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
+                        className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
+                      >
+                        <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
+                        <div className="flex flex-col items-start gap-1 mb-8">
+                          {pricing.hasDiscount && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground line-through text-sm font-medium">{pricing.originalLabel}</span>
+                              <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">-{pricing.discount}% OFF</span>
+                            </div>
+                          )}
+                          <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{pricing.finalLabel}</span>
                         </div>
-                        <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{plan.price}</span>
-                      </div>
-                      
-                      <ul className="space-y-4 mb-8 text-left flex-1">
-                        {plan.features.map((feature, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-primary shrink-0" />
-                            <span className="text-muted-foreground text-sm">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
 
-                      <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
-                        Seleccionar Plan
+                        <ul className="space-y-4 mb-8 text-left flex-1">
+                          {plan.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                              <Check className="w-5 h-5 text-primary shrink-0" />
+                              <span className="text-muted-foreground text-sm">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
+                          Seleccionar Plan
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -254,40 +353,45 @@ function PlanesContent({
                   <p className="text-muted-foreground">Entrenamiento Personalizado</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {customPackages.map((plan) => (
-                    <div
-                      key={plan.id}
-                      onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
-                      className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] flex flex-col h-full ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] md:-translate-y-2' : 'border-border hover:border-primary/50'}`}
-                    >
-                      {plan.isPopular && (
-                        <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                          MÁS POPULAR
+                  {CUSTOM_PACKAGES.map((plan) => {
+                    const pricing = priceForPlan(plan, planPricing);
+                    return (
+                      <div
+                        key={plan.id}
+                        onClick={() => { setSelectedPlan(plan.id); setStep(2); }}
+                        className={`glass-panel cursor-pointer group relative p-8 rounded-2xl border transition-all duration-300 hover:scale-[1.02] flex flex-col h-full ${plan.isPopular ? 'border-primary shadow-[0_0_20px_rgba(212,175,55,0.2)] md:-translate-y-2' : 'border-border hover:border-primary/50'}`}
+                      >
+                        {plan.isPopular && (
+                          <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                            MÁS POPULAR
+                          </div>
+                        )}
+                        <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
+                        <div className="flex flex-col items-start gap-1 mb-8">
+                          {pricing.hasDiscount && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground line-through text-sm font-medium">{pricing.originalLabel}</span>
+                              <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">-{pricing.discount}% OFF</span>
+                            </div>
+                          )}
+                          <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{pricing.finalLabel}</span>
                         </div>
-                      )}
-                      <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
-                      <div className="flex flex-col items-start gap-1 mb-8">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground line-through text-sm font-medium">{plan.originalPrice}</span>
-                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.discount}</span>
+
+                        <ul className="space-y-4 mb-8 text-left flex-1">
+                          {plan.features.map((feature, i) => (
+                            <li key={i} className="flex items-start gap-3">
+                              <Check className="w-5 h-5 text-primary shrink-0" />
+                              <span className="text-muted-foreground text-sm">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+
+                        <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
+                          Seleccionar Plan
                         </div>
-                        <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{plan.price}</span>
                       </div>
-
-                      <ul className="space-y-4 mb-8 text-left flex-1">
-                        {plan.features.map((feature, i) => (
-                          <li key={i} className="flex items-start gap-3">
-                            <Check className="w-5 h-5 text-primary shrink-0" />
-                            <span className="text-muted-foreground text-sm">{feature}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <div className="w-full text-center py-3 rounded-lg border border-primary/30 text-primary font-bold group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto">
-                        Seleccionar Plan
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </motion.div>
@@ -429,9 +533,7 @@ function PlanesContent({
                       wizardPlanId={selectedPlan}
                       method={selectedMethod.id}
                       whatsappNumber={whatsappNumber}
-                      priceLabel={
-                        allPlans.find((p) => p.id === selectedPlan)?.price ?? "—"
-                      }
+                      priceLabel={selectedPlanFinalLabel}
                       transactionRef={transactionRef}
                       onTransactionRefChange={setTransactionRef}
                     />

@@ -8,15 +8,19 @@ import {
   Loader2,
   Sparkles,
   MapPin,
-  Wallet,
   Landmark,
   Users2,
   ChevronDown,
+  Tag,
 } from "lucide-react";
 import { saveCmsContent } from "./actions";
 import { BankQrUploader } from "./BankQrUploader";
 import { TrainerPhotoUploader } from "./TrainerPhotoUploader";
-import type { BankConfig, TrainerConfig } from "@/lib/cms";
+import type {
+  BankConfig,
+  PlanPricingConfig,
+  TrainerConfig,
+} from "@/lib/cms";
 
 type BankKey = "bank_bancolombia" | "bank_nequi" | "bank_daviplata";
 type TrainerKey = "trainer_1" | "trainer_2";
@@ -38,9 +42,6 @@ export function CmsForm({
     hours_weekdays: string;
     hours_saturday: string;
     hours_sunday: string;
-    price_monthly: number;
-    price_session: number;
-    price_assessment: number;
     contact_email: string;
     whatsapp_number: string;
     whatsapp_display: string;
@@ -49,6 +50,7 @@ export function CmsForm({
     bank_daviplata: BankWithUrl;
     trainer_1: TrainerWithUrl;
     trainer_2: TrainerWithUrl;
+    plan_pricing: PlanPricingConfig;
   };
 }) {
   const [pending, startTransition] = useTransition();
@@ -195,44 +197,53 @@ export function CmsForm({
       </Section>
 
       <Section
-        icon={<Wallet className="w-5 h-5 text-primary" />}
-        title="Precios"
-        subtitle="Precios sueltos que aparecen en el landing y en el chatbot."
+        icon={<Tag className="w-5 h-5 text-primary" />}
+        title="Planes y precios"
+        subtitle="Precio original y porcentaje de descuento por plan. El precio final que ven los usuarios en el landing y en /planes se calcula automáticamente."
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field label="Mensualidad (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_monthly"
-              defaultValue={initial.price_monthly}
-              required
-              className={inputCls}
+        <div>
+          <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            Servicios básicos
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PlanPricingCard
+              slug="mensualidad"
+              label="Mensualidad del Gym"
+              data={initial.plan_pricing.mensualidad}
             />
-          </Field>
-          <Field label="Sesión suelta (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_session"
-              defaultValue={initial.price_session}
-              required
-              className={inputCls}
+            <PlanPricingCard
+              slug="sesion"
+              label="Sesión de Entrenamiento"
+              data={initial.plan_pricing.sesion}
             />
-          </Field>
-          <Field label="Valoración física (COP)">
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              name="price_assessment"
-              defaultValue={initial.price_assessment}
-              required
-              className={inputCls}
+            <PlanPricingCard
+              slug="valoracion"
+              label="Valoración Física"
+              data={initial.plan_pricing.valoracion}
             />
-          </Field>
+          </div>
+        </div>
+        <div className="pt-2">
+          <h4 className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
+            Paquetes de entrenamiento personalizado
+          </h4>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <PlanPricingCard
+              slug="package_12"
+              label="Paquete 12 Clases"
+              data={initial.plan_pricing.package_12}
+            />
+            <PlanPricingCard
+              slug="package_15"
+              label="Paquete 15 Clases"
+              data={initial.plan_pricing.package_15}
+            />
+            <PlanPricingCard
+              slug="package_20"
+              label="Paquete 20 Clases"
+              data={initial.plan_pricing.package_20}
+            />
+          </div>
         </div>
       </Section>
 
@@ -394,6 +405,70 @@ function TrainerCard({
         initialUrl={data.photoUrl}
         fallbackUrl={data.fallbackUrl}
       />
+    </div>
+  );
+}
+
+function PlanPricingCard({
+  slug,
+  label,
+  data,
+}: {
+  slug: string;
+  label: string;
+  data: { price: number; discount_percentage: number };
+}) {
+  const [price, setPrice] = useState(data.price);
+  const [discount, setDiscount] = useState(data.discount_percentage);
+  const final = Math.max(0, Math.round(price * (1 - discount / 100)));
+  return (
+    <div className="bg-background border border-border rounded-xl p-5 space-y-3">
+      <h4 className="font-display font-bold text-base">{label}</h4>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Precio original (COP)">
+          <input
+            type="number"
+            min={0}
+            step={1000}
+            name={`plan_${slug}__price`}
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value) || 0)}
+            required
+            className={inputCls}
+          />
+        </Field>
+        <Field label="Descuento (%)">
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            name={`plan_${slug}__discount_percentage`}
+            value={discount}
+            onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+            required
+            className={inputCls}
+          />
+        </Field>
+      </div>
+      <div className="flex items-center gap-2 text-xs pt-1">
+        <span className="text-muted-foreground uppercase tracking-wider">
+          Precio final
+        </span>
+        {discount > 0 && (
+          <span className="text-muted-foreground line-through">
+            ${price.toLocaleString("es-CO")}
+          </span>
+        )}
+        <span className="font-bold font-mono text-primary text-base">
+          ${final.toLocaleString("es-CO")}
+        </span>
+        {discount > 0 && (
+          <span className="bg-destructive/10 text-destructive font-bold px-2 py-0.5 rounded-full">
+            -{discount}%
+          </span>
+        )}
+      </div>
     </div>
   );
 }

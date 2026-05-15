@@ -19,6 +19,45 @@ export type TrainerConfig = {
   enabled: boolean;
 };
 
+/**
+ * Position of a floating button as a percentage of the viewport (0-100).
+ * Stored as percent (not pixels) so the saved position is responsive
+ * across different screen widths. `null` means "use the component's
+ * default CSS position" — the initial value before an admin drags.
+ */
+export type ButtonCoords = { leftPct: number; topPct: number } | null;
+
+/** Per-device positions for a single floating button. */
+export type ButtonPosition = {
+  desktop: ButtonCoords;
+  mobile: ButtonCoords;
+};
+
+/** Positions for all admin-movable floating buttons. */
+export type UiButtonPositions = {
+  chatbot: ButtonPosition;
+  audio: ButtonPosition;
+  opacity: ButtonPosition;
+};
+
+export type PlanSlug =
+  | "mensualidad"
+  | "sesion"
+  | "valoracion"
+  | "package_12"
+  | "package_15"
+  | "package_20";
+
+/** Per-plan original price (COP) and discount percentage (0-100). */
+export type PlanPricingEntry = {
+  /** Original list price in COP. */
+  price: number;
+  /** 0-100. Final shown price = price * (1 - discount_percentage/100). */
+  discount_percentage: number;
+};
+
+export type PlanPricingConfig = Record<PlanSlug, PlanPricingEntry>;
+
 export type CmsContent = {
   hero_title: string;
   hero_subtitle: string;
@@ -43,6 +82,8 @@ export type CmsContent = {
   bank_daviplata: BankConfig;
   trainer_1: TrainerConfig;
   trainer_2: TrainerConfig;
+  ui_button_positions: UiButtonPositions;
+  plan_pricing: PlanPricingConfig;
 };
 
 export const CMS_DEFAULTS: CmsContent = {
@@ -95,7 +136,44 @@ export const CMS_DEFAULTS: CmsContent = {
     photo_path: null,
     enabled: true,
   },
+  ui_button_positions: {
+    chatbot: { desktop: null, mobile: null },
+    audio: { desktop: null, mobile: null },
+    opacity: { desktop: null, mobile: null },
+  },
+  plan_pricing: {
+    mensualidad: { price: 90000, discount_percentage: 33 },
+    sesion: { price: 10000, discount_percentage: 50 },
+    valoracion: { price: 30000, discount_percentage: 50 },
+    package_12: { price: 240000, discount_percentage: 38 },
+    package_15: { price: 320000, discount_percentage: 38 },
+    package_20: { price: 400000, discount_percentage: 38 },
+  },
 };
+
+function isValidCoords(v: unknown): v is { leftPct: number; topPct: number } {
+  if (!v || typeof v !== "object") return false;
+  const o = v as Record<string, unknown>;
+  return typeof o.leftPct === "number" && typeof o.topPct === "number";
+}
+
+function sanitizeButtonPositions(v: unknown): UiButtonPositions {
+  const fallback = CMS_DEFAULTS.ui_button_positions;
+  if (!v || typeof v !== "object") return fallback;
+  const o = v as Record<string, unknown>;
+  const fix = (key: keyof UiButtonPositions): ButtonPosition => {
+    const raw = (o[key] ?? {}) as Record<string, unknown>;
+    return {
+      desktop: isValidCoords(raw.desktop) ? raw.desktop : null,
+      mobile: isValidCoords(raw.mobile) ? raw.mobile : null,
+    };
+  };
+  return {
+    chatbot: fix("chatbot"),
+    audio: fix("audio"),
+    opacity: fix("opacity"),
+  };
+}
 
 /**
  * Read every CMS key in a single round-trip and return them merged with
@@ -111,8 +189,12 @@ export const getCmsContent = cache(async (): Promise<CmsContent> => {
     const merged: CmsContent = { ...CMS_DEFAULTS };
     for (const row of data) {
       if (row.key in CMS_DEFAULTS) {
-        // Trust DB shape; fall back per-key on any malformed value
-        (merged as Record<string, unknown>)[row.key] = row.value;
+        if (row.key === "ui_button_positions") {
+          merged.ui_button_positions = sanitizeButtonPositions(row.value);
+        } else {
+          // Trust DB shape; fall back per-key on any malformed value
+          (merged as Record<string, unknown>)[row.key] = row.value;
+        }
       }
     }
     return merged;

@@ -67,14 +67,14 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
       </div>
 
       {/* Right Side: Auth Form */}
-      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-6 sm:p-12 relative z-20 bg-[#050505]">
+      <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-4 sm:p-12 relative z-20 bg-[#050505] min-h-[100dvh] lg:min-h-screen">
         {/* Mobile Welcome Text (Hidden on Desktop) */}
-        <div className="lg:hidden text-center mb-8 mt-4">
-           <h1 className="text-3xl font-display font-extrabold text-white mb-3 drop-shadow-xl">
+        <div className="lg:hidden text-center mb-4 mt-16 sm:mt-4">
+           <h1 className="text-2xl font-display font-extrabold text-white mb-1 drop-shadow-xl">
              EL FUTURO DEL <span className="text-primary">FITNESS</span>
            </h1>
-           <p className="text-sm text-white/60 px-4">
-             Te damos la bienvenida a nuestra nueva página. Por pagar aquí, reclama ofertas imperdibles y de tiempo limitado de <span className="text-white font-bold">10% de descuento</span>.
+           <p className="text-xs text-white/60 px-2">
+             Regístrate y reclama <span className="text-white font-bold">10% de descuento</span> hoy mismo.
            </p>
         </div>
 
@@ -84,8 +84,8 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
           transition={{ duration: 0.4 }}
           className="w-full max-w-md"
         >
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
+          {/* Logo (Hidden on mobile because Navbar has it) */}
+          <div className="hidden lg:flex justify-center mb-8">
             <Image
               src="/assets/logo-transparent.png"
               alt="Training Studio Gym"
@@ -96,7 +96,7 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
           </div>
 
           {/* Dynamic Auth Box */}
-          <div className="bg-[#0a0a0a] rounded-3xl border border-white/5 p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+          <div className="bg-[#0a0a0a] rounded-2xl lg:rounded-3xl border border-white/5 p-5 sm:p-8 shadow-2xl relative overflow-hidden">
              {/* Subtle internal glow */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-primary/5 blur-[50px] pointer-events-none" />
              
@@ -215,28 +215,28 @@ function LoginView({ onSwitchMode }: { onSwitchMode: () => void }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-      <h2 className="text-2xl font-bold text-center text-white mb-6">Iniciar Sesión</h2>
+      <h2 className="text-xl sm:text-2xl font-bold text-center text-white mb-4 sm:mb-6">Iniciar Sesión</h2>
       
       {error && <ErrorBanner message={error} />}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <InputWithIcon Icon={Mail} type="email" value={email} onChange={setEmail} required placeholder="Correo Electrónico" />
         <PasswordField value={password} onChange={setPassword} required placeholder="Contraseña" />
         
         <button
           type="submit"
           disabled={isLoading}
-          className="relative w-full group overflow-hidden rounded-xl bg-primary px-4 py-3.5 font-bold text-black uppercase tracking-widest text-sm transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.3)]"
+          className="relative w-full group overflow-hidden rounded-xl bg-primary px-4 py-3 sm:py-3.5 font-bold text-black uppercase tracking-widest text-sm transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(212,175,55,0.3)] mt-2"
         >
           {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Entrar"}
         </button>
       </form>
 
-      <div className="mt-8 text-center border-t border-white/5 pt-6">
-        <p className="text-sm text-white/50 mb-3">¿No tienes cuenta?</p>
+      <div className="mt-6 sm:mt-8 text-center border-t border-white/5 pt-4 sm:pt-6">
+        <p className="text-xs sm:text-sm text-white/50 mb-2 sm:mb-3">¿No tienes cuenta?</p>
         <button
           onClick={onSwitchMode}
-          className="text-primary font-bold hover:text-yellow-300 transition-colors text-sm uppercase tracking-wider"
+          className="text-primary font-bold hover:text-yellow-300 transition-colors text-xs sm:text-sm uppercase tracking-wider"
         >
           Regístrate completamente gratis
         </button>
@@ -297,7 +297,7 @@ function SignupView({ onSwitchMode }: { onSwitchMode: () => void }) {
       
       {error && <ErrorBanner message={error} />}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
         <InputWithIcon Icon={User} type="text" value={fullName} onChange={setFullName} required placeholder="Nombre Completo" />
         <InputWithIcon Icon={Phone} type="tel" value={phone} onChange={setPhone} required placeholder="Teléfono" />
         <InputWithIcon Icon={Mail} type="email" value={email} onChange={setEmail} required placeholder="Correo Electrónico" />

@@ -216,8 +216,11 @@ function LoginView({ onSwitchMode }: { onSwitchMode: () => void }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
       <h2 className="text-xl sm:text-2xl font-bold text-center text-white mb-4 sm:mb-6">Iniciar Sesión</h2>
-      
+
       {error && <ErrorBanner message={error} />}
+
+      <GoogleButton mode="login" />
+      <OrSeparator />
 
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <InputWithIcon Icon={Mail} type="email" value={email} onChange={setEmail} required placeholder="Correo Electrónico" />
@@ -294,8 +297,11 @@ function SignupView({ onSwitchMode }: { onSwitchMode: () => void }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
       <h2 className="text-xl font-bold text-center text-white mb-2">Crear Cuenta</h2>
       <p className="text-xs text-center text-primary mb-6">Regístrate y reclama tus ofertas exclusivas</p>
-      
+
       {error && <ErrorBanner message={error} />}
+
+      <GoogleButton mode="signup" />
+      <OrSeparator />
 
       <form onSubmit={handleSubmit} className="space-y-2 sm:space-y-3">
         <InputWithIcon Icon={User} type="text" value={fullName} onChange={setFullName} required placeholder="Nombre Completo" />
@@ -322,6 +328,16 @@ function SignupView({ onSwitchMode }: { onSwitchMode: () => void }) {
         </button>
       </div>
     </motion.div>
+  );
+}
+
+function OrSeparator() {
+  return (
+    <div className="flex items-center gap-3 my-4">
+      <div className="flex-1 h-px bg-white/10" />
+      <span className="text-xs text-white/40 uppercase tracking-widest">o</span>
+      <div className="flex-1 h-px bg-white/10" />
+    </div>
   );
 }
 

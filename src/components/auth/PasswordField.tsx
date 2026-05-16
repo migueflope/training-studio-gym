@@ -33,7 +33,7 @@ export function PasswordField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-11 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50"
+        className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-11 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50 text-base"
       />
       <button
         type="button"

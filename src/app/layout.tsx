@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Chatbot } from "@/components/ui/Chatbot";
@@ -24,6 +24,13 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 const SITE_URL = "https://trainingstudio.com.co";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

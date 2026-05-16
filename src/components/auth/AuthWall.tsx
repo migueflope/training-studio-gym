@@ -358,7 +358,7 @@ function InputWithIcon({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#111] border border-white/10 text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-white/30 text-sm"
+        className="w-full bg-[#111] border border-white/10 text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all placeholder:text-white/30 text-base"
       />
     </div>
   );

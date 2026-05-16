@@ -19,10 +19,12 @@ interface AuthWallProps {
 const SAVED_PROFILE_KEY = "ts_saved_profile";
 
 export function AuthWall({ mensualidad }: AuthWallProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [mode, setMode] = useState<"login" | "signup" | "saved">("login");
   const [savedProfile, setSavedProfile] = useState<{ email: string; name: string } | null>(null);
 
   useEffect(() => {
+    setIsMounted(true);
     const saved = localStorage.getItem(SAVED_PROFILE_KEY);
     if (saved) {
       try {
@@ -34,6 +36,10 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
       } catch (e) {}
     }
   }, []);
+
+  if (!isMounted) {
+    return <div className="flex min-h-screen w-full bg-black" />;
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-black">
@@ -275,6 +281,13 @@ function SignupView({ onSwitchMode }: { onSwitchMode: () => void }) {
       setError("Hubo un error al registrarte. Verifica tus datos.");
       return;
     }
+    
+    // Save to localStorage for quick login
+    localStorage.setItem("ts_saved_profile", JSON.stringify({
+      email: email,
+      name: fullName
+    }));
+    
     setSuccess(true);
   };
 

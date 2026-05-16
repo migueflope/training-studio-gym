@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Sparkles, ChevronRight, Zap } from "lucide-react";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
@@ -31,11 +32,13 @@ export function WelcomeOfferDialog({
   onClose,
 }: WelcomeOfferDialogProps) {
   const [autoOpen, setAutoOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { openAuth } = useAuthModal();
 
   const isOpen = mode === "welcome" ? autoOpen : !!controlledOpen;
 
   useEffect(() => {
+    setIsMounted(true);
     if (mode !== "welcome") return;
     if (typeof window === "undefined") return;
     if (window.localStorage.getItem(WELCOME_SEEN_KEY)) return;
@@ -81,7 +84,9 @@ export function WelcomeOfferDialog({
   const priceBefore = formatCop(mensualidad.price);
   const priceAfter = formatCop(finalPrice);
 
-  return (
+  if (!isMounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
@@ -122,7 +127,7 @@ export function WelcomeOfferDialog({
               <div className="absolute inset-0 bg-primary/10 mix-blend-overlay z-10" />
               
               <img 
-                src="/welcome-offer.png" 
+                src="/welcome-offer-clean.png" 
                 alt="Welcome to Training Studio Gym"
                 className="absolute inset-0 w-full h-full object-cover filter brightness-90 group-hover:scale-105 transition-transform duration-[3s] ease-out"
               />
@@ -207,6 +212,7 @@ export function WelcomeOfferDialog({
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

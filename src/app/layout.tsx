@@ -7,6 +7,7 @@ import { DraggableButtonsProvider } from "@/components/ui/DraggableButtonsContex
 import { EditPositionsToggle } from "@/components/admin/EditPositionsToggle";
 import { getCmsContent } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
+import { ProfilePersister } from "@/components/auth/ProfilePersister";
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -80,6 +81,12 @@ export default async function RootLayout({
             <EditPositionsToggle />
           </DraggableButtonsProvider>
         </AuthModalProvider>
+        {profile && (
+          <ProfilePersister
+            email={profile.email ?? ""}
+            name={profile.fullName ?? ""}
+          />
+        )}
       </body>
     </html>
   );

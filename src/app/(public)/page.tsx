@@ -12,7 +12,6 @@ import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
 import { AuthWall } from "@/components/auth/AuthWall";
-import { ProfilePersister } from "@/components/auth/ProfilePersister";
 
 export const dynamic = "force-dynamic";
 
@@ -92,10 +91,6 @@ export default async function Home({
         <Location />
       </div>
       {isAdmin && <HeroOpacityEditor />}
-      <ProfilePersister
-        email={profile.email ?? ""}
-        name={profile.fullName ?? ""}
-      />
     </HeroOpacityProvider>
   );
 }

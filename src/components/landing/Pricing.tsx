@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 import { Check } from "lucide-react";
 import type { PlanPricingConfig } from "@/lib/cms";
+import { VerPlanesCTA } from "./VerPlanesCTA";
 
 const MAIN_SERVICES = [
   {
@@ -39,7 +39,13 @@ function computeFinal(price: number, discount: number) {
   return Math.max(0, Math.round(price * (1 - discount / 100)));
 }
 
-export function Pricing({ planPricing }: { planPricing: PlanPricingConfig }) {
+export function Pricing({
+  planPricing,
+  isLoggedIn = false,
+}: {
+  planPricing: PlanPricingConfig;
+  isLoggedIn?: boolean;
+}) {
   return (
     <section className="py-24 bg-background relative">
       <div className="container mx-auto px-4 md:px-6 relative z-10">
@@ -91,6 +97,11 @@ export function Pricing({ planPricing }: { planPricing: PlanPricingConfig }) {
                       <span className="text-4xl font-bold text-primary tracking-tighter">
                         {formatCop(final)}
                       </span>
+                      {hasDiscount && (
+                        <span className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mt-1">
+                          Pagando en la página
+                        </span>
+                      )}
                     </div>
 
                     <ul className="space-y-4 mb-8 text-left">
@@ -105,24 +116,28 @@ export function Pricing({ planPricing }: { planPricing: PlanPricingConfig }) {
                     </ul>
                   </div>
 
-                  <Link
+                  <VerPlanesCTA
                     href={`/planes?plan=${service.id}&step=2`}
+                    isLoggedIn={isLoggedIn}
+                    mensualidad={planPricing.mensualidad}
                     className="w-full py-4 rounded-lg font-bold text-center border border-primary/30 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all mt-auto"
                   >
                     Seleccionar Plan
-                  </Link>
+                  </VerPlanesCTA>
                 </motion.div>
               );
             })}
           </div>
 
           <div className="mt-16 text-center">
-            <Link
+            <VerPlanesCTA
               href="/planes"
+              isLoggedIn={isLoggedIn}
+              mensualidad={planPricing.mensualidad}
               className="inline-flex items-center justify-center px-10 py-5 bg-primary text-primary-foreground text-lg font-bold rounded-lg shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] hover:-translate-y-1 transition-all"
             >
               Ver Paquetes Completos
-            </Link>
+            </VerPlanesCTA>
           </div>
         </div>
       </div>

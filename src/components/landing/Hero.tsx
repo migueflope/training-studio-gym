@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useHeroOpacity } from "./HeroOpacityContext";
+import { VerPlanesCTA } from "./VerPlanesCTA";
+import type { PlanPricingConfig } from "@/lib/cms";
 import {
   useDraggableButton,
   useDraggableButtons,
@@ -41,11 +43,15 @@ export function Hero({
   subtitle = "El primer estudio de entrenamiento en Cartagena donde la tecnología se une al músculo para darte resultados medibles.",
   isAdmin = false,
   hasActiveMembership = false,
+  isLoggedIn = false,
+  mensualidadPricing,
 }: {
   badge?: string;
   subtitle?: string;
   isAdmin?: boolean;
   hasActiveMembership?: boolean;
+  isLoggedIn?: boolean;
+  mensualidadPricing?: PlanPricingConfig["mensualidad"];
 } = {}) {
   const ctaHref = isAdmin ? "/admin" : hasActiveMembership ? "/dashboard" : "/contacto";
   const ctaLabel = isAdmin
@@ -183,14 +189,16 @@ export function Hero({
             variants={itemVariants}
             className="flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-6 pt-2 md:pt-8"
           >
-            <Link
+            <VerPlanesCTA
               href="/planes"
+              isLoggedIn={isLoggedIn}
+              mensualidad={mensualidadPricing ?? { price: 90000, discount_percentage: 33 }}
               className="w-full sm:w-auto px-8 py-4 bg-primary text-primary-foreground text-lg font-bold rounded-lg shadow-[0_0_20px_rgba(212,175,55,0.5)] hover:shadow-[0_0_40px_rgba(212,175,55,0.8)] hover:-translate-y-1 transition-all flex items-center justify-center gap-2 relative overflow-hidden group"
             >
               {/* Technological hover shine effect */}
               <div className="absolute inset-0 w-full h-full bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out skew-x-12" />
               Ver Planes <ArrowRight className="w-5 h-5 relative z-10" />
-            </Link>
+            </VerPlanesCTA>
             <Link
               href={ctaHref}
               className="w-full sm:w-auto px-8 py-4 bg-black/60 backdrop-blur-md border-2 border-primary text-primary text-lg font-bold rounded-lg hover:bg-primary/20 transition-all flex items-center justify-center shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:shadow-[0_0_25px_rgba(212,175,55,0.3)]"

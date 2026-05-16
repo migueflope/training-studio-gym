@@ -11,6 +11,7 @@ import { HeroOpacityEditor } from "@/components/landing/HeroOpacityEditor";
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
+import { WelcomeOfferDialog } from "@/components/landing/WelcomeOfferDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function Home({
   const { landing } = await searchParams;
   const profile = await getUserProfile();
   const isAdmin = !!profile && isAdminRole(profile.role);
+
   let hasActiveMembership = false;
   if (profile && !isAdmin) {
     const membership = await getActiveMembership(profile.id);
@@ -75,13 +77,21 @@ export default async function Home({
           subtitle={cms.hero_subtitle}
           isAdmin={isAdmin}
           hasActiveMembership={hasActiveMembership}
+          isLoggedIn={!!profile}
+          mensualidadPricing={cms.plan_pricing.mensualidad}
         />
         <Pillars description={cms.about_text} />
-        <Pricing planPricing={cms.plan_pricing} />
+        <Pricing planPricing={cms.plan_pricing} isLoggedIn={!!profile} />
         <Trainers trainers={trainers} />
         <GymShowcase />
         <Location />
       </div>
+      {!profile && (
+        <WelcomeOfferDialog
+          mode="welcome"
+          mensualidad={cms.plan_pricing.mensualidad}
+        />
+      )}
       {isAdmin && <HeroOpacityEditor />}
     </HeroOpacityProvider>
   );

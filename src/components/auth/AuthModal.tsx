@@ -113,7 +113,7 @@ export function AuthModal() {
               {mode === "login" ? (
                 <LoginForm onSuccess={closeAuth} next={state.next ?? "/dashboard"} />
               ) : (
-                <SignupForm />
+                <SignupForm next={state.next} />
               )}
 
               <FooterToggle mode={mode} onSwitch={setMode} />
@@ -203,7 +203,7 @@ function LoginForm({ onSuccess, next }: { onSuccess: () => void; next: string })
 
   return (
     <>
-      <GoogleButton mode="login" />
+      <GoogleButton mode="login" next={next} />
 
       <Divider />
 
@@ -236,7 +236,7 @@ function LoginForm({ onSuccess, next }: { onSuccess: () => void; next: string })
   );
 }
 
-function SignupForm() {
+function SignupForm({ next }: { next: string | null }) {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -256,11 +256,12 @@ function SignupForm() {
       }
       setIsLoading(true);
       const supabase = createClient();
+      const target = next ?? "/";
       const { error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(target)}`,
           data: { full_name: fullName, phone },
         },
       });
@@ -271,7 +272,7 @@ function SignupForm() {
       }
       setEmailSent(true);
     },
-    [email, password, passwordConfirm, fullName, phone],
+    [email, password, passwordConfirm, fullName, phone, next],
   );
 
   if (emailSent) {
@@ -303,7 +304,7 @@ function SignupForm() {
 
   return (
     <>
-      <GoogleButton mode="signup" />
+      <GoogleButton mode="signup" next={next} />
 
       <Divider />
 

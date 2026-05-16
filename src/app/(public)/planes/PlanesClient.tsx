@@ -110,6 +110,7 @@ function priceForPlan(meta: PlanCardMeta, pricing: PlanPricingConfig) {
   return {
     originalLabel: formatCop(original),
     finalLabel: formatCop(final),
+    finalAmount: final,
     discount,
     hasDiscount: discount > 0,
   };
@@ -326,6 +327,11 @@ function PlanesContent({
                             </div>
                           )}
                           <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{pricing.finalLabel}</span>
+                          {pricing.hasDiscount && (
+                            <span className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mt-1">
+                              Pagando en la página
+                            </span>
+                          )}
                         </div>
 
                         <ul className="space-y-4 mb-8 text-left flex-1">
@@ -375,6 +381,11 @@ function PlanesContent({
                             </div>
                           )}
                           <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{pricing.finalLabel}</span>
+                          {pricing.hasDiscount && (
+                            <span className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mt-1">
+                              Pagando en la página
+                            </span>
+                          )}
                         </div>
 
                         <ul className="space-y-4 mb-8 text-left flex-1">

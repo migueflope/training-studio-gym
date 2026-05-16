@@ -6,15 +6,17 @@ import { createClient } from "@/lib/supabase/client";
 
 interface GoogleButtonProps {
   mode: "login" | "signup";
+  /** Optional override for post-auth redirect. */
+  next?: string | null;
 }
 
-export function GoogleButton({ mode }: GoogleButtonProps) {
+export function GoogleButton({ mode, next: nextOverride }: GoogleButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleClick = async () => {
     setIsLoading(true);
     const supabase = createClient();
-    const next = mode === "login" ? "/dashboard" : "/";
+    const next = nextOverride ?? (mode === "login" ? "/dashboard" : "/");
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

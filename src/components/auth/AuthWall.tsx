@@ -25,6 +25,8 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // Load saved profile from localStorage
     const saved = localStorage.getItem(SAVED_PROFILE_KEY);
     if (saved) {
       try {
@@ -35,6 +37,21 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
         }
       } catch (e) {}
     }
+
+    // Listen for auth state changes — catches Google OAuth redirects too
+    const supabase = createClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "INITIAL_SESSION") && session?.user) {
+        const u = session.user;
+        const profile = {
+          email: u.email ?? "",
+          name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "",
+        };
+        localStorage.setItem(SAVED_PROFILE_KEY, JSON.stringify(profile));
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   if (!isMounted) {

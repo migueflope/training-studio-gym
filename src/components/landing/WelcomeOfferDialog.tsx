@@ -104,7 +104,7 @@ export function WelcomeOfferDialog({
             exit={{ scale: 0.9, y: 30, opacity: 0, rotateX: -10 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-[#050505] rounded-[2.5rem] border border-white/5 shadow-[0_0_80px_-15px_rgba(212,175,55,0.25)] overflow-hidden flex flex-col"
+            className="relative w-full max-w-lg bg-[#050505] rounded-[2.5rem] border border-white/5 shadow-[0_0_80px_-15px_rgba(212,175,55,0.25)] overflow-hidden flex flex-col"
           >
             {/* Subtle background glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-primary/5 blur-[100px] pointer-events-none z-0" />

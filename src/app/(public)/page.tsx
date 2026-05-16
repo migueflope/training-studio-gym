@@ -11,7 +11,7 @@ import { HeroOpacityEditor } from "@/components/landing/HeroOpacityEditor";
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
-import { WelcomeOfferDialog } from "@/components/landing/WelcomeOfferDialog";
+import { AuthWall } from "@/components/auth/AuthWall";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +65,10 @@ export default async function Home({
     }),
   );
 
+  if (!profile) {
+    return <AuthWall mensualidad={cms.plan_pricing.mensualidad} />;
+  }
+
   return (
     <HeroOpacityProvider
       initialMobile={cms.hero_video_opacity_mobile}
@@ -86,12 +90,6 @@ export default async function Home({
         <GymShowcase />
         <Location />
       </div>
-      {!profile && (
-        <WelcomeOfferDialog
-          mode="welcome"
-          mensualidad={cms.plan_pricing.mensualidad}
-        />
-      )}
       {isAdmin && <HeroOpacityEditor />}
     </HeroOpacityProvider>
   );

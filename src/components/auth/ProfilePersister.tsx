@@ -7,6 +7,7 @@ const SAVED_PROFILE_KEY = "ts_saved_profile";
 interface ProfilePersisterProps {
   email: string;
   name: string;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -15,15 +16,15 @@ interface ProfilePersisterProps {
  * view the next time they visit after signing out.
  * Works for ALL auth methods: Google OAuth, email/password, etc.
  */
-export function ProfilePersister({ email, name }: ProfilePersisterProps) {
+export function ProfilePersister({ email, name, avatarUrl }: ProfilePersisterProps) {
   useEffect(() => {
     if (email) {
       localStorage.setItem(
         SAVED_PROFILE_KEY,
-        JSON.stringify({ email, name })
+        JSON.stringify({ email, name, avatarUrl: avatarUrl ?? null })
       );
     }
-  }, [email, name]);
+  }, [email, name, avatarUrl]);
 
   return null;
 }

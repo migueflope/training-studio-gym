@@ -85,6 +85,7 @@ export default async function RootLayout({
           <ProfilePersister
             email={profile.email ?? ""}
             name={profile.fullName ?? ""}
+            avatarUrl={profile.avatarUrl}
           />
         )}
       </body>

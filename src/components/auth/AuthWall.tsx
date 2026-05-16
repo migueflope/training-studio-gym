@@ -21,7 +21,7 @@ const SAVED_PROFILE_KEY = "ts_saved_profile";
 export function AuthWall({ mensualidad }: AuthWallProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [mode, setMode] = useState<"login" | "signup" | "saved">("login");
-  const [savedProfile, setSavedProfile] = useState<{ email: string; name: string } | null>(null);
+  const [savedProfile, setSavedProfile] = useState<{ email: string; name: string; avatarUrl?: string | null } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -153,7 +153,7 @@ export function AuthWall({ mensualidad }: AuthWallProps) {
 
 // --- Subcomponents ---
 
-function SavedProfileView({ profile, onSwitchAccount }: { profile: { email: string; name: string }; onSwitchAccount: () => void }) {
+function SavedProfileView({ profile, onSwitchAccount }: { profile: { email: string; name: string; avatarUrl?: string | null }; onSwitchAccount: () => void }) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -179,8 +179,17 @@ function SavedProfileView({ profile, onSwitchAccount }: { profile: { email: stri
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center relative z-10">
       <div className="w-24 h-24 mx-auto bg-gradient-to-tr from-primary to-yellow-200 rounded-full p-1 mb-4 shadow-[0_0_20px_rgba(212,175,55,0.3)]">
-        <div className="w-full h-full bg-[#111] rounded-full flex items-center justify-center border-2 border-[#111]">
-          <User className="w-10 h-10 text-primary/80" />
+        <div className="w-full h-full bg-[#111] rounded-full flex items-center justify-center border-2 border-[#111] overflow-hidden">
+          {profile.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={profile.avatarUrl}
+              alt={profile.name}
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <User className="w-10 h-10 text-primary/80" />
+          )}
         </div>
       </div>
       <h3 className="text-xl font-bold text-white mb-1">{profile.name || profile.email}</h3>

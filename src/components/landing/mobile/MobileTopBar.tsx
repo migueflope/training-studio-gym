@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import type { UserProfile } from "@/lib/auth/roles";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -37,6 +38,8 @@ export function MobileTopBar({
   const [scrolled, setScrolled] = useState(false);
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const { openAuth } = useAuthModal();
+  const pathname = usePathname();
+  const isOnAuthWall = !profile && pathname === "/";
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);
@@ -139,7 +142,7 @@ export function MobileTopBar({
               initialItems={notifItems}
               initialUnread={notifUnread}
             />
-            {!profile && (
+            {!profile && !isOnAuthWall && (
               <button
                 type="button"
                 onClick={() => openAuth("login")}

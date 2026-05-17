@@ -136,11 +136,9 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             {/* Header */}
             <div className="bg-[#111]/90 p-4 border-b border-[#222] flex justify-between items-center backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-transparent p-0">
-                  <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center overflow-hidden">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-10 h-10 object-contain scale-125" />
-                  </div>
+                <div className="w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-12 h-12 object-contain mix-blend-screen scale-110" />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm leading-none text-white">GymBot</h3>
@@ -164,7 +162,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                         <User className="w-4 h-4 text-accent-foreground" />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-8 h-8 object-contain scale-125" />
+                        <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-10 h-10 object-contain mix-blend-screen scale-110" />
                       )}
                     </div>
                     <div className={`p-3 rounded-2xl text-sm ${msg.role === "user" ? "bg-accent text-accent-foreground rounded-tr-sm" : "bg-[#1a1a1a] text-white rounded-tl-sm border border-[#333]"}`}>
@@ -178,7 +176,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                   <div className="flex gap-2 max-w-[85%] flex-row">
                     <div className="w-8 h-8 rounded-full bg-black border border-primary/30 flex shrink-0 items-center justify-center mt-1 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-8 h-8 object-contain scale-125" />
+                      <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-10 h-10 object-contain mix-blend-screen scale-110" />
                     </div>
                     <div className="p-3 rounded-2xl bg-[#1a1a1a] border border-[#333] text-foreground rounded-tl-sm flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />
@@ -234,7 +232,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
               initial={{ opacity: 0, y: 10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="absolute bottom-full mb-4 px-5 py-3 bg-black border border-primary/50 text-white text-sm font-bold rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] cursor-pointer whitespace-nowrap flex flex-col items-center z-50"
+              className="absolute bottom-full mb-4 px-5 py-3 bg-black border border-primary/50 text-white text-sm font-bold rounded-2xl shadow-[0_0_30px_rgba(212,175,55,0.3)] cursor-pointer whitespace-normal max-w-[250px] text-center flex flex-col items-center z-50"
               onClick={() => setIsOpen(true)}
             >
               {tooltip}
@@ -245,19 +243,17 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
           )}
         </AnimatePresence>
         
-        <motion.button
-          onClick={() => setIsOpen(!isOpen)}
-          animate={{ y: [0, -8, 0] }}
-          transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-          className="w-16 h-16 bg-black border-[2px] border-primary rounded-full shadow-[0_0_20px_rgba(212,175,55,0.4)] flex items-center justify-center hover:scale-110 transition-transform hover:shadow-[0_0_30px_rgba(212,175,55,0.6)] relative overflow-visible group"
-        >
-          {isOpen ? (
-            <X className="w-8 h-8 text-primary" />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src="/images/gymbot-bubble.png" alt="Chat" className="w-16 h-16 object-contain scale-125 transition-transform group-hover:scale-110" />
-          )}
-        </motion.button>
+        {!isOpen && (
+          <motion.button
+            onClick={() => setIsOpen(true)}
+            animate={{ y: [0, -8, 0] }}
+            transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            className="w-16 h-16 flex items-center justify-center hover:scale-110 transition-transform relative group drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:drop-shadow-[0_0_30px_rgba(212,175,55,0.6)] cursor-pointer"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/gymbot-bubble.png" alt="Chat" className="w-20 h-20 object-contain mix-blend-screen scale-125 transition-transform group-hover:scale-110" />
+          </motion.button>
+        )}
       </div>
     </>
   );

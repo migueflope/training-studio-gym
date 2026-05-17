@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, X, Send, Bot, User, Loader2 } from "lucide-react";
 import { useDraggableButton } from "./DraggableButtonsContext";
@@ -11,7 +12,8 @@ type Message = {
   text: string;
 };
 
-export function Chatbot() {
+export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
+  const pathname = usePathname();
   const draggable = useDraggableButton("chatbot");
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -28,6 +30,10 @@ export function Chatbot() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, isLoading]);
+
+  // Hide on the AuthWall (guests on the landing route) — it covers the
+  // signup CTA on mobile and isn't useful before sign-in.
+  if (!hasProfile && pathname === "/") return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

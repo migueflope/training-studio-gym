@@ -109,15 +109,19 @@ export function MobileTopBar({
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="h-14 px-3 flex items-center justify-between gap-2">
-          {/* Hamburger */}
-          <button
-            type="button"
-            onClick={() => setDrawerOpen(true)}
-            aria-label="Abrir menú"
-            className="p-2 -ml-2 text-foreground hover:bg-secondary rounded-full transition-colors"
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {/* Hamburger — hidden on the AuthWall (guests landing on /). */}
+          {!isOnAuthWall ? (
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Abrir menú"
+              className="p-2 -ml-2 text-foreground hover:bg-secondary rounded-full transition-colors"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+          ) : (
+            <span className="w-10" aria-hidden />
+          )}
 
           {/* Logo + name centered, tap → hero */}
           <Link href="/" aria-label="Training Studio Gym" className="flex items-center gap-2 min-w-0">

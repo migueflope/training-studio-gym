@@ -250,8 +250,9 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             className="w-16 h-16 flex items-center justify-center hover:scale-110 transition-transform relative group drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:drop-shadow-[0_0_30px_rgba(212,175,55,0.6)] cursor-pointer"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="Chat" className="w-12 h-12 object-contain transition-transform group-hover:scale-110 drop-shadow-[0_0_8px_rgba(212,175,55,0.6)]" />
+            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.7)] transition-transform group-hover:scale-110">
+              <MessageSquare className="w-7 h-7 text-black fill-black" />
+            </div>
           </motion.button>
         )}
       </div>

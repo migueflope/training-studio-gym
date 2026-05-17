@@ -77,7 +77,7 @@ export default async function RootLayout({
             initialPositions={cms.ui_button_positions}
           >
             {children}
-            <Chatbot />
+            <Chatbot hasProfile={!!profile} />
             <EditPositionsToggle />
           </DraggableButtonsProvider>
         </AuthModalProvider>

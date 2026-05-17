@@ -20,81 +20,19 @@ import {
   Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  loadProfiles,
+  upsertProfile,
+  removeProfile,
+  requestCredentialSave,
+  type SavedProfile,
+} from "@/lib/auth/savedProfiles";
 
 interface AuthWallProps {
   mensualidad: {
     price: number;
     discount_percentage: number;
   };
-}
-
-type SavedProfile = {
-  email: string;
-  name: string;
-  avatarUrl?: string | null;
-};
-
-const SAVED_PROFILES_KEY = "ts_saved_profiles";
-const LEGACY_PROFILE_KEY = "ts_saved_profile";
-
-// --- Storage helpers ---
-
-function loadProfiles(): SavedProfile[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(SAVED_PROFILES_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        return parsed.filter((p) => p && typeof p.email === "string" && p.email);
-      }
-    }
-    // Migrate legacy single-profile storage
-    const legacy = localStorage.getItem(LEGACY_PROFILE_KEY);
-    if (legacy) {
-      const parsed = JSON.parse(legacy);
-      if (parsed?.email) {
-        const migrated: SavedProfile[] = [
-          { email: parsed.email, name: parsed.name ?? "", avatarUrl: parsed.avatarUrl ?? null },
-        ];
-        localStorage.setItem(SAVED_PROFILES_KEY, JSON.stringify(migrated));
-        localStorage.removeItem(LEGACY_PROFILE_KEY);
-        return migrated;
-      }
-    }
-  } catch {}
-  return [];
-}
-
-function upsertProfile(profile: SavedProfile): SavedProfile[] {
-  const current = loadProfiles();
-  const filtered = current.filter((p) => p.email.toLowerCase() !== profile.email.toLowerCase());
-  const next = [profile, ...filtered];
-  localStorage.setItem(SAVED_PROFILES_KEY, JSON.stringify(next));
-  return next;
-}
-
-function removeProfile(email: string): SavedProfile[] {
-  const current = loadProfiles();
-  const next = current.filter((p) => p.email.toLowerCase() !== email.toLowerCase());
-  localStorage.setItem(SAVED_PROFILES_KEY, JSON.stringify(next));
-  return next;
-}
-
-// Asks the browser/OS to save the credential (Chrome/Edge/Safari iOS via WebKit).
-// The native "Save password?" prompt is shown by the browser, not by us.
-async function requestCredentialSave(email: string, password: string, name?: string) {
-  if (typeof window === "undefined") return;
-  const w = window as unknown as {
-    PasswordCredential?: new (data: { id: string; password: string; name?: string }) => Credential;
-  };
-  if (!("credentials" in navigator) || !w.PasswordCredential) return;
-  try {
-    const cred = new w.PasswordCredential({ id: email, password, name });
-    await navigator.credentials.store(cred);
-  } catch {
-    // Browsers without support, or user denied — silently ignore.
-  }
 }
 
 export function AuthWall({ mensualidad: _mensualidad }: AuthWallProps) {

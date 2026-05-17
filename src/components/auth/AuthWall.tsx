@@ -271,7 +271,6 @@ function SavedProfilesListView({
                   <p className="text-sm sm:text-base font-bold text-white truncate">{profile.name || profile.email}</p>
                   <p className="text-xs text-white/40 truncate">{profile.email}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-white/30 shrink-0" />
               </button>
 
               <button

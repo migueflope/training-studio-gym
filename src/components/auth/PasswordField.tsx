@@ -10,6 +10,7 @@ interface PasswordFieldProps {
   required?: boolean;
   minLength?: number;
   autoComplete?: string;
+  name?: string;
 }
 
 export function PasswordField({
@@ -19,6 +20,7 @@ export function PasswordField({
   required,
   minLength,
   autoComplete,
+  name = "password",
 }: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
@@ -33,6 +35,7 @@ export function PasswordField({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        name={name}
         className="w-full bg-secondary/50 border border-border text-foreground rounded-lg py-3 pl-10 pr-11 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all placeholder:text-muted-foreground/50 text-base"
       />
       <button

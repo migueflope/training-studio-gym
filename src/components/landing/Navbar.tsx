@@ -197,7 +197,7 @@ export function Navbar({
                 email={profile.email}
                 canAccessDashboard={canAccessDashboard}
               />
-            ) : (
+            ) : pathname !== "/" ? (
               <button
                 type="button"
                 onClick={() => openAuth("login")}
@@ -205,7 +205,7 @@ export function Navbar({
               >
                 Iniciar Sesión
               </button>
-            )}
+            ) : null}
             <Link
               href="/contacto"
               className="px-5 py-2.5 text-[15px] font-bold bg-primary text-primary-foreground rounded-full shadow-[0_0_15px_rgba(212,175,55,0.35)] hover:shadow-[0_0_25px_rgba(212,175,55,0.6)] hover:-translate-y-0.5 transition-all"

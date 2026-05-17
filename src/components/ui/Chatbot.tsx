@@ -250,8 +250,8 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
             className="w-16 h-16 flex items-center justify-center hover:scale-110 transition-transform relative group drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:drop-shadow-[0_0_30px_rgba(212,175,55,0.6)] cursor-pointer"
           >
-            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.7)] transition-transform group-hover:scale-110">
-              <MessageSquare className="w-7 h-7 text-black fill-black" />
+            <div className="w-14 h-14 rounded-full bg-[#b8962e] flex items-center justify-center shadow-[0_0_15px_rgba(184,150,46,0.4)] transition-transform group-hover:scale-110">
+              <MessageSquare className="w-6 h-6 text-black" />
             </div>
           </motion.button>
         )}

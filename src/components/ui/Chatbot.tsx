@@ -259,4 +259,3 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
     </>
   );
 }
-}

@@ -136,10 +136,10 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             {/* Header */}
             <div className="bg-[#111]/90 p-4 border-b border-[#222] flex justify-between items-center backdrop-blur-md">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-yellow-200 p-[2px]">
-                  <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-transparent p-0">
+                  <div className="w-full h-full rounded-full bg-transparent flex items-center justify-center overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/gymbot-ghost.png" alt="Bot Logo" className="w-10 h-auto object-cover scale-110" />
+                    <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-10 h-10 object-contain scale-125" />
                   </div>
                 </div>
                 <div>
@@ -164,7 +164,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                         <User className="w-4 h-4 text-accent-foreground" />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src="/images/gymbot-ghost.png" alt="Bot Logo" className="w-8 h-8 object-cover scale-125" />
+                        <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-8 h-8 object-contain scale-125" />
                       )}
                     </div>
                     <div className={`p-3 rounded-2xl text-sm ${msg.role === "user" ? "bg-accent text-accent-foreground rounded-tr-sm" : "bg-[#1a1a1a] text-white rounded-tl-sm border border-[#333]"}`}>
@@ -178,7 +178,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                   <div className="flex gap-2 max-w-[85%] flex-row">
                     <div className="w-8 h-8 rounded-full bg-black border border-primary/30 flex shrink-0 items-center justify-center mt-1 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/images/gymbot-ghost.png" alt="Bot Logo" className="w-8 h-8 object-cover scale-125" />
+                      <img src="/images/gymbot-bubble.png" alt="Bot Logo" className="w-8 h-8 object-contain scale-125" />
                     </div>
                     <div className="p-3 rounded-2xl bg-[#1a1a1a] border border-[#333] text-foreground rounded-tl-sm flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />
@@ -255,7 +255,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             <X className="w-8 h-8 text-primary" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/images/gymbot-ghost.png" alt="Chat" className="w-16 h-16 object-cover scale-110 transition-transform group-hover:scale-125" />
+            <img src="/images/gymbot-bubble.png" alt="Chat" className="w-16 h-16 object-contain scale-125 transition-transform group-hover:scale-110" />
           )}
         </motion.button>
       </div>

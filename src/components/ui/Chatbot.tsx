@@ -139,7 +139,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-yellow-200 p-[2px]">
                   <div className="w-full h-full rounded-full bg-black flex items-center justify-center overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="Bot Logo" className="w-7 h-auto object-contain" />
+                    <img src="/images/bot-avatar.png" alt="Bot Logo" className="w-10 h-auto object-contain" />
                   </div>
                 </div>
                 <div>
@@ -164,7 +164,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                         <User className="w-4 h-4 text-accent-foreground" />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="Bot Logo" className="w-5 h-auto object-contain" />
+                        <img src="/images/bot-avatar.png" alt="Bot Logo" className="w-6 h-auto object-contain" />
                       )}
                     </div>
                     <div className={`p-3 rounded-2xl text-sm ${msg.role === "user" ? "bg-accent text-accent-foreground rounded-tr-sm" : "bg-[#1a1a1a] text-white rounded-tl-sm border border-[#333]"}`}>
@@ -178,7 +178,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                   <div className="flex gap-2 max-w-[85%] flex-row">
                     <div className="w-8 h-8 rounded-full bg-black border border-primary/30 flex shrink-0 items-center justify-center mt-1 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="Bot Logo" className="w-5 h-auto object-contain" />
+                      <img src="/images/bot-avatar.png" alt="Bot Logo" className="w-6 h-auto object-contain" />
                     </div>
                     <div className="p-3 rounded-2xl bg-[#1a1a1a] border border-[#333] text-foreground rounded-tl-sm flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />
@@ -226,15 +226,15 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
         ref={draggable.ref}
         style={draggable.style}
         {...(draggable.dragHandlers ?? {})}
-        className="fixed bottom-20 md:bottom-4 right-4 md:right-6 z-50 flex flex-col items-end"
+        className="fixed bottom-20 md:bottom-4 right-4 md:right-6 z-50 flex items-center justify-center"
       >
         <AnimatePresence>
           {tooltip && !isOpen && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="mb-3 mr-2 px-4 py-2 bg-white text-black text-xs font-bold rounded-2xl rounded-br-sm shadow-xl relative cursor-pointer"
+              initial={{ opacity: 0, x: 10, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 10, scale: 0.9 }}
+              className="absolute right-full mr-4 px-4 py-3 bg-[#111] border border-primary/30 text-white text-sm font-medium rounded-2xl rounded-tr-sm shadow-[0_0_20px_rgba(0,0,0,0.8)] cursor-pointer whitespace-nowrap"
               onClick={() => setIsOpen(true)}
             >
               {tooltip}
@@ -252,7 +252,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
             <X className="w-8 h-8 text-primary" />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="Chat" className="w-10 h-auto object-contain" />
+            <img src="/images/bot-avatar.png" alt="Chat" className="w-12 h-auto object-contain" />
           )}
         </motion.button>
       </div>

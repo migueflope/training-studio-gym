@@ -52,7 +52,7 @@ export function Location() {
           <div className="h-[500px] rounded-2xl overflow-hidden border border-border shadow-2xl relative group">
             {/* Embedded Google Maps iframe */}
             <iframe
-              src="https://www.google.com/maps?q=Urb.+Villa+Sol+2,+Mz.+E22,+Variante+Mamonal,+Cartagena,+Colombia&output=embed"
+              src="https://www.google.com/maps?q=10.383274,-75.45117&z=17&output=embed"
               width="100%"
               height="100%"
               style={{ border: 0 }}

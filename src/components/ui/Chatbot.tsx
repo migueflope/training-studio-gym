@@ -138,7 +138,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-transparent p-0 flex items-center justify-center">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="GymBot" className="w-10 h-10 object-contain" />
+                  <img src="/assets/logo-transparent.png" alt="GymBot" className="w-10 h-10 object-contain" />
                 </div>
                 <div>
                   <h3 className="font-bold text-sm leading-none text-white">GymBot</h3>
@@ -162,7 +162,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                         <User className="w-4 h-4 text-accent-foreground" />
                       ) : (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="GymBot" className="w-7 h-7 object-contain" />
+                        <img src="/assets/logo-transparent.png" alt="GymBot" className="w-7 h-7 object-contain" />
                       )}
                     </div>
                     <div className={`p-3 rounded-2xl text-sm ${msg.role === "user" ? "bg-accent text-accent-foreground rounded-tr-sm" : "bg-[#1a1a1a] text-white rounded-tl-sm border border-[#333]"}`}>
@@ -176,7 +176,7 @@ export function Chatbot({ hasProfile = false }: { hasProfile?: boolean }) {
                   <div className="flex gap-2 max-w-[85%] flex-row">
                     <div className="w-8 h-8 rounded-full bg-black border border-primary/30 flex shrink-0 items-center justify-center mt-1 overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/logo-transparent.png" alt="GymBot" className="w-7 h-7 object-contain" />
+                      <img src="/assets/logo-transparent.png" alt="GymBot" className="w-7 h-7 object-contain" />
                     </div>
                     <div className="p-3 rounded-2xl bg-[#1a1a1a] border border-[#333] text-foreground rounded-tl-sm flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground animate-bounce" />

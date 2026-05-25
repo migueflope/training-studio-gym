@@ -83,7 +83,6 @@ export function EditPositionsToggle() {
             Tamaño de los botones
           </p>
           <DraggableScaleSliderRow buttonKey="chatbot" label="Chat" />
-          {heroOnly && <DraggableScaleSliderRow buttonKey="audio" label="Audio" />}
           {heroOnly && (
             <DraggableScaleSliderRow buttonKey="opacity" label="Opacidad" />
           )}

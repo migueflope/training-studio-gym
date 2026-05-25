@@ -2,11 +2,9 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Volume2, VolumeX } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 
-const VIDEO_URL =
-  "https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/v14044g50000d7v6jpnog65lrihdsc9g.MP4";
+const IMAGE_URL = "/hero-bg.png";
 
 export function HeroVideo({
   badge = "Tu mejor versión empieza hoy",
@@ -15,67 +13,8 @@ export function HeroVideo({
   badge?: string;
   subtitle?: string;
 } = {}) {
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  // userWantsAudio: the user's intent. False = always muted. True = unmute
-  // when the hero is in view, mute when out of view.
-  const [userWantsAudio, setUserWantsAudio] = useState(false);
-  const [heroInView, setHeroInView] = useState(true);
-
-  // Apply mute state whenever intent or visibility changes.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    v.muted = !(userWantsAudio && heroInView);
-    if (userWantsAudio && heroInView) {
-      v.play().catch(() => {
-        // Autoplay with sound was blocked — keep muted.
-      });
-    }
-  }, [userWantsAudio, heroInView]);
-
-  // IntersectionObserver: when the hero scrolls out of view, mute. When it
-  // comes back in, restore the user's intent.
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => setHeroInView(entry.isIntersecting),
-      { threshold: 0.3 },
-    );
-    obs.observe(node);
-    return () => obs.disconnect();
-  }, []);
-
-  // First click anywhere on the page enables audio (only if user hasn't
-  // already toggled it off via the unmute button).
-  useEffect(() => {
-    let unlocked = false;
-    const onFirstInteraction = () => {
-      if (unlocked) return;
-      unlocked = true;
-      setUserWantsAudio(true);
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("keydown", onFirstInteraction);
-    };
-    window.addEventListener("pointerdown", onFirstInteraction);
-    window.addEventListener("keydown", onFirstInteraction);
-    return () => {
-      window.removeEventListener("pointerdown", onFirstInteraction);
-      window.removeEventListener("keydown", onFirstInteraction);
-    };
-  }, []);
-
-  function toggleAudio(e: React.MouseEvent) {
-    e.stopPropagation();
-    setUserWantsAudio((v) => !v);
-  }
-
-  const audioOn = userWantsAudio && heroInView;
-
   return (
     <section
-      ref={sectionRef}
       className="relative min-h-screen flex items-center overflow-hidden"
     >
       <div className="absolute inset-0 z-0">
@@ -164,13 +103,9 @@ export function HeroVideo({
 
               {/* Frame */}
               <div className="relative w-full h-full rounded-2xl overflow-hidden border border-primary/30 shadow-[0_0_50px_rgba(212,175,55,0.25)]">
-                <video
-                  ref={videoRef}
-                  src={VIDEO_URL}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
+                <img
+                  src={IMAGE_URL}
+                  alt="Training Studio Gym"
                   className="w-full h-full object-cover"
                 />
 
@@ -183,26 +118,6 @@ export function HeroVideo({
                       "linear-gradient(180deg, rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.35) 100%), radial-gradient(circle at 50% 50%, transparent 60%, rgba(0,0,0,0.45) 100%)",
                   }}
                 />
-
-                {/* Audio toggle */}
-                <button
-                  type="button"
-                  onClick={toggleAudio}
-                  aria-label={audioOn ? "Silenciar video" : "Activar sonido"}
-                  className="absolute top-3 right-3 inline-flex items-center gap-2 px-3 py-2 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-foreground text-xs font-medium hover:bg-background/90 transition-colors"
-                >
-                  {audioOn ? (
-                    <>
-                      <Volume2 className="w-4 h-4 text-primary" />
-                      <span className="hidden sm:inline">Sonido activo</span>
-                    </>
-                  ) : (
-                    <>
-                      <VolumeX className="w-4 h-4" />
-                      <span className="hidden sm:inline">Activar sonido</span>
-                    </>
-                  )}
-                </button>
               </div>
 
               {/* Tech corner brackets */}

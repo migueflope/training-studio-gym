@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/SocialIcons";
 import { whatsappUrlFor } from "@/lib/whatsapp";
-import { VideoModal } from "@/components/ui/VideoModal";
 
 const goalOptions = [
   "Ganar masa muscular",
@@ -50,9 +49,6 @@ export default function ContactoClient({
   const [name, setName] = useState("");
   const [goal, setGoal] = useState(goalOptions[0]);
   const [schedule, setSchedule] = useState(scheduleOptions[0]);
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   const directMessage =
     "¡Hola! Quiero agendar mi valoración física en Training Studio Gym 💪";
@@ -68,21 +64,6 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
 
 ¡Quedo atento(a) a su respuesta!`;
     window.open(whatsappUrlFor(whatsappNumber, message), "_blank", "noopener,noreferrer");
-  };
-
-  const handleMouseEnter = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = false;
-      videoRef.current.play().catch(() => {
-        if (videoRef.current) videoRef.current.muted = true;
-      });
-    }
-  };
-
-  const handleMouseLeave = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = true;
-    }
   };
 
   return (
@@ -150,11 +131,8 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
                   rotateX: 3,
                   boxShadow: "0 0 60px rgba(212,175,55,0.4)"
                 }}
-                onClick={() => setSelectedVideo("https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/showcase/3%20(agendar%20valoracion).mp4")}
-                onMouseEnter={handleMouseEnter}
-                onMouseLeave={handleMouseLeave}
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="relative rounded-[2rem] overflow-hidden border border-primary/40 shadow-[0_0_30px_rgba(212,175,55,0.2)] aspect-[4/5] sm:aspect-video w-full max-w-3xl bg-secondary/20 cursor-pointer group"
+                className="relative rounded-[2rem] overflow-hidden border border-primary/40 shadow-[0_0_30px_rgba(212,175,55,0.2)] aspect-[4/5] sm:aspect-video w-full max-w-3xl bg-secondary/20 group"
               >
                 {/* Tech Scanline Effect */}
                 <div className="absolute inset-0 z-20 pointer-events-none">
@@ -164,22 +142,11 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
                 {/* Glassmorphism Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-transparent mix-blend-overlay z-10 pointer-events-none" />
                 
-                <video
-                  ref={videoRef}
-                  src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/showcase/3%20(agendar%20valoracion).mp4"
-                  autoPlay
-                  loop
-                  muted={true}
-                  playsInline
-                  suppressHydrationWarning={true}
+                <img
+                  src="/trainers.webp"
+                  alt="Entrenadores de Training Studio Gym"
                   className="absolute inset-0 w-full h-full object-cover brightness-90 group-hover:brightness-100 transition-all duration-500"
                 />
-                
-                <div className="absolute bottom-4 right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                  <span className="bg-black/50 backdrop-blur-md px-4 py-2 rounded-full text-white text-sm font-medium border border-white/10 flex items-center gap-2">
-                    Ver con sonido ↗
-                  </span>
-                </div>
               </motion.div>
             </motion.div>
           </div>
@@ -373,12 +340,6 @@ Mi nombre es ${name || "(sin nombre)"} y quiero agendar mi valoración física.
           </div>
         </div>
       </section>
-
-      <VideoModal 
-        isOpen={!!selectedVideo} 
-        videoUrl={selectedVideo || ""} 
-        onClose={() => setSelectedVideo(null)} 
-      />
     </>
   );
 }

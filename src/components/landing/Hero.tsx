@@ -2,15 +2,11 @@
 
 import { motion, Variants } from "framer-motion";
 import Link from "next/link";
-import { ArrowRight, ChevronDown, Volume2, VolumeX } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { ArrowRight, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useHeroOpacity } from "./HeroOpacityContext";
 import { VerPlanesCTA } from "./VerPlanesCTA";
 import type { PlanPricingConfig } from "@/lib/cms";
-import {
-  useDraggableButton,
-  useDraggableButtons,
-} from "@/components/ui/DraggableButtonsContext";
 
 const containerVariants: Variants = {
   hidden: { opacity: 0 },
@@ -59,12 +55,6 @@ export function Hero({
     : hasActiveMembership
       ? "Ir a mi panel"
       : "Agendar Valoración";
-  const audioDraggable = useDraggableButton("audio");
-  const { editMode } = useDraggableButtons();
-  const [isMuted, setIsMuted] = useState(true);
-  const [isHeroInView, setIsHeroInView] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const heroRef = useRef<HTMLDivElement>(null);
   const { mobile: opacityMobile, desktop: opacityDesktop } = useHeroOpacity();
   const [isMobile, setIsMobile] = useState(false);
 
@@ -76,55 +66,15 @@ export function Hero({
     return () => mq.removeEventListener("change", update);
   }, []);
 
-  // Unmute on first interaction anywhere in the Hero
-  const handleHeroClick = () => {
-    if (isMuted) setIsMuted(false);
-  };
-
-  // Mute when scrolled out of view; also drives audio-button visibility so
-  // the floating control only shows while the hero is on screen.
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const [entry] = entries;
-        const inView = entry.isIntersecting;
-        setIsHeroInView(inView);
-        if (!inView && videoRef.current) {
-          setIsMuted(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (heroRef.current) observer.observe(heroRef.current);
-    return () => {
-      if (heroRef.current) observer.unobserve(heroRef.current);
-    };
-  }, []);
-
-  const showAudioButton = isHeroInView || editMode;
-
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-    }
-  }, [isMuted]);
-
   return (
-    <section 
-      ref={heroRef}
-      onClick={handleHeroClick}
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black cursor-pointer"
+    <section
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-black"
     >
-      {/* ======================= BACKGROUND VIDEO ======================= */}
+      {/* ======================= BACKGROUND IMAGE ======================= */}
       <div className="absolute inset-0 z-0 bg-black">
-        <video
-          ref={videoRef}
-          src="https://jigwpntqxywjwruftwix.supabase.co/storage/v1/object/public/gym-media/v14044g50000d7v6jpnog65lrihdsc9g.MP4"
-          autoPlay
-          loop
-          muted={isMuted}
-          playsInline
+        <img
+          src="/hero-bg.png"
+          alt="Training Studio Gym"
           style={{
             objectPosition: "center 35%",
             opacity: (isMobile ? opacityMobile : opacityDesktop) / 100,
@@ -208,52 +158,6 @@ export function Hero({
           </motion.div>
         </motion.div>
       </div>
-
-      {/* ======================= AUDIO CONTROL ======================= */}
-      {showAudioButton && (() => {
-        const { transform: _audioTransform, ...audioStyle } = audioDraggable.style;
-        const targetScale = audioDraggable.appearance?.scale ?? 1;
-        return (
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{
-          opacity: 1,
-          scale: targetScale,
-          boxShadow: [
-            "0 0 0px rgba(212,175,55,0.0)",
-            "0 0 18px rgba(212,175,55,0.45)",
-            "0 0 0px rgba(212,175,55,0.0)",
-          ],
-        }}
-        transition={{
-          delay: 1.5,
-          scale: { duration: 0 },
-          boxShadow: { repeat: Infinity, duration: 2.4, ease: "easeInOut" },
-        }}
-        ref={audioDraggable.ref}
-        onClick={(e) => {
-          e.stopPropagation();
-          setIsMuted(!isMuted);
-        }}
-        aria-label={isMuted ? "Activar sonido" : "Silenciar"}
-        style={audioStyle}
-        {...(audioDraggable.dragHandlers ?? {})}
-        className="fixed bottom-20 left-4 md:bottom-4 md:left-6 z-30 flex items-center justify-center gap-0 md:gap-2 w-12 h-12 md:w-auto md:h-auto p-0 md:px-5 md:py-3 bg-black/70 backdrop-blur-md border border-primary/50 rounded-full text-white hover:bg-primary/30 transition-colors hover:shadow-[0_0_25px_rgba(212,175,55,0.55)] group pointer-events-auto"
-      >
-        {isMuted ? (
-          <>
-            <VolumeX className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-            <span className="hidden md:inline text-sm font-medium">Activar sonido</span>
-          </>
-        ) : (
-          <>
-            <Volume2 className="w-5 h-5 text-primary group-hover:scale-110 transition-transform" />
-            <span className="hidden md:inline text-sm font-medium">Silenciar</span>
-          </>
-        )}
-      </motion.button>
-        );
-      })()}
 
       {/* Scroll indicator */}
       <motion.div 

@@ -52,7 +52,8 @@ export function AuthWall({ mensualidad: _mensualidad }: AuthWallProps) {
     } else if (loaded.length > 1) {
       setMode("list");
     } else {
-      setMode("login");
+      // New visitors (no saved accounts) land on signup, not login.
+      setMode("signup");
     }
 
     // Catches Google OAuth redirects too.
@@ -443,6 +444,7 @@ function LoginView({
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -465,7 +467,7 @@ function LoginView({
         name: data.user.user_metadata?.full_name || data.user.user_metadata?.name || "",
         avatarUrl: data.user.user_metadata?.avatar_url || data.user.user_metadata?.picture || null,
       };
-      await onLoginSuccess(profile, password);
+      await onLoginSuccess(profile, rememberPassword ? password : undefined);
     }
     router.refresh();
   };
@@ -515,6 +517,8 @@ function LoginView({
           autoComplete="current-password"
         />
 
+        <RememberPasswordCheckbox checked={rememberPassword} onChange={setRememberPassword} />
+
         <button
           type="submit"
           disabled={isLoading}
@@ -562,10 +566,12 @@ function SignupView({
   onSwitchMode: () => void;
   onSignupSuccess: (profile: SavedProfile, password?: string) => Promise<void>;
 }) {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -575,7 +581,7 @@ function SignupView({
     setError(null);
     setIsLoading(true);
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -588,9 +594,19 @@ function SignupView({
       return;
     }
 
-    await onSignupSuccess({ email, name: fullName, avatarUrl: null }, password);
+    await onSignupSuccess(
+      { email, name: fullName, avatarUrl: null },
+      rememberPassword ? password : undefined,
+    );
 
-    setSuccess(true);
+    // With email confirmation disabled in Supabase, signUp returns a session
+    // and the user is logged in right away. If confirmation is still required
+    // (no session), fall back to the "check your email" screen.
+    if (data.session) {
+      router.refresh();
+    } else {
+      setSuccess(true);
+    }
   };
 
   if (success) {
@@ -663,6 +679,8 @@ function SignupView({
           autoComplete="new-password"
         />
 
+        <RememberPasswordCheckbox checked={rememberPassword} onChange={setRememberPassword} />
+
         <button
           type="submit"
           disabled={isLoading}
@@ -682,6 +700,26 @@ function SignupView({
         </button>
       </div>
     </motion.div>
+  );
+}
+
+function RememberPasswordCheckbox({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 mt-1 cursor-pointer select-none">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 rounded border-white/20 bg-[#111] accent-[#d4af37] focus:ring-primary"
+      />
+      <span className="text-xs text-white/60">Guardar mi contraseña en este dispositivo</span>
+    </label>
   );
 }
 

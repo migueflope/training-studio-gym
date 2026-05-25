@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Mail, Loader2, Phone, MailCheck, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +10,7 @@ import { GoogleButton } from "@/components/auth/GoogleButton";
 import { PasswordField } from "@/components/auth/PasswordField";
 
 export default function RegisterPage() {
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -28,7 +30,7 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -44,6 +46,15 @@ export default function RegisterPage() {
 
     if (signUpError) {
       setError(translateAuthError(signUpError.message));
+      return;
+    }
+
+    // Email confirmation disabled → signUp returns a session, so log the user
+    // in straight away. If confirmation is still required (no session), fall
+    // back to the "check your email" screen.
+    if (data.session) {
+      router.push("/dashboard");
+      router.refresh();
       return;
     }
 

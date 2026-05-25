@@ -1,29 +1,54 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useRef } from "react";
+import { VideoModal } from "@/components/ui/VideoModal";
 
-const SHOWCASE_IMAGES = [
+const SHOWCASE_VIDEOS = [
   {
     id: 1,
-    url: "/welcome-offer-clean.png",
+    url: "https://pub-1aa2a648b54b4be9a60b7b93f559af4e.r2.dev/2.mp4",
     title: "Tecnología de Punta",
     colSpan: "md:col-span-2 md:row-span-2",
   },
   {
     id: 2,
-    url: "/hero-bg.png",
+    url: "https://pub-1aa2a648b54b4be9a60b7b93f559af4e.r2.dev/3.mp4",
     title: "Ambiente Premium",
     colSpan: "md:col-span-1 md:row-span-1",
   },
   {
     id: 4,
-    url: "/cinematic_trainers.png",
+    url: "https://pub-1aa2a648b54b4be9a60b7b93f559af4e.r2.dev/4.mp4",
     title: "Resultados Reales",
     colSpan: "md:col-span-1 md:row-span-1",
   },
 ];
 
 export function GymShowcase() {
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  
+  // To handle hover sound
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
+
+  const handleMouseEnter = (id: number) => {
+    const video = videoRefs.current[id];
+    if (video) {
+      video.muted = false;
+      // En caso de que el navegador bloquee el unmute sin interacción previa, lo atrapamos
+      video.play().catch(() => {
+        video.muted = true;
+      });
+    }
+  };
+
+  const handleMouseLeave = (id: number) => {
+    const video = videoRefs.current[id];
+    if (video) {
+      video.muted = true;
+    }
+  };
+
   return (
     <>
       <section className="relative py-24 overflow-hidden bg-black/50">
@@ -49,18 +74,21 @@ export function GymShowcase() {
 
           {/* Bento Box Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
-            {SHOWCASE_IMAGES.map((image, index) => (
+            {SHOWCASE_VIDEOS.map((video, index) => (
               <motion.div
-                key={image.id}
+                key={video.id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.5, delay: index * 0.15 }}
-                whileHover={{
-                  scale: 1.02,
-                  transition: { type: "spring", stiffness: 400, damping: 25 }
+                whileHover={{ 
+                  scale: 1.02, 
+                  transition: { type: "spring", stiffness: 400, damping: 25 } 
                 }}
-                className={`relative rounded-3xl overflow-hidden group border border-primary/20 hover:border-primary/50 bg-secondary/20 backdrop-blur-sm min-h-[300px] md:min-h-[250px] shadow-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.2)] ${image.colSpan}`}
+                onMouseEnter={() => handleMouseEnter(video.id)}
+                onMouseLeave={() => handleMouseLeave(video.id)}
+                onClick={() => setSelectedVideo(video.url)}
+                className={`relative rounded-3xl overflow-hidden group border border-primary/20 hover:border-primary/50 bg-secondary/20 backdrop-blur-sm min-h-[300px] md:min-h-[250px] shadow-lg hover:shadow-[0_0_30px_rgba(212,175,55,0.2)] cursor-pointer ${video.colSpan}`}
               >
                 {/* Overlay Gradient for Text Readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 opacity-80 group-hover:opacity-100 transition-opacity duration-500" />
@@ -70,22 +98,36 @@ export function GymShowcase() {
                   <div className="w-full h-[2px] bg-primary/40 blur-[1px] absolute top-[-10%] group-hover:top-[110%] transition-all duration-[2s] ease-in-out" />
                 </div>
 
-                <img
-                  src={image.url}
-                  alt={image.title}
+                <video
+                  ref={(el) => { videoRefs.current[video.id] = el; }}
+                  src={video.url}
+                  autoPlay
+                  loop
+                  muted={true}
+                  playsInline
+                  suppressHydrationWarning={true}
                   className="absolute inset-0 w-full h-full object-cover brightness-75 group-hover:brightness-100 transition-all duration-700"
                 />
 
                 <div className="absolute bottom-0 left-0 p-6 z-30 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
                   <h3 className="text-xl md:text-2xl font-display font-bold text-white drop-shadow-md">
-                    {image.title}
+                    {video.title}
                   </h3>
+                  <p className="text-primary text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-500 mt-1">
+                    Ver video completo ↗
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
+
+      <VideoModal 
+        isOpen={!!selectedVideo} 
+        videoUrl={selectedVideo || ""} 
+        onClose={() => setSelectedVideo(null)} 
+      />
     </>
   );
 }

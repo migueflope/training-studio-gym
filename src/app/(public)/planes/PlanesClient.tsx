@@ -2,12 +2,20 @@
 
 import { useState, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, QrCode, Copy, ArrowLeft, RotateCcw, X } from "lucide-react";
+import { Check, QrCode, Copy, ArrowLeft, RotateCcw, X, Loader2, AlertCircle } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { WizardUploadPanel } from "./WizardUploadPanel";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
+import { createClient } from "@/lib/supabase/client";
+import { PasswordField } from "@/components/auth/PasswordField";
+import { GoogleButton } from "@/components/auth/GoogleButton";
+import {
+  upsertProfile,
+  requestCredentialSave,
+  type SavedProfile,
+} from "@/lib/auth/savedProfiles";
 import { readCheckout, writeCheckout, clearCheckout } from "@/lib/checkout/storage";
 import type { PlanPricingConfig, PlanSlug } from "@/lib/cms";
 
@@ -161,6 +169,77 @@ function PlanesContent({
   const [transactionRef, setTransactionRef] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [restored, setRestored] = useState(false);
+
+  // Account creation at the "Datos" step.
+  const [password, setPassword] = useState("");
+  const [rememberPassword, setRememberPassword] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [isAuthed, setIsAuthed] = useState(false);
+
+  // Detect existing session: a logged-in user skips signup, and we prefill
+  // any empty contact fields from their profile.
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      setIsAuthed(!!u);
+      if (u) {
+        setContactData((prev) => ({
+          name: prev.name || u.user_metadata?.full_name || u.user_metadata?.name || "",
+          whatsapp: prev.whatsapp || u.user_metadata?.phone || "",
+          email: prev.email || u.email || "",
+        }));
+      }
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) setIsAuthed(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleDatosSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+
+    // Already logged in → no account needed, straight to payment.
+    if (isAuthed) {
+      setStep(3);
+      return;
+    }
+
+    setAuthLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signUp({
+      email: contactData.email,
+      password,
+      options: { data: { full_name: contactData.name, phone: contactData.whatsapp } },
+    });
+    setAuthLoading(false);
+
+    if (error) {
+      setAuthError(
+        /already registered|already exists|user already/i.test(error.message)
+          ? "Ese correo ya tiene una cuenta. Inicia sesión para continuar."
+          : "No pudimos crear tu cuenta. Revisa los datos e intenta de nuevo.",
+      );
+      return;
+    }
+
+    const profile: SavedProfile = {
+      email: contactData.email,
+      name: contactData.name,
+      avatarUrl: null,
+    };
+    upsertProfile(profile);
+    if (rememberPassword) {
+      await requestCredentialSave(contactData.email, password, contactData.name);
+    }
+    setIsAuthed(true);
+    setStep(3);
+  };
 
   // Mount-only: restore from URL params and/or localStorage.
   // URL plan/step always wins for plan+step. Contact/method/txRef are
@@ -420,14 +499,37 @@ function PlanesContent({
               <button onClick={() => setStep(1)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6">
                 <ArrowLeft className="w-4 h-4" /> Cambiar plan
               </button>
-              
-              <h3 className="text-2xl font-display font-bold mb-6">Tus Datos</h3>
-              
-              <form onSubmit={(e) => { e.preventDefault(); setStep(3); }} className="space-y-4">
+
+              <h3 className="text-2xl font-display font-bold mb-1">Tus Datos</h3>
+              <p className="text-sm text-muted-foreground mb-6">
+                {isAuthed
+                  ? "Confirmá tus datos para continuar al pago."
+                  : "Creá tu cuenta para activar el plan y subir tu comprobante."}
+              </p>
+
+              {!isAuthed && (
+                <>
+                  <GoogleButton mode="signup" next={`/planes?plan=${selectedPlan}&step=3`} />
+                  <div className="flex items-center gap-3 my-4">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider">o</span>
+                    <div className="h-px flex-1 bg-border" />
+                  </div>
+                </>
+              )}
+
+              {authError && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>{authError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleDatosSubmit} className="space-y-4" autoComplete="on">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 block">Nombre Completo</label>
                   <input
-                    type="text" required
+                    type="text" required name="name" autoComplete="name"
                     className="w-full bg-secondary/50 border-b-2 border-transparent focus:border-primary focus:outline-none py-3 px-4 rounded-t-md text-foreground transition-all"
                     value={contactData.name} onChange={e => setContactData({...contactData, name: e.target.value})}
                   />
@@ -435,7 +537,7 @@ function PlanesContent({
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 block">WhatsApp</label>
                   <input
-                    type="tel" required
+                    type="tel" required name="tel" autoComplete="tel"
                     className="w-full bg-secondary/50 border-b-2 border-transparent focus:border-primary focus:outline-none py-3 px-4 rounded-t-md text-foreground transition-all"
                     value={contactData.whatsapp} onChange={e => setContactData({...contactData, whatsapp: e.target.value})}
                   />
@@ -443,16 +545,60 @@ function PlanesContent({
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 block">Correo</label>
                   <input
-                    type="email" required
+                    type="email" required name="email" autoComplete="username"
                     className="w-full bg-secondary/50 border-b-2 border-transparent focus:border-primary focus:outline-none py-3 px-4 rounded-t-md text-foreground transition-all"
                     value={contactData.email} onChange={e => setContactData({...contactData, email: e.target.value})}
                   />
                 </div>
-                
-                <button type="submit" className="w-full py-4 mt-6 bg-primary text-primary-foreground font-bold rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all">
-                  Continuar al Pago
+
+                {!isAuthed && (
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1 block">Contraseña</label>
+                    <PasswordField
+                      value={password}
+                      onChange={setPassword}
+                      required
+                      minLength={6}
+                      placeholder="Creá una contraseña (mín. 6)"
+                      name="password"
+                      autoComplete="new-password"
+                    />
+                    <label className="flex items-center gap-2 mt-3 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={rememberPassword}
+                        onChange={(e) => setRememberPassword(e.target.checked)}
+                        className="h-4 w-4 rounded border-border bg-secondary accent-[#d4af37]"
+                      />
+                      <span className="text-xs text-muted-foreground">Guardar mi contraseña en este dispositivo</span>
+                    </label>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full py-4 mt-6 bg-primary text-primary-foreground font-bold rounded-lg shadow-[0_0_15px_rgba(212,175,55,0.3)] hover:shadow-[0_0_20px_rgba(212,175,55,0.5)] transition-all disabled:opacity-70 flex items-center justify-center gap-2"
+                >
+                  {authLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : isAuthed ? (
+                    "Continuar al Pago"
+                  ) : (
+                    "Crear cuenta y continuar"
+                  )}
                 </button>
               </form>
+
+              {!isAuthed && (
+                <button
+                  type="button"
+                  onClick={() => openAuth("login", { next: `/planes?plan=${selectedPlan}&step=3` })}
+                  className="mt-4 w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  ¿Ya tienes cuenta? Inicia sesión
+                </button>
+              )}
             </motion.div>
           )}
 

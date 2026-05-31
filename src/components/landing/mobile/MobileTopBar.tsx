@@ -10,6 +10,7 @@ import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { useAuthModal } from "@/components/auth/AuthModalProvider";
 import type { Notification } from "@/lib/notifications";
 import { MobileDrawer } from "./MobileDrawer";
+import { useHasSavedProfiles } from "@/lib/auth/useHasSavedProfiles";
 
 interface Props {
   profile: UserProfile | null;
@@ -39,7 +40,9 @@ export function MobileTopBar({
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const { openAuth } = useAuthModal();
   const pathname = usePathname();
-  const isOnAuthWall = !profile && pathname === "/";
+  const hasSavedProfiles = useHasSavedProfiles();
+  // The AuthWall only shows for returning, logged-out users on the landing.
+  const isOnAuthWall = !profile && pathname === "/" && hasSavedProfiles === true;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 4);

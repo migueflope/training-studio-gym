@@ -11,7 +11,7 @@ import { HeroOpacityEditor } from "@/components/landing/HeroOpacityEditor";
 import { getCmsContent, getTrainerPhotoUrl } from "@/lib/cms";
 import { getUserProfile, isAdminRole } from "@/lib/auth/getUserProfile";
 import { getActiveMembership } from "@/lib/auth/getActiveMembership";
-import { AuthWall } from "@/components/auth/AuthWall";
+import { GuestGate } from "@/components/auth/GuestGate";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +65,6 @@ export default async function Home({
     }),
   );
 
-  if (!profile) {
-    return <AuthWall mensualidad={cms.plan_pricing.mensualidad} />;
-  }
-
   return (
     <HeroOpacityProvider
       initialMobile={cms.hero_video_opacity_mobile}
@@ -91,6 +87,10 @@ export default async function Home({
         <Location />
       </div>
       {isAdmin && <HeroOpacityEditor />}
+      {/* Returning, logged-out users get the AuthWall overlay (quick login /
+          add another account). New visitors see the landing and register at
+          the checkout's "Datos" step. */}
+      {!profile && <GuestGate mensualidad={cms.plan_pricing.mensualidad} />}
     </HeroOpacityProvider>
   );
 }

@@ -121,12 +121,29 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
   }
   updates.push({ key: "whatsapp_number", value: whatsappNumber });
 
+  // The QR image (banks) and photo (trainers) are uploaded/removed via their
+  // own server actions (uploadBankQr/removeBankQr, uploadTrainerPhoto/
+  // removeTrainerPhoto) which write the path straight to the DB. Those are the
+  // single source of truth. We must NOT take qr_path/photo_path from the form
+  // here: a tab opened before another admin uploaded a QR would carry an empty
+  // hidden field and wipe the freshly-saved image on "Guardar cambios". So we
+  // read the current path from the DB and preserve it.
+  const { data: existingRows } = await supabase
+    .from("content")
+    .select("key, value")
+    .in("key", [...BANK_KEYS, ...TRAINER_KEYS]);
+  const existingByKey = new Map(
+    (existingRows ?? []).map((r) => [r.key, r.value as Record<string, unknown>]),
+  );
+
   for (const k of BANK_KEYS) {
     const name = String(formData.get(`${k}__name`) ?? "").trim();
     const holder = String(formData.get(`${k}__holder`) ?? "").trim();
     const account = String(formData.get(`${k}__account`) ?? "").trim();
     const enabled = formData.get(`${k}__enabled`) === "on";
-    const qrPath = String(formData.get(`${k}__qr_path`) ?? "").trim() || null;
+    const existing = existingByKey.get(k);
+    const qrPath =
+      typeof existing?.qr_path === "string" ? existing.qr_path : null;
 
     if (!name || !holder || !account) {
       return {
@@ -141,7 +158,9 @@ export async function saveCmsContent(formData: FormData): Promise<Result> {
   for (const k of TRAINER_KEYS) {
     const name = String(formData.get(`${k}__name`) ?? "").trim();
     const enabled = formData.get(`${k}__enabled`) === "on";
-    const photoPath = String(formData.get(`${k}__photo_path`) ?? "").trim() || null;
+    const existing = existingByKey.get(k);
+    const photoPath =
+      typeof existing?.photo_path === "string" ? existing.photo_path : null;
     if (!name) {
       return {
         ok: false,

@@ -1,9 +1,23 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CheckCircle2, XCircle, Loader2, AlertCircle, Crown, Shield } from "lucide-react";
-import { activateMembership, cancelMembership } from "./actions";
-import type { UserRole } from "@/lib/auth/roles";
+import {
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  AlertCircle,
+  Crown,
+  Shield,
+  RotateCcw,
+  Trash2,
+} from "lucide-react";
+import {
+  activateMembership,
+  cancelMembership,
+  resetUserData,
+  deleteUser,
+} from "./actions";
+import { isAdminRole, type UserRole } from "@/lib/auth/roles";
 
 export interface PlanOption {
   id: string;
@@ -51,6 +65,8 @@ function fmtDate(iso: string): string {
 export function UsersTable({ rows, plans }: UsersTableProps) {
   const [activatingFor, setActivatingFor] = useState<AdminUserRow | null>(null);
   const [cancellingFor, setCancellingFor] = useState<AdminUserRow | null>(null);
+  const [resettingFor, setResettingFor] = useState<AdminUserRow | null>(null);
+  const [deletingFor, setDeletingFor] = useState<AdminUserRow | null>(null);
 
   return (
     <div className="glass-panel rounded-2xl border border-border overflow-hidden">
@@ -127,22 +143,44 @@ export function UsersTable({ rows, plans }: UsersTableProps) {
                 <td className="px-4 py-3 text-xs text-muted-foreground font-mono">
                   {fmtDate(row.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  {row.activeMembership ? (
-                    <button
-                      onClick={() => setCancellingFor(row)}
-                      className="text-xs font-medium px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => setActivatingFor(row)}
-                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                      Activar membresía
-                    </button>
-                  )}
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-2 flex-wrap">
+                    {row.activeMembership ? (
+                      <button
+                        onClick={() => setCancellingFor(row)}
+                        className="text-xs font-medium px-3 py-1.5 rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors"
+                      >
+                        Cancelar
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setActivatingFor(row)}
+                        className="text-xs font-bold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                      >
+                        Activar membresía
+                      </button>
+                    )}
+                    {!isAdminRole(row.role) && (
+                      <>
+                        <button
+                          onClick={() => setResettingFor(row)}
+                          title="Borra pagos y membresías (no aparecerá en ganancias). Conserva la cuenta."
+                          className="inline-flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border border-border text-muted-foreground hover:bg-secondary transition-colors"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Reiniciar
+                        </button>
+                        <button
+                          onClick={() => setDeletingFor(row)}
+                          title="Elimina el usuario por completo (cuenta, pagos y membresías)."
+                          className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Eliminar
+                        </button>
+                      </>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -164,7 +202,138 @@ export function UsersTable({ rows, plans }: UsersTableProps) {
           onClose={() => setCancellingFor(null)}
         />
       )}
+      {resettingFor && (
+        <ResetModal
+          user={resettingFor}
+          onClose={() => setResettingFor(null)}
+        />
+      )}
+      {deletingFor && (
+        <DeleteModal
+          user={deletingFor}
+          onClose={() => setDeletingFor(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function ResetModal({
+  user,
+  onClose,
+}: {
+  user: AdminUserRow;
+  onClose: () => void;
+}) {
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const handleConfirm = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await resetUserData(user.id);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      onClose();
+    });
+  };
+
+  return (
+    <ModalShell title={`Reiniciar — ${user.fullName}`} onClose={onClose}>
+      <p className="text-sm text-muted-foreground mb-4">
+        Se borrarán <strong>todos los pagos y membresías</strong> de este
+        usuario. Sus pagos dejarán de contar en las ganancias del mes. La cuenta
+        se conserva (puede volver a iniciar sesión). Útil para usuarios de prueba.
+      </p>
+      {error && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onClose}
+          disabled={pending}
+          className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+        >
+          Volver
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={pending}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+        >
+          {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+          Sí, reiniciar
+        </button>
+      </div>
+    </ModalShell>
+  );
+}
+
+function DeleteModal({
+  user,
+  onClose,
+}: {
+  user: AdminUserRow;
+  onClose: () => void;
+}) {
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const handleConfirm = () => {
+    setError(null);
+    startTransition(async () => {
+      const res = await deleteUser(user.id);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      onClose();
+    });
+  };
+
+  return (
+    <ModalShell title={`Eliminar — ${user.fullName}`} onClose={onClose}>
+      <p className="text-sm text-muted-foreground mb-4">
+        Esto borra la cuenta <strong>de forma permanente</strong>: el usuario,
+        sus pagos, membresías y notificaciones. No se puede deshacer. Escribí{" "}
+        <strong>ELIMINAR</strong> para confirmar.
+      </p>
+      <input
+        value={confirmText}
+        onChange={(e) => setConfirmText(e.target.value)}
+        placeholder="ELIMINAR"
+        className="mb-4 w-full px-3 py-2 rounded-lg bg-background border border-border focus:border-destructive outline-none text-sm"
+      />
+      {error && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+      <div className="flex gap-2 justify-end">
+        <button
+          onClick={onClose}
+          disabled={pending}
+          className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-secondary transition-colors disabled:opacity-50"
+        >
+          Volver
+        </button>
+        <button
+          onClick={handleConfirm}
+          disabled={pending || confirmText.trim().toUpperCase() !== "ELIMINAR"}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50"
+        >
+          {pending && <Loader2 className="w-4 h-4 animate-spin" />}
+          Eliminar definitivamente
+        </button>
+      </div>
+    </ModalShell>
   );
 }
 

@@ -10,6 +10,10 @@ import {
   Shield,
   RotateCcw,
   Trash2,
+  Mail,
+  MessageCircle,
+  CalendarDays,
+  Clock,
 } from "lucide-react";
 import {
   activateMembership,
@@ -62,11 +66,26 @@ function fmtDate(iso: string): string {
   return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function daysUntil(iso: string): number {
+  const end = new Date(`${iso.slice(0, 10)}T00:00:00`);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((end.getTime() - today.getTime()) / 86_400_000);
+}
+
+function whatsappLink(phone: string): string {
+  let digits = phone.replace(/\D/g, "");
+  // Números colombianos de 10 dígitos (celular empieza por 3): anteponer indicativo 57
+  if (digits.length === 10 && digits.startsWith("3")) digits = `57${digits}`;
+  return `https://wa.me/${digits}`;
+}
+
 export function UsersTable({ rows, plans }: UsersTableProps) {
   const [activatingFor, setActivatingFor] = useState<AdminUserRow | null>(null);
   const [cancellingFor, setCancellingFor] = useState<AdminUserRow | null>(null);
   const [resettingFor, setResettingFor] = useState<AdminUserRow | null>(null);
   const [deletingFor, setDeletingFor] = useState<AdminUserRow | null>(null);
+  const [viewingProfile, setViewingProfile] = useState<AdminUserRow | null>(null);
 
   return (
     <div className="glass-panel rounded-2xl border border-border overflow-hidden">
@@ -92,7 +111,12 @@ export function UsersTable({ rows, plans }: UsersTableProps) {
             {rows.map((row) => (
               <tr key={row.id} className="border-b border-border/50 hover:bg-secondary/30 transition-colors">
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setViewingProfile(row)}
+                    title="Ver detalle del usuario"
+                    className="flex items-center gap-3 text-left w-full rounded-lg -mx-1 px-1 py-0.5 hover:bg-primary/5 transition-colors cursor-pointer"
+                  >
                     {row.avatarUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -117,7 +141,7 @@ export function UsersTable({ rows, plans }: UsersTableProps) {
                         <p className="text-xs text-muted-foreground truncate">{row.phone}</p>
                       )}
                     </div>
-                  </div>
+                  </button>
                 </td>
                 <td className="px-4 py-3">
                   <RoleBadge role={row.role} />
@@ -214,7 +238,130 @@ export function UsersTable({ rows, plans }: UsersTableProps) {
           onClose={() => setDeletingFor(null)}
         />
       )}
+      {viewingProfile && (
+        <ProfileModal
+          user={viewingProfile}
+          onClose={() => setViewingProfile(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function ProfileModal({
+  user,
+  onClose,
+}: {
+  user: AdminUserRow;
+  onClose: () => void;
+}) {
+  const membership = user.activeMembership;
+  const daysLeft = membership ? daysUntil(membership.endDate) : null;
+  const totalDays = membership
+    ? Math.max(daysUntil(membership.endDate) - daysUntil(membership.startDate), 1)
+    : null;
+  const progress =
+    daysLeft !== null && totalDays !== null
+      ? Math.min(Math.max(1 - daysLeft / totalDays, 0), 1)
+      : null;
+
+  return (
+    <ModalShell title={user.fullName} onClose={onClose}>
+      <div className="space-y-4">
+        {/* Membresía */}
+        {membership && daysLeft !== null ? (
+          <div className="rounded-xl border border-success/30 bg-success/5 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-bold text-success">
+              <CheckCircle2 className="w-4 h-4" />
+              {membership.planName}
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
+              {daysLeft > 1 ? (
+                <span>
+                  Le quedan <strong className="text-primary">{daysLeft} días</strong> de plan
+                </span>
+              ) : daysLeft === 1 ? (
+                <span>
+                  Le queda <strong className="text-primary">1 día</strong> — vence mañana
+                </span>
+              ) : daysLeft === 0 ? (
+                <span className="font-bold text-primary">Vence hoy</span>
+              ) : (
+                <span className="font-bold text-destructive">Plan vencido</span>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Inició {fmtDate(membership.startDate)} · Vence {fmtDate(membership.endDate)}
+            </div>
+            {progress !== null && (
+              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-success transition-all"
+                  style={{ width: `${Math.round((1 - progress) * 100)}%` }}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-secondary/30 p-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <XCircle className="w-4 h-4 shrink-0" />
+            Sin plan activo — solo está registrado
+          </div>
+        )}
+
+        {/* Contacto */}
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Contacto
+          </p>
+          {user.phone ? (
+            <a
+              href={whatsappLink(user.phone)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm hover:border-success/50 hover:bg-success/5 transition-colors group"
+            >
+              <MessageCircle className="w-4 h-4 text-success shrink-0" />
+              <span className="font-medium">{user.phone}</span>
+              <span className="ml-auto text-xs text-muted-foreground group-hover:text-success transition-colors">
+                Abrir WhatsApp →
+              </span>
+            </a>
+          ) : (
+            <div className="flex items-center gap-3 rounded-lg border border-border/50 px-3 py-2.5 text-sm text-muted-foreground">
+              <MessageCircle className="w-4 h-4 shrink-0" />
+              Sin número de WhatsApp registrado
+            </div>
+          )}
+          <a
+            href={`mailto:${user.email}`}
+            className="flex items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm hover:border-primary/50 hover:bg-primary/5 transition-colors group"
+          >
+            <Mail className="w-4 h-4 text-primary shrink-0" />
+            <span className="font-medium truncate">{user.email}</span>
+            <span className="ml-auto text-xs text-muted-foreground group-hover:text-primary transition-colors shrink-0">
+              Enviar correo →
+            </span>
+          </a>
+        </div>
+
+        {/* Registro */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+          Registrado el {fmtDate(user.createdAt)}
+        </div>
+
+        <div className="flex justify-end pt-1">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-secondary transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </ModalShell>
   );
 }
 

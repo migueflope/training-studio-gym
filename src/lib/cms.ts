@@ -57,6 +57,7 @@ export type UiButtonPositions = {
 
 export type PlanSlug =
   | "mensualidad"
+  | "quincenal"
   | "sesion"
   | "valoracion"
   | "package_12"
@@ -159,6 +160,7 @@ export const CMS_DEFAULTS: CmsContent = {
   },
   plan_pricing: {
     mensualidad: { price: 90000, discount_percentage: 33 },
+    quincenal: { price: 30000, discount_percentage: 0 },
     sesion: { price: 10000, discount_percentage: 50 },
     valoracion: { price: 30000, discount_percentage: 50 },
     package_12: { price: 240000, discount_percentage: 38 },
@@ -217,6 +219,32 @@ function sanitizeButtonSettings(raw: unknown): ButtonSettings {
   return out;
 }
 
+/**
+ * Merge a stored plan_pricing object with defaults per-slug, so rows saved
+ * before a new plan existed (e.g. "quincenal") don't leave that plan without
+ * pricing and crash the landing/planes render.
+ */
+function sanitizePlanPricing(v: unknown): PlanPricingConfig {
+  const out = { ...CMS_DEFAULTS.plan_pricing };
+  if (!v || typeof v !== "object") return out;
+  const r = v as Record<string, unknown>;
+  for (const slug of Object.keys(out) as PlanSlug[]) {
+    const entry = r[slug];
+    if (!entry || typeof entry !== "object") continue;
+    const e = entry as Record<string, unknown>;
+    if (
+      typeof e.price === "number" &&
+      typeof e.discount_percentage === "number"
+    ) {
+      out[slug] = {
+        price: e.price,
+        discount_percentage: e.discount_percentage,
+      };
+    }
+  }
+  return out;
+}
+
 function sanitizeButtonPositions(v: unknown): UiButtonPositions {
   if (!v || typeof v !== "object") return CMS_DEFAULTS.ui_button_positions;
   const o = v as Record<string, unknown>;
@@ -244,6 +272,8 @@ export const getCmsContent = cache(async (): Promise<CmsContent> => {
       if (row.key in CMS_DEFAULTS) {
         if (row.key === "ui_button_positions") {
           merged.ui_button_positions = sanitizeButtonPositions(row.value);
+        } else if (row.key === "plan_pricing") {
+          merged.plan_pricing = sanitizePlanPricing(row.value);
         } else {
           // Trust DB shape; fall back per-key on any malformed value
           (merged as Record<string, unknown>)[row.key] = row.value;

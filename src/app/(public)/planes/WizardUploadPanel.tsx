@@ -51,6 +51,11 @@ const WIZARD_TO_DB: Record<string, RealPlan> = {
     amountCop: 60000,
     displayName: "Mensualidad del Gym",
   },
+  quincenal: {
+    dbPlanId: "e6f87c6e-f245-4cdb-8c7e-c6f87c6ef245",
+    amountCop: 30000,
+    displayName: "Quincena del Gym",
+  },
   "12-clases": {
     dbPlanId: "c4e65a4c-d023-3ab8-aa6c-a4e65a4cd023",
     amountCop: 150000,

@@ -30,6 +30,8 @@ type PlanCardMeta = {
   slug: PlanSlug;
   name: string;
   isPopular: boolean;
+  /** e.g. "Pago cada 15 días" — shown under the price. */
+  period?: string;
   features: string[];
 };
 
@@ -43,6 +45,18 @@ const BASIC_SERVICES: PlanCardMeta[] = [
       "Acceso ilimitado a las instalaciones",
       "Uso de todas las máquinas",
       "Horarios flexibles",
+    ],
+  },
+  {
+    id: "quincenal",
+    slug: "quincenal",
+    name: "Quincena del Gym",
+    isPopular: false,
+    period: "Pago cada 15 días",
+    features: [
+      "Acceso ilimitado por 15 días",
+      "Uso de todas las máquinas",
+      "Pagá tu rutina por quincenas",
     ],
   },
   {
@@ -388,7 +402,7 @@ function PlanesContent({
               {/* SERVICIOS BÁSICOS */}
               <div>
                 <h2 className="text-2xl font-display font-bold text-center mb-8 uppercase tracking-wider text-primary">Servicios</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {BASIC_SERVICES.map((plan) => {
                     const pricing = priceForPlan(plan, planPricing);
                     return (
@@ -398,19 +412,25 @@ function PlanesContent({
                         className="glass-panel cursor-pointer group relative p-8 rounded-2xl border border-border hover:border-primary/50 transition-all duration-300 hover:scale-[1.02] flex flex-col h-full"
                       >
                         <h3 className="text-xl font-display font-bold mb-6">{plan.name}</h3>
+                        {/* Fixed rows (discount / price / note) so sibling cards
+                            stay aligned even when one has no discount or note. */}
                         <div className="flex flex-col items-start gap-1 mb-8">
-                          {pricing.hasDiscount && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground line-through text-sm font-medium">{pricing.originalLabel}</span>
-                              <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">-{pricing.discount}% OFF</span>
-                            </div>
-                          )}
+                          <div className={`flex items-center gap-2 ${pricing.hasDiscount ? "" : "invisible"}`}>
+                            <span className="text-muted-foreground line-through text-sm font-medium">{pricing.originalLabel}</span>
+                            <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">-{pricing.discount}% OFF</span>
+                          </div>
                           <span className="text-4xl font-bold font-mono text-primary tracking-tighter">{pricing.finalLabel}</span>
-                          {pricing.hasDiscount && (
-                            <span className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mt-1">
-                              Pagando en la página
-                            </span>
-                          )}
+                          <span
+                            className={`text-[10px] uppercase tracking-wider font-semibold mt-1 ${
+                              plan.period
+                                ? "text-muted-foreground"
+                                : pricing.hasDiscount
+                                  ? "text-primary/80"
+                                  : "invisible"
+                            }`}
+                          >
+                            {plan.period ?? (pricing.hasDiscount ? "Pagando en la página" : " ")}
+                          </span>
                         </div>
 
                         <ul className="space-y-4 mb-8 text-left flex-1">

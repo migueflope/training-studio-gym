@@ -212,6 +212,11 @@ export function CmsForm({
               data={initial.plan_pricing.mensualidad}
             />
             <PlanPricingCard
+              slug="quincenal"
+              label="Quincena del Gym"
+              data={initial.plan_pricing.quincenal}
+            />
+            <PlanPricingCard
               slug="sesion"
               label="Sesión de Entrenamiento"
               data={initial.plan_pricing.sesion}

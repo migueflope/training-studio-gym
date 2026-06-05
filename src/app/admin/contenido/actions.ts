@@ -94,6 +94,7 @@ type TrainerKey = (typeof TRAINER_KEYS)[number];
 
 const PLAN_SLUGS: readonly PlanSlug[] = [
   "mensualidad",
+  "quincenal",
   "sesion",
   "valoracion",
   "package_12",

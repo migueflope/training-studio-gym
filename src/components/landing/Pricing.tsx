@@ -9,6 +9,7 @@ const MAIN_SERVICES = [
   {
     id: "mensualidad" as const,
     name: "Mensualidad del Gym",
+    period: null,
     features: [
       "Acceso ilimitado a las instalaciones",
       "Uso de todas las máquinas",
@@ -16,13 +17,25 @@ const MAIN_SERVICES = [
     ],
   },
   {
+    id: "quincenal" as const,
+    name: "Quincena del Gym",
+    period: "Pago cada 15 días",
+    features: [
+      "Acceso ilimitado por 15 días",
+      "Uso de todas las máquinas",
+      "Pagá tu rutina por quincenas",
+    ],
+  },
+  {
     id: "sesion" as const,
     name: "Sesión de Entrenamiento",
+    period: null,
     features: ["Pase por 1 día", "Acceso a máquinas", "Ideal para probar"],
   },
   {
     id: "valoracion" as const,
     name: "Valoración Física",
+    period: null,
     features: [
       "Análisis de composición corporal",
       "Medidas y peso",
@@ -58,7 +71,7 @@ export function Pricing({
             Todo lo que necesitas para comenzar tu transformación.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
             {MAIN_SERVICES.map((service, index) => {
               const pricing = planPricing[service.id];
               const price = pricing.price;
@@ -80,28 +93,38 @@ export function Pricing({
                         Ahorro
                       </div>
                     )}
-                    <h3 className="text-xl font-bold font-display mb-6 text-foreground/90">
+                    {/* Fixed-height rows (title / discount / price / note) so the
+                        four cards stay perfectly aligned even when one title
+                        wraps or a card has no discount or period note. */}
+                    <h3 className="text-xl font-bold font-display mb-6 text-foreground/90 min-h-14 flex items-center justify-center">
                       {service.name}
                     </h3>
                     <div className="flex flex-col items-center gap-1 mb-8">
-                      {hasDiscount && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground line-through text-sm font-medium">
-                            {formatCop(price)}
-                          </span>
-                          <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">
-                            -{discount}% OFF
-                          </span>
-                        </div>
-                      )}
+                      <div
+                        className={`flex items-center gap-2 ${hasDiscount ? "" : "invisible"}`}
+                      >
+                        <span className="text-muted-foreground line-through text-sm font-medium">
+                          {formatCop(price)}
+                        </span>
+                        <span className="bg-destructive/10 text-destructive text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          -{discount}% OFF
+                        </span>
+                      </div>
                       <span className="text-4xl font-bold text-primary tracking-tighter">
                         {formatCop(final)}
                       </span>
-                      {hasDiscount && (
-                        <span className="text-[10px] uppercase tracking-wider text-primary/80 font-semibold mt-1">
-                          Pagando en la página
-                        </span>
-                      )}
+                      <span
+                        className={`text-[10px] uppercase tracking-wider font-semibold mt-1 ${
+                          service.period
+                            ? "text-muted-foreground"
+                            : hasDiscount
+                              ? "text-primary/80"
+                              : "invisible"
+                        }`}
+                      >
+                        {service.period ??
+                          (hasDiscount ? "Pagando en la página" : " ")}
+                      </span>
                     </div>
 
                     <ul className="space-y-4 mb-8 text-left">

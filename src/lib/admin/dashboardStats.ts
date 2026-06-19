@@ -147,13 +147,17 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
+/**
+ * Exact COP amount with Colombian grouping: "." for thousands, "," for
+ * decimals (only shown when the amount isn't a whole number). No abbreviation,
+ * so the admin sees the precise monthly earnings, e.g. $1.290.000.
+ */
 export function formatCop(value: number): string {
-  if (value >= 1_000_000) {
-    const m = value / 1_000_000;
-    return `$${m.toFixed(m >= 10 ? 1 : 2).replace(/\.0+$/, "")}M`;
-  }
-  if (value >= 1_000) return `$${Math.round(value / 1_000)}K`;
-  return `$${value}`;
+  const formatted = new Intl.NumberFormat("es-CO", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+  return `$${formatted}`;
 }
 
 export function formatDeltaPct(value: number | null): string {

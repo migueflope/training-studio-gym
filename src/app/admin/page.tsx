@@ -6,6 +6,7 @@ import {
   formatDeltaPct,
 } from "@/lib/admin/dashboardStats";
 import { GrowthChart } from "./GrowthChart";
+import { ExpiringSoonCard } from "./ExpiringSoonCard";
 
 export const dynamic = "force-dynamic";
 
@@ -101,23 +102,10 @@ export default async function AdminDashboardPage() {
           </h3>
         </div>
 
-        <div className="glass-panel p-6 rounded-2xl border border-border">
-          <div className="flex justify-between items-start mb-4">
-            <div className="p-2 bg-destructive/10 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-destructive" />
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground mb-1">
-            Vencen en &lt; 7 días
-          </p>
-          <h3
-            className={`text-3xl font-bold font-display ${
-              stats.expiringSoon > 0 ? "text-destructive" : ""
-            }`}
-          >
-            {stats.expiringSoon}
-          </h3>
-        </div>
+        <ExpiringSoonCard
+          count={stats.expiringSoon}
+          members={stats.expiringMembers}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

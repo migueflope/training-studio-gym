@@ -1,6 +1,18 @@
 import "server-only";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+export interface ExpiringMember {
+  userId: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  planName: string;
+  endDate: string;
+  /** Días que faltan para que venza (0 = vence hoy). */
+  daysLeft: number;
+}
 
 export interface DashboardStats {
   activeMembers: number;
@@ -9,6 +21,7 @@ export interface DashboardStats {
   monthlyRevenueDeltaPct: number | null;
   pendingPayments: number;
   expiringSoon: number;
+  expiringMembers: ExpiringMember[];
   growth: { name: string; usuarios: number }[];
 }
 
@@ -29,6 +42,13 @@ const MONTH_LABELS_ES = [
 
 function ymd(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+/** Días enteros entre dos fechas YYYY-MM-DD (toYmd - fromYmd). */
+function daysBetween(fromYmd: string, toYmd: string): number {
+  const from = new Date(`${fromYmd}T00:00:00Z`).getTime();
+  const to = new Date(`${toYmd}T00:00:00Z`).getTime();
+  return Math.round((to - from) / 86_400_000);
 }
 
 function startOfMonth(d: Date): Date {
@@ -65,6 +85,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     prevMonthRevenueRes,
     pendingRes,
     expiringRes,
+    expiringDetailRes,
     growthRes,
   ] = await Promise.all([
     supabase
@@ -98,6 +119,13 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       .eq("status", "active")
       .gte("end_date", today)
       .lte("end_date", in7DaysStr),
+    supabase
+      .from("memberships")
+      .select("user_id, end_date, plans(name), profiles(full_name, phone)")
+      .eq("status", "active")
+      .gte("end_date", today)
+      .lte("end_date", in7DaysStr)
+      .order("end_date", { ascending: true }),
     supabase
       .from("profiles")
       .select("created_at")
@@ -136,6 +164,38 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     return { name: MONTH_LABELS_ES[month], usuarios: cumulative };
   });
 
+  // Lista detallada de quienes están por vencer (para el modal del dashboard).
+  // Los emails viven en auth.users, así que se traen con el cliente admin.
+  const expiringRows = expiringDetailRes.data ?? [];
+  const emailsById = new Map<string, string>();
+  if (expiringRows.length > 0) {
+    try {
+      const admin = createAdminClient();
+      const { data: usersList } = await admin.auth.admin.listUsers({
+        perPage: 1000,
+      });
+      for (const u of usersList?.users ?? []) {
+        if (u.email) emailsById.set(u.id, u.email);
+      }
+    } catch (err) {
+      console.error("[dashboardStats] listUsers failed:", err);
+    }
+  }
+
+  const expiringMembers: ExpiringMember[] = expiringRows.map((m) => {
+    const plan = Array.isArray(m.plans) ? m.plans[0] : m.plans;
+    const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+    return {
+      userId: m.user_id,
+      fullName: profile?.full_name ?? "Usuario",
+      email: emailsById.get(m.user_id) ?? "",
+      phone: profile?.phone ?? null,
+      planName: plan?.name ?? "Plan",
+      endDate: m.end_date,
+      daysLeft: daysBetween(today, m.end_date),
+    };
+  });
+
   return {
     activeMembers,
     activeMembersDeltaPct: pct(activeMembers, activeMembersPrev),
@@ -143,6 +203,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     monthlyRevenueDeltaPct: pct(monthlyRevenueCop, prevMonthlyRevenueCop),
     pendingPayments: pendingRes.count ?? 0,
     expiringSoon: expiringRes.count ?? 0,
+    expiringMembers,
     growth,
   };
 }
